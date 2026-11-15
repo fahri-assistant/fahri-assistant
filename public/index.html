@@ -114,10 +114,17 @@ async function submit(){
         }
       ];
       for(let i=0;i<jalur.length;i++){
-        try{ reply=await jalur[i](); if(reply) break; }catch(e){ if(i<jalur.length-1) await new Promise(res=>setTimeout(res,800)); }
+        try{
+          reply = await Promise.race([
+            jalur[i](),
+            new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 12000))
+          ]);
+          if(reply) break;
+        }catch(e){ /* langsung lanjut jalur berikutnya, tanpa jeda */ }
       }
       if(!reply) throw new Error('AI lagi sibuk sebentar, coba lagi.');
-      loading.textContent=reply; history.push({role:'user',content:text},{role:'assistant',content:reply});
+      let bersih = reply.replace(/<br\s*\/?>/gi,'\n').replace(/\*\*/g,'').replace(/<[^>]+>/g,'');
+      loading.textContent=bersih; history.push({role:'user',content:text},{role:'assistant',content:bersih});
     } else {
       const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(text)+'?width=1024&height=1024&seed='+Math.floor(Math.random()*999999)+'&nologo=true';
       loading.textContent='Ini hasil untuk: '+text;
@@ -163,4 +170,4 @@ async function submit(){
 })();
 </script>
 </body>
-                                                                       </html>
+  </html>
