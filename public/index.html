@@ -44,7 +44,7 @@ dialog{margin:auto;border:1px solid #262B4A;border-radius:18px;padding:24px;back
 <body>
 <div id="splashScreen" role="status" aria-label="Memuat Fahri Assistant"><div class="splash-center"><div class="splash-symbol" aria-hidden="true"><div class="splash-ring"></div><div class="splash-icon"><span id="splashLetter">F</span><img id="splashLogo" src="/icon-512.png" alt="" hidden></div></div><p class="splash-caption">Menyiapkan ruang percakapan Anda…</p></div><div class="splash-brand">FAHRI ASSISTANT</div></div>
 <script>(()=>{const splash=document.getElementById('splashScreen');const start=performance.now();let closing=false;function close(){if(closing)return;closing=true;setTimeout(()=>{splash.classList.add('leaving');setTimeout(()=>splash.remove(),500)},Math.max(0,1800-(performance.now()-start)))}window.addEventListener('load',close,{once:true});setTimeout(close,5000);const img=document.getElementById('splashLogo');function logo(){if(img.naturalWidth){img.hidden=false;document.getElementById('splashLetter').hidden=true}}img.addEventListener('load',logo);if(img.complete)logo()})();</script>
-<header><h1>✨ Fahri Assistant</h1><p>Asisten Pintar Buatan Fahri</p></header>
+<header><h1 id="headerTitle">✨ Fahri Assistant</h1><p>Asisten Pintar Buatan Fahri</p></header>
 <button id="loginBtn" type="button" style="margin-top:8px;padding:8px 16px;border:none;border-radius:12px;background:#4F46E5;color:white;font-weight:700;cursor:pointer;">Masuk / Login</button>
 <div id="accountBar"><span id="accountText"></span> <button id="accountButton" class="small-button" type="button">Masuk</button></div>
 <div class="modes"><button id="btnChat" type="button" aria-pressed="true">💬 Chat</button><button id="btnImage" type="button" aria-pressed="false">🎨 Bikin Gambar</button></div>
@@ -73,7 +73,7 @@ setBusy(true);input.value='';add(text,'user');const loading=add(mode==='chat'?'�
 try{const headers={'Content-Type':'application/json'};if(authRequired&&window.__FAHRI_USER__){const tok=await window.__FAHRI_USER__.getIdToken();headers.Authorization='Bearer '+tok}const response=await fetch(mode==='chat'?'/api/chat':'/api/image',{method:'POST',headers,signal:ctrl.signal,body:JSON.stringify(mode==='chat'?{message:text,history:history.slice(-12)}:{prompt:text})});if(!(response.headers.get('content-type')||'').includes('application/json'))throw new Error('Respons bukan JSON.');const data=await response.json();if(!response.ok)throw new Error(errorText(data,response.status));
 if(mode==='chat'){if(typeof data.reply!=='string'||!data.reply.trim())throw new Error('Jawaban AI kosong.');textWithLinks(loading,data.reply);history.push({role:'user',content:text},{role:'assistant',content:data.reply});history=history.slice(-12)}else{if(typeof data.image!=='string'||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(data.image))throw new Error('Format gambar dari server tidak valid.');loading.textContent='Ini hasil untuk: '+text;const img=document.createElement('img');img.alt=text;img.src=data.image;img.onload=scroll;loading.append(img);const link=document.createElement('a');link.textContent='Simpan gambar';link.href=data.image;link.download='fahri-gambar.'+(data.mime==='image/jpeg'?'jpg':data.mime==='image/webp'?'webp':'png');link.style.display='block';link.style.marginTop='10px';loading.append(link)}
 }catch(e){loading.textContent=ctrl.signal.aborted?'Permintaan melewati batas waktu. Periksa koneksi dan coba lagi.':e.message;input.value=text}finally{clearTimeout(timer);setBusy(false);input.focus();scroll()}}
-async function setup(){try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw new Error();const status=await r.json();authRequired=status.authRequired;ready=true;if(!status.chatConfigured)add('Belum ada API chat yang dikonfigurasi. Isi key di .env lalu restart server.','ai');if(!status.imageConfigured)imageBtn.title='Isi key dan model Pollinations untuk mengaktifkan gambar.';if(authRequired){document.getElementById('accountBar').hidden=false;accountButton.onclick=()=>{if(window.__FAHRI_USER__){if(confirm('Logout?')) window.__FAHRI_LOGOUT__&&window.__FAHRI_LOGOUT__()}else dialog.showModal()};}}catch{add('Konfigurasi belum siap. Pastikan server berjalan.','ai');ready=true;}}
+async function setup(){try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw new Error();const status=await r.json();authRequired=status.authRequired;ready=true;if(!status.chatConfigured)add('Belum ada API chat yang dikonfigurasi. Isi key di .env lalu restart server.','ai');if(!status.imageConfigured)imageBtn.title='Isi key dan model Pollinations untuk mengaktifkan gambar.';}catch{add('Konfigurasi belum siap. Pastikan server berjalan.','ai');ready=true;}}
 setup();
 window.__FAHRI_SET_USER__ = function(user){
   window.__FAHRI_USER__ = user || null;
@@ -81,23 +81,54 @@ window.__FAHRI_SET_USER__ = function(user){
   if(big) big.style.display = user ? 'none' : 'block';
   var bar=document.getElementById('accountBar');
   if(bar) bar.style.display = user ? 'none' : 'block';
-  document.getElementById('accountText').textContent = user ? 'Masuk sebagai '+(user.displayName||user.email||'Pengguna') : 'Login diperlukan';
+  var t=document.getElementById('accountText');
+  if(t) t.textContent = user ? 'Masuk sebagai '+(user.displayName||user.email||'Pengguna') : 'Login diperlukan';
   accountButton.textContent = user ? 'Keluar' : 'Masuk';
   if(user && dialog.open) dialog.close();
 };
-document.querySelector('header h1').style.cursor='pointer';
-document.querySelector('header h1').onclick=function(){
-  if(window.__FAHRI_USER__){ if(confirm('Logout dari '+(window.__FAHRI_USER__.email||'akun ini')+' ?')){ window.__FAHRI_LOGOUT__ && window.__FAHRI_LOGOUT__(); } }
-};
+accountButton.onclick=()=>{ if(window.__FAHRI_USER__){ if(confirm('Logout?')) window.__FAHRI_LOGOUT__ && window.__FAHRI_LOGOUT__(); } else dialog.showModal(); };
+document.getElementById('headerTitle').style.cursor='pointer';
+document.getElementById('headerTitle').onclick=function(){ if(window.__FAHRI_USER__){ if(confirm('Logout dari '+(window.__FAHRI_USER__.email||'akun ini')+' ?')) window.__FAHRI_LOGOUT__ && window.__FAHRI_LOGOUT__(); } };
 </script>
 <script>
 if ("serviceWorker" in navigator) { window.addEventListener("load", () => { navigator.serviceWorker.register("/sw.js"); }); }
-const loginBtn = document.getElementById('loginBtn');
-const loginDialog = document.getElementById('loginDialog');
-if (loginBtn && loginDialog) { loginBtn.addEventListener('click', () => loginDialog.showModal()); }
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="/auth.js"></script>
+<script>
+// AUTH JADI SATU DI SINI - NGGAK ADA auth.js LAGI
+(function(){
+  function setStatus(m){ var el=document.getElementById('authStatus'); if(el) el.textContent=m; }
+  var loginBtn=document.getElementById('loginBtn');
+  var loginDialog=document.getElementById('loginDialog');
+  if(loginBtn && loginDialog){ loginBtn.addEventListener('click', ()=>loginDialog.showModal()); }
+  function start(){
+    if(!window.firebase){ setStatus('Firebase gagal ke-load'); return; }
+    fetch('/firebase-config.json',{cache:'no-store'}).then(r=>{
+      if(!r.ok) throw new Error('firebase-config.json tidak ketemu');
+      return r.json();
+    }).then(cfg=>{
+      if(!firebase.apps.length) firebase.initializeApp(cfg);
+      var auth=firebase.auth();
+      window.__FAHRI_LOGOUT__ = function(){ return auth.signOut().then(function(){ location.reload(); }); };
+      auth.getRedirectResult().then(function(res){ if(res && res.user) setStatus('Login berhasil'); }).catch(function(e){ setStatus('Login gagal: '+e.message); });
+      auth.onAuthStateChanged(function(user){
+        if(window.__FAHRI_SET_USER__) window.__FAHRI_SET_USER__(user);
+        if(!user) setStatus('Auth siap - silakan login');
+        else setStatus('Login sebagai: '+user.email);
+      });
+      function pasang(id, isGoogle){
+        var b=document.getElementById(id); if(!b) return;
+        b.onclick=function(e){ e.preventDefault(); var p = isGoogle ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider(); auth.signInWithRedirect(p).catch(function(err){ alert('Login gagal: '+err.message); }); };
+      }
+      pasang('googleLogin', true);
+      pasang('githubLogin', false);
+    }).catch(function(e){ setStatus('Auth error: '+e.message); });
+  }
+  // Tunggu module di atas siap dulu, baru jalanin auth - jadi nggak kelewat lagi
+  if(document.readyState === 'complete') setTimeout(start, 300);
+  else window.addEventListener('load', function(){ setTimeout(start, 300); });
+})();
+</script>
 </body>
- </html>
+  </html>
