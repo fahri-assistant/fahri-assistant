@@ -1,70 +1,74 @@
-// auth.js - versi nyambung sendiri, nggak nunggu file lain
-(async function(){
+// auth.js - versi compat, anti failed to fetch
+(function(){
   function setStatus(msg){
     var el = document.getElementById('authStatus');
     if(el) el.textContent = msg;
     console.log('[auth]', msg);
   }
 
-  try{
-    const [appMod, authMod] = await Promise.all([
-      import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
-      import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js")
-    ]);
-    const r = await fetch('/firebase-config.json', {cache:'no-store'});
-    if(!r.ok){ setStatus('firebase-config.json tidak ketemu'); return; }
-    const config = await r.json();
-    const auth = authMod.getAuth(appMod.initializeApp(config));
+  // Tunggu firebase ke-load
+  var tries = 0;
+  var timer = setInterval(function(){
+    if(window.firebase){
+      clearInterval(timer);
+      start();
+    } else if(++tries > 50){
+      clearInterval(timer);
+      setStatus('Firebase gagal ke-load, cek internet / refresh');
+    }
+  }, 100);
 
-    // Buat nangkep hasil balik dari Google
+  async function start(){
     try{
-      const res = await authMod.getRedirectResult(auth);
-      if(res && res.user) setStatus('Login berhasil: ' + res.user.email);
-    }catch(e){ setStatus('Login gagal: ' + e.message); }
+      var r = await fetch('/firebase-config.json', {cache:'no-store'});
+      if(!r.ok){ setStatus('firebase-config.json tidak ketemu'); return; }
+      var config = await r.json();
+      if(!firebase.apps.length) firebase.initializeApp(config);
+      var auth = firebase.auth();
 
-    authMod.onAuthStateChanged(auth, (user)=>{
-      if(user){
-        setStatus('Login sebagai: ' + user.email);
-        // sembunyiin dialog login kalau ada
-        var dlg = document.getElementById('authDialog');
-        if(dlg) dlg.close ? dlg.close() : dlg.style.display = 'none';
-        var btn = document.getElementById('loginBtn');
-        if(btn) btn.textContent = user.email.split('@')[0];
+      // Nangkep hasil balik dari Google
+      try{
+        var res = await auth.getRedirectResult();
+        if(res && res.user) setStatus('Login berhasil: ' + res.user.email);
+      }catch(e){ setStatus('Login gagal: ' + e.message); }
+
+      auth.onAuthStateChanged(function(user){
+        if(user){
+          setStatus('Login sebagai: ' + user.email);
+          var dlg = document.getElementById('authDialog');
+          if(dlg && dlg.close) dlg.close();
+          var btn = document.getElementById('loginBtn');
+          if(btn) btn.textContent = user.email.split('@')[0];
+        }
+      });
+
+      function pasang(id, provName){
+        var btn = document.getElementById(id);
+        if(!btn) return;
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          var prov = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
+          auth.signInWithRedirect(prov).catch(function(err){
+            alert('Login gagal: ' + err.message);
+          });
+        });
       }
-    });
 
-    // INI KUNCINYA - langsung tempel ke tombol
-    function pasang(id, provider){
-      var btn = document.getElementById(id);
-      if(!btn){ console.log('tombol tidak ketemu:', id); return; }
-      btn.addEventListener('click', async (e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-        alert('Tombol ' + id + ' kepencet, lagi buka Google...');
-        try{
-          const prov = provider === 'google' ? new authMod.GoogleAuthProvider() : new authMod.GithubAuthProvider();
-          await authMod.signInWithRedirect(auth, prov);
-        }catch(err){ alert('Login gagal: ' + err.message); }
-      });
-      console.log('tombol kepasang:', id);
+      pasang('googleLogin', 'google');
+      pasang('githubLogin', 'github');
+
+      var loginBtn = document.getElementById('loginBtn');
+      var dlg2 = document.getElementById('authDialog');
+      if(loginBtn && dlg2){
+        loginBtn.addEventListener('click', function(){
+          if(dlg2.showModal) dlg2.showModal();
+        });
+      }
+
+      setStatus('Auth siap');
+    }catch(e){
+      setStatus('Auth error: ' + e.message);
     }
-
-    pasang('googleLogin', 'google');
-    pasang('githubLogin', 'github');
-
-    // Tombol Masuk yang buka dialog
-    var loginBtn = document.getElementById('loginBtn');
-    var dlg2 = document.getElementById('authDialog');
-    if(loginBtn && dlg2){
-      loginBtn.addEventListener('click', ()=>{
-        if(dlg2.showModal) dlg2.showModal();
-        else dlg2.style.display = 'block';
-      });
-    }
-
-    setStatus('Auth siap');
-  }catch(e){
-    console.error(e);
-    setStatus('Auth error: ' + e.message);
   }
 })();
