@@ -28,6 +28,18 @@ function jawabanLokal(message){
   return null;
 }
 
+function bersihkanTeks(raw){
+  return (raw || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?(b|strong|i|em|p|div|span)[^>]*>/gi, '')
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/`{1,3}([^`]+)`{1,3}/g, '$1')
+    .replace(/^#{1,6}\s*/gm, '')
+    .trim();
+}
+
 export default async function handler(req, res){
   if(req.method !== 'POST') return res.status(405).json({error:'Method tidak diizinkan'});
   try{
@@ -41,10 +53,11 @@ export default async function handler(req, res){
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+process.env.GROQ_API_KEY},
-      body:JSON.stringify({model:'llama-3.1-8b-instant', messages: allMessages, temperature:0.7, max_tokens:800})
+      body:JSON.stringify({model:'llama-3.1-8b-instant', messages: allMessages, temperature:0.7, max_tokens:500})
     });
     const data = await r.json();
     if(!r.ok) return res.status(r.status).json({error: data?.error?.message || 'Groq error'});
-    return res.status(200).json({reply: data.choices?.[0]?.message?.content || ''});
+    const raw = data.choices?.[0]?.message?.content || '';
+    return res.status(200).json({reply: bersihkanTeks(raw)});
   }catch(e){ return res.status(500).json({error:'Server error: '+e.message}); }
-      }
+                                                                        }
