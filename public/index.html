@@ -325,5 +325,14 @@ if(idChatAktif){
   if(last && last.history && last.history.length){ bukaChat(idChatAktif); }
 }
 </script>
+ <script>
+window.__FAHRI_SET_USER__ = function(user){
+  if(user){
+    console.log('Login sebagai', user.email);
+  } else {
+    console.log('Belum login');
+  }
+};
+ </script>
 </body>
  </html>
