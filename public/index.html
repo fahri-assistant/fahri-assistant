@@ -88,7 +88,6 @@
   <button id="githubLogin" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:#111;color:#fff;font-weight:600">Login Github</button>
   <button onclick="window.__FAHRI_LOGOUT__ && window.__FAHRI_LOGOUT__()" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:transparent;color:#fff">Logout</button>
 </div>
-</div>
 
 <div id="chat">
   <div class="msg ai">Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik "buatkan gambar kucing di pantai" ✨</div>
@@ -334,5 +333,8 @@ window.__FAHRI_SET_USER__ = function(user){
   }
 };
  </script>
+ <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="auth.js"></script>
 </body>
  </html>
