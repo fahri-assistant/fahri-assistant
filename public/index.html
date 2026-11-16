@@ -41,7 +41,7 @@ button:disabled{opacity:.6;cursor:wait}
 #splashScreen.leaving{opacity:0;pointer-events:none}.splash-center{display:flex;flex-direction:column;align-items:center;gap:24px}
 .splash-icon{width:94px;height:94px;border-radius:29px;background:linear-gradient(135deg,#A779FF,#4BA7EE);display:grid;place-items:center;font-size:48px;font-weight:800}.splash-brand{position:absolute;left:12px;right:12px;bottom:36px;text-align:center;font-size:18px;font-weight:700;letter-spacing:4px}
 dialog{margin:auto;border:1px solid #262B4A;border-radius:18px;padding:24px;background:#141737;color:white;width:min(90%,380px)}dialog::backdrop{background:#000a}dialog h2{margin-bottom:14px}dialog button{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #262B4A;background:#4F46E5;color:white;cursor:pointer}#authStatus{font-size:12px;line-height:1.6;margin-top:14px;color:#FFD27A;white-space:pre-wrap}
-/* TAMBAHAN TEMA - cuma nimpa warna, struktur tetap */
+/* TAMBAHAN TEMA - cuma nimpa warna */
 [data-theme="terang"] body, body[data-theme="terang"]{background:#f5f5f7;color:#111}
 [data-theme="terang"] header{background:linear-gradient(180deg,#fff,#f5f5f7)}
 [data-theme="terang"] .ai{background:#ececff;border-color:#ddd;color:#111}
@@ -79,7 +79,7 @@ dialog{margin:auto;border:1px solid #262B4A;border-radius:18px;padding:24px;back
 <dialog id="loginDialog"><h2>Masuk ke Fahri Assistant</h2><button id="googleLogin" type="button">Lanjutkan dengan Google</button><button id="githubLogin" type="button">Lanjutkan dengan GitHub</button><p id="authStatus">Menyiapkan login...</p><button id="closeLogin" type="button">Tutup</button></dialog>
 <dialog id="logDialog"><h2>📜 Riwayat Chat</h2><div id="logListFahri"></div><button type="button" onclick="clearLogsFahri()" style="background:transparent;color:#ff6b6b;border-color:#ff6b6b">Hapus Semua Riwayat</button><button type="button" onclick="document.getElementById('logDialog').close()">Tutup</button></dialog>
 <script>
-// ===== TAMBAHAN: TEMA + LOG + ANTI-RESET + TTS + HEADER DINAMIS - TIDAK MENGUBAH LOGIKA LAMA =====
+// ===== TAMBAHAN FITUR - TIDAK MENGUBAH LOGIKA LAMA =====
 const THEMEKEY_F='fahri_theme_v1';
 function setThemeFahri(t){ if(t==='gelap') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t); localStorage.setItem(THEMEKEY_F,t); document.querySelectorAll('#themeRow button').forEach(b=>b.classList.toggle('active',b.dataset.t===t)); }
 setThemeFahri(localStorage.getItem(THEMEKEY_F)||'gelap');
@@ -98,9 +98,7 @@ const chatBtn=document.getElementById('btnChat'),imageBtn=document.getElementByI
 const dialog=document.getElementById('loginDialog'),accountButton=document.getElementById('accountButton');
 let mode='chat',busy=false,history=[];
 try{ history=JSON.parse(localStorage.getItem('fahri_history_v1')||'[]'); }catch(e){ history=[]; }
-// TAMBAHAN: TAMPILIN HISTORY LAMA PAS BUKA APLIKASI - TIDAK UBAH LOGIKA CHAT
 (function restoreHistoryFahri(){ if(!history.length) return; const first=box.querySelector('.msg'); if(first) first.remove(); history.forEach(m=>{ const d=document.createElement('div'); d.className='msg '+(m.role==='user'?'user':'ai'); d.textContent=m.content; if(m.role==='assistant'){ const b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊 Dengarkan'; b.onclick=()=>speakFahri(m.content); d.appendChild(document.createElement('br')); d.appendChild(b); } box.appendChild(d); }); box.scrollTop=box.scrollHeight; })();
-// TAMBAHAN: HEADER DINAMIS - GEDE DI AWAL, KECIL PAS SCROLL
 const headerEl=document.getElementById('mainHeader');
 box.addEventListener('scroll',()=>{ if(box.scrollTop>40) headerEl.classList.add('small'); else if(history.length<=3) headerEl.classList.remove('small'); });
 function add(text,role){const d=document.createElement('div');d.className='msg '+role;d.textContent=text; if(role==='ai'){ const b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊 Dengarkan'; b.onclick=()=>speakFahri(text); d.appendChild(document.createElement('br')); d.appendChild(b); } box.append(d);box.scrollTop=box.scrollHeight;return d}
@@ -154,24 +152,20 @@ async function submit(){
           const r=await fetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'openai',messages:msgs,temperature:0.7,max_tokens:800})});
           if(!r.ok) throw new Error('jalur2 gagal');
           const d=await r.json(); return (d.choices?.[0]?.message?.content||'').trim();
-        },
-        async ()=>{
-          const r=await fetch('https://text.pollinations.ai/'+encodeURIComponent('Jawab singkat dalam Bahasa Indonesia: '+text));
-          if(!r.ok) throw new Error('jalur3 gagal');
-          return (await r.text()).trim();
         }
+        // JALUR 3 DIHAPUS - INI YANG BIKIN JAWABAN NGAWUR, JANGAN DIPAKE LAGI
       ];
       for(let i=0;i<jalur.length;i++){
         try{
           reply = await Promise.race([
             jalur[i](),
-            new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 12000))
+            new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 25000))
           ]);
           if(reply) break;
         }catch(e){ }
       }
       if(!reply) throw new Error('AI lagi sibuk sebentar, coba lagi.');
-      let bersih = reply.replace(/<br\s*\/?>/gi,'\n').replace(/\*\*/g,'').replace(/<[^>]+>/g,'');
+      let bersih = reply.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').trim();
       loading.textContent=bersih; const b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊 Dengarkan'; b.onclick=()=>speakFahri(bersih); loading.appendChild(document.createElement('br')); loading.appendChild(b);
       history.push({role:'user',content:text},{role:'assistant',content:bersih});
       localStorage.setItem('fahri_history_v1',JSON.stringify(history));
@@ -218,4 +212,4 @@ async function submit(){
 })();
 </script>
 </body>
-  </html>
+                                                                                                                                                                                                                            </html>
