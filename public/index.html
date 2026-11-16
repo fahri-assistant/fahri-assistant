@@ -15,10 +15,9 @@
   .msg { max-width: 85%; padding: 12px 14px; border-radius: 16px; line-height: 1.5; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
   .msg.user { align-self: flex-end; background: #7c3aed; }
   .msg.ai { align-self: flex-start; background: #1f1f1f; border: 1px solid #2a2a2a; }
-  /* === WATERMARK FahriAI - DARI KODE LAMA, NGGAK DIHAPUS === */
   .fahri-img-wrap { position: relative; display: inline-block; max-width: 100%; margin-top: 8px; }
   .fahri-img-wrap img { width: 100%; max-width: 480px; border-radius: 12px; display: block; }
-  .fahri-watermark { position: absolute; bottom: 10px; right: 12px; background: rgba(0,0,0,0.6); color: #fff; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; pointer-events: none; font-family: sans-serif; }
+  .fahri-watermark { position: absolute; bottom: 0; right: 0; background: #000; color: #fff; font-size: 14px; font-weight: bold; padding: 6px 14px; border-radius: 12px 0 12px 0; letter-spacing: 0.5px; pointer-events: none; font-family: sans-serif; }
   #inputArea { padding: 12px; background: #1a1a1a; border-top: 1px solid #2a2a2a; display: flex; gap: 8px; }
   #input { flex: 1; padding: 12px 14px; border-radius: 24px; border: 1px solid #333; background: #262626; color: #fff; outline: none; font-size: 15px; }
   #sendBtn { padding: 0 20px; border-radius: 24px; border: none; background: #7c3aed; color: #fff; font-weight: bold; cursor: pointer; }
@@ -30,9 +29,14 @@
 </style>
 </head>
 <body>
-<header>
+<header id="mainHeader">
   <div class="logo">F</div>
-  <div><h1>FahriAI</h1><p>Fahri Assistant • Online</p></div>
+  <div style="flex:1;">
+    <h1 id="headerTitle">FahriAI</h1>
+    <p id="headerSubtitle">Fahri Assistant • Online</p>
+  </div>
+  <div id="headerTime" style="font-size:12px; color:#aaa; text-align:right;"></div>
+  <div style="width:10px; height:10px; background:#22c55e; border-radius:50%;"></div>
 </header>
 
 <div id="chat">
@@ -63,6 +67,7 @@ function setMode(mode, btn){
   document.getElementById('chatInput').placeholder = modeGambar ? 'Ketik prompt gambar / pilih foto dulu...' : 'Tanya apa aja ke Fahri...';
   document.getElementById('btnKamera').style.display = modeGambar ? 'block' : 'none';
   if(!modeGambar) fotoKu = null;
+  updateHeader();
 }
 function quickAsk(text){ document.getElementById('chatInput').value = text; document.getElementById('chatForm').requestSubmit(); }
 
@@ -99,23 +104,20 @@ async function send(){
   chat.scrollTop = chat.scrollHeight;
 }
 document.getElementById('chatForm').addEventListener('submit', (e) => {
-  if (fotoKu) return; // kalau ada foto, biar script edit foto yang jalan
+  if (fotoKu) return;
   e.preventDefault();
   send();
 });
 </script>
 
 <script>
-// === TAMBAHAN EDIT FOTO - DARI KODE YANG KAMU KIRIM, DIGABUNG, NGGAK UBAH YANG LAIN ===
 let fotoKu = null;
 const formKu = document.getElementById('chatForm');
 const inputKu = document.getElementById('chatInput');
 const btnKamera = document.getElementById('btnKamera');
-
 const inputFoto = document.createElement('input');
 inputFoto.type = 'file'; inputFoto.accept = 'image/*'; inputFoto.style.display = 'none';
 document.body.appendChild(inputFoto);
-
 btnKamera.onclick = () => inputFoto.click();
 inputFoto.onchange = (e) => {
   const f = e.target.files[0]; if (!f) return;
@@ -123,10 +125,8 @@ inputFoto.onchange = (e) => {
   rd.onload = () => { fotoKu = rd.result; inputKu.placeholder = 'Foto udah kepilih, ketik perintah editnya...'; inputKu.focus(); };
   rd.readAsDataURL(f);
 };
-
-// Kalau ada foto, kirim ke api/image.js, kalau nggak ada biarin cara lama jalan
 formKu.addEventListener('submit', async (e) => {
-  if (!fotoKu) return; // nggak ada foto = biarin yang lama jalan
+  if (!fotoKu) return;
   e.preventDefault(); e.stopImmediatePropagation();
   const teks = inputKu.value.trim(); if (!teks) return;
   const box = document.getElementById('chat');
@@ -140,6 +140,25 @@ formKu.addEventListener('submit', async (e) => {
   } catch (err) { div.textContent = 'Gagal: ' + err.message; }
   fotoKu = null; inputKu.placeholder = 'Tanya apa aja ke Fahri...';
 }, true);
+</script>
+
+<script>
+function updateHeader(){
+  const now = new Date(); const jam = now.getHours();
+  let sapa = 'Selamat malam';
+  if (jam >= 5 && jam < 11) sapa = 'Selamat pagi';
+  else if (jam >= 11 && jam < 15) sapa = 'Selamat siang';
+  else if (jam >= 15 && jam < 18) sapa = 'Selamat sore';
+  document.getElementById('headerTime').innerHTML = sapa + '<br>' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  if (typeof modeGambar !== 'undefined' && modeGambar) {
+    document.getElementById('headerTitle').textContent = 'FahriAI • Gambar';
+    document.getElementById('headerSubtitle').textContent = 'Mode Bikin Gambar • Pilih foto / ketik prompt';
+  } else {
+    document.getElementById('headerTitle').textContent = 'FahriAI';
+    document.getElementById('headerSubtitle').textContent = 'Fahri Assistant • Online • ' + sapa;
+  }
+}
+setInterval(updateHeader, 1000); updateHeader();
 </script>
 </body>
    </html>
