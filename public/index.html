@@ -81,7 +81,13 @@
   <div class="hero-logo">F</div>
   <h1>Fahri Assistant</h1>
   <p id="heroGreet">Selamat malam 👋<br>Mau aku bantu apa hari ini?</p>
-  <div class="hero-pill">✨ 14 AI • Gambar • Edit Foto • Gratis</div>
+  <div class="hero-pill">✨ Chat • Gambar • Edit Foto</div>
+<div id="authStatus" style="font-size:12px;opacity:.7;margin-top:8px">Memuat login...</div>
+<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+  <button id="googleLogin" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:#fff;color:#000;font-weight:600">Login Google</button>
+  <button id="githubLogin" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:#111;color:#fff;font-weight:600">Login Github</button>
+  <button onclick="window.__FAHRI_LOGOUT__ && window.__FAHRI_LOGOUT__()" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:transparent;color:#fff">Logout</button>
+</div>
 </div>
 
 <div id="chat">
