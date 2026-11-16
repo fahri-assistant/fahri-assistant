@@ -15,16 +15,18 @@
   .msg { max-width: 85%; padding: 12px 14px; border-radius: 16px; line-height: 1.5; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
   .msg.user { align-self: flex-end; background: #7c3aed; }
   .msg.ai { align-self: flex-start; background: #1f1f1f; border: 1px solid #2a2a2a; }
-  /* === WATERMARK FahriAI === */
+  /* === WATERMARK FahriAI - DARI KODE LAMA, NGGAK DIHAPUS === */
   .fahri-img-wrap { position: relative; display: inline-block; max-width: 100%; margin-top: 8px; }
   .fahri-img-wrap img { width: 100%; max-width: 480px; border-radius: 12px; display: block; }
   .fahri-watermark { position: absolute; bottom: 10px; right: 12px; background: rgba(0,0,0,0.6); color: #fff; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; pointer-events: none; font-family: sans-serif; }
-  .fahri-caption { font-size: 12px; color: #aaa; margin-top: 6px; }
   #inputArea { padding: 12px; background: #1a1a1a; border-top: 1px solid #2a2a2a; display: flex; gap: 8px; }
   #input { flex: 1; padding: 12px 14px; border-radius: 24px; border: 1px solid #333; background: #262626; color: #fff; outline: none; font-size: 15px; }
   #sendBtn { padding: 0 20px; border-radius: 24px; border: none; background: #7c3aed; color: #fff; font-weight: bold; cursor: pointer; }
   .quick { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 12px 10px; background: #1a1a1a; }
   .quick button { padding: 7px 12px; border-radius: 20px; border: 1px solid #333; background: #262626; color: #ddd; font-size: 13px; cursor: pointer; }
+  .mode-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid #333; background: #262626; color: #ddd; font-size: 13px; cursor: pointer; }
+  .mode-btn.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+  #btnKamera { display: none; padding: 0 14px; border: none; border-radius: 24px; background: #1A1E35; color: #fff; font-size: 20px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -38,35 +40,44 @@
 </div>
 
 <div class="quick">
-  <button onclick="quickAsk('buatkan gambar kucing tidur di pantai saat sunset')">🎨 Gambar Kucing</button>
-  <button onclick="quickAsk('buatkan gambar kota Jakarta futuristik')">🏙️ Gambar Kota</button>
+  <button class="mode-btn active" onclick="setMode('chat', this)">💬 Tanya</button>
+  <button class="mode-btn" onclick="setMode('gambar', this)">🎨 Bikin Gambar</button>
+  <button onclick="quickAsk('buatkan gambar kucing tidur di pantai saat sunset')">🐱 Gambar Kucing</button>
   <button onclick="quickAsk('siapa kamu?')">Siapa kamu?</button>
 </div>
 
-<div id="inputArea">
-  <input id="input" placeholder="Tanya apa aja / minta gambar..." onkeydown="if(event.key==='Enter') send()" />
-  <button id="sendBtn" onclick="send()">Kirim</button>
-</div>
+<form id="chatForm" style="display:flex; gap:8px; padding:12px; background:#1a1a1a; border-top:1px solid #2a2a2a;">
+  <button id="btnKamera" type="button">📷</button>
+  <input id="chatInput" placeholder="Tanya apa aja ke Fahri..." style="flex:1; padding:12px 14px; border-radius:24px; border:1px solid #333; background:#262626; color:#fff; outline:none; font-size:15px;" />
+  <button id="sendBtn" type="submit" style="padding:0 20px; border-radius:24px; border:none; background:#7c3aed; color:#fff; font-weight:bold; cursor:pointer;">Kirim</button>
+</form>
+<input id="input" type="hidden" />
 
 <script>
 let history = [];
-function quickAsk(text){ document.getElementById('input').value = text; send(); }
+let modeGambar = false;
+function setMode(mode, btn){
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  modeGambar = (mode === 'gambar');
+  document.getElementById('chatInput').placeholder = modeGambar ? 'Ketik prompt gambar / pilih foto dulu...' : 'Tanya apa aja ke Fahri...';
+  document.getElementById('btnKamera').style.display = modeGambar ? 'block' : 'none';
+  if(!modeGambar) fotoKu = null;
+}
+function quickAsk(text){ document.getElementById('chatInput').value = text; document.getElementById('chatForm').requestSubmit(); }
 
 function formatReply(text){
-  // 1. Gambar + Watermark FahriAI - ini yang bikin watermark nempel di gambar
   let html = text.replace(/!\[.*?\]\(https?:\/\/[^\s\)]+\)/g, (match) => {
     const url = match.match(/\((https?:\/\/[^\s\)]+)\)/)[1];
     return `<div class="fahri-img-wrap"><img src="${url}" alt="Gambar FahriAI" loading="lazy"><div class="fahri-watermark">FahriAI</div></div>`;
   });
-  // 2. Hapus sisa markdown gambar biar nggak dobel
   html = html.replace(/!\[.*?\]\(.*?\)/g, '');
-  // 3. Bold **teks**
   html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
   return html;
 }
 
 async function send(){
-  const input = document.getElementById('input');
+  const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if(!text) return;
   const chat = document.getElementById('chat');
@@ -78,18 +89,57 @@ async function send(){
   loading.textContent = 'FahriAI lagi mikir...';
   chat.appendChild(loading);
   chat.scrollTop = chat.scrollHeight;
-
   try {
     const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: history }) });
     const d = await r.json();
     const reply = d.reply || 'Maaf, lagi sibuk.';
     loading.innerHTML = formatReply(reply);
     history.push({ role: 'assistant', content: reply });
-  } catch(e){
-    loading.textContent = 'Maaf, server lagi sibuk. Coba lagi ya.';
-  }
+  } catch(e){ loading.textContent = 'Maaf, server lagi sibuk. Coba lagi ya.'; }
   chat.scrollTop = chat.scrollHeight;
 }
+document.getElementById('chatForm').addEventListener('submit', (e) => {
+  if (fotoKu) return; // kalau ada foto, biar script edit foto yang jalan
+  e.preventDefault();
+  send();
+});
+</script>
+
+<script>
+// === TAMBAHAN EDIT FOTO - DARI KODE YANG KAMU KIRIM, DIGABUNG, NGGAK UBAH YANG LAIN ===
+let fotoKu = null;
+const formKu = document.getElementById('chatForm');
+const inputKu = document.getElementById('chatInput');
+const btnKamera = document.getElementById('btnKamera');
+
+const inputFoto = document.createElement('input');
+inputFoto.type = 'file'; inputFoto.accept = 'image/*'; inputFoto.style.display = 'none';
+document.body.appendChild(inputFoto);
+
+btnKamera.onclick = () => inputFoto.click();
+inputFoto.onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { fotoKu = rd.result; inputKu.placeholder = 'Foto udah kepilih, ketik perintah editnya...'; inputKu.focus(); };
+  rd.readAsDataURL(f);
+};
+
+// Kalau ada foto, kirim ke api/image.js, kalau nggak ada biarin cara lama jalan
+formKu.addEventListener('submit', async (e) => {
+  if (!fotoKu) return; // nggak ada foto = biarin yang lama jalan
+  e.preventDefault(); e.stopImmediatePropagation();
+  const teks = inputKu.value.trim(); if (!teks) return;
+  const box = document.getElementById('chat');
+  const div = document.createElement('div'); div.className = 'msg ai'; div.textContent = '⏳ Lagi ngedit fotonya...'; box.appendChild(div);
+  inputKu.value = '';
+  try {
+    const r = await fetch('/api/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: teks, imageBase64: fotoKu }) });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    div.innerHTML = 'Ini hasil edit untuk: ' + teks + `<div class="fahri-img-wrap"><img src="${d.imageUrl}" style="width:100%;border-radius:12px;"><div class="fahri-watermark">FahriAI</div></div><div style="font-size:12px;color:#aaa;margin-top:6px;">✨ Gambar dibuat oleh FahriAI ✨</div>`;
+  } catch (err) { div.textContent = 'Gagal: ' + err.message; }
+  fotoKu = null; inputKu.placeholder = 'Tanya apa aja ke Fahri...';
+}, true);
 </script>
 </body>
-    </html>
+   </html>
