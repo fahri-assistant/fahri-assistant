@@ -85,14 +85,14 @@ Aturan WAJIB:
     // ===== 14 AI ANTRIAN - SEMUA AKTIF =====
     // 1. GROQ - Utama, 8 detik
     if (process.env.GROQ_API_KEY) {
-      for (const m of ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant']) {
+      for (const m of ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-120b', 'openai/gpt-oss-20b']) {
         const r = await tryOpenAI('https://api.groq.com/openai/v1/chat/completions', process.env.GROQ_API_KEY, m, 8000);
         if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
       }
     }
     // 2. OPENROUTER - 3 detik
     if (process.env.OPENROUTER_API_KEY) {
-      for (const m of ['deepseek/deepseek-chat-v3.1:free', 'meta-llama/llama-3.1-8b-instruct:free', 'qwen/qwen-2.5-72b-instruct:free']) {
+      for (const m of ['deepseek/deepseek-chat-v3-0324:free', 'meta-llama/llama-3.1-8b-instruct:free', 'qwen/qwen3-235b-a22b:free']) {
         const r = await tryOpenAI('https://openrouter.ai/api/v1/chat/completions', process.env.OPENROUTER_API_KEY, m, 3000, { 'HTTP-Referer': 'https://fahri-assistant.vercel.app', 'X-Title': 'Fahri Assistant' });
         if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
       }
