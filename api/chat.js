@@ -170,6 +170,14 @@ Aturan WAJIB:
       } catch {}
     }
 
+          // CADANGAN TERAKHIR - Pollinations, tanpa API Key, gratis
+try {
+  const pr = await fetch('https://text.pollinations.ai/' + encodeURIComponent(lastText), { headers: { 'Accept': 'text/plain' } });
+  if (pr.ok) {
+    const ptext = (await pr.text()).trim();
+    if (ptext) return await sendText(ptext);
+  }
+} catch {}
     return await sendText('Maaf, semua AI lagi sibuk sebentar. Coba kirim lagi pertanyaan yang sama ya, jangan ganti pertanyaan dulu.');
   } catch (e) {
     return res.status(200).json({ reply: 'Maaf, server lagi sibuk sebentar. Coba kirim lagi ya.' });
