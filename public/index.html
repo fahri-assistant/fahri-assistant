@@ -211,5 +211,53 @@ async function submit(){
   }).catch(function(e){ setStatus('Auth error: '+e.message+'\nCek file firebase-config.json di Vercel kamu'); if(window.__FAHRI_SET_USER__) window.__FAHRI_SET_USER__(null); });
 })();
 </script>
+  <script>
+// === TAMBAHAN EDIT FOTO - JANGAN UBAH YANG LAIN ===
+let fotoKu = null;
+const formKu = document.getElementById('chatForm');
+const inputKu = document.getElementById('chatInput');
+const btnKamera = document.createElement('button');
+btnKamera.textContent = '📷';
+btnKamera.type = 'button';
+btnKamera.style.cssText = 'display:none;padding:0 12px;border:none;border-radius:16px;background:#1A1E35;color:#fff;font-size:20px;cursor:pointer';
+formKu.prepend(btnKamera);
+
+const inputFoto = document.createElement('input');
+inputFoto.type = 'file'; inputFoto.accept = 'image/*'; inputFoto.style.display = 'none';
+document.body.appendChild(inputFoto);
+
+btnKamera.onclick = () => inputFoto.click();
+inputFoto.onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { fotoKu = rd.result; inputKu.placeholder = 'Foto udah kepilih, ketik perintah editnya...'; inputKu.focus(); };
+  rd.readAsDataURL(f);
+};
+
+// Munculin tombol kamera cuma kalau lagi di mode Gambar
+setInterval(() => {
+  const lagiGambar = document.querySelector('.mode-btn.active')?.textContent.includes('Gambar');
+  btnKamera.style.display = lagiGambar ? 'block' : 'none';
+  if (!lagiGambar) fotoKu = null;
+}, 500);
+
+// Kalau ada foto, kirim ke api/image.js, kalau nggak ada biarin cara lama jalan
+formKu.addEventListener('submit', async (e) => {
+  if (!fotoKu) return; // nggak ada foto = biarin yang lama jalan
+  e.preventDefault(); e.stopImmediatePropagation();
+  const teks = inputKu.value.trim(); if (!teks) return;
+  const box = document.getElementById('chatBox') || document.querySelector('.chat-box');
+  const div = document.createElement('div'); div.textContent = '⏳ Lagi ngedit fotonya...'; box.appendChild(div);
+  inputKu.value = '';
+  try {
+    const r = await fetch('/api/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: teks, imageBase64: fotoKu }) });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    div.textContent = 'Ini hasil edit untuk: ' + teks;
+    const img = document.createElement('img'); img.src = d.imageUrl; img.style.width = '100%'; img.style.borderRadius = '12px'; div.appendChild(img);
+  } catch (err) { div.textContent = 'Gagal: ' + err.message; }
+  fotoKu = null; inputKu.placeholder = 'Tanya apa aja ke Fahri...';
+}, true);
+  </script>
 </body>
                                                                                                                                                                                                                             </html>
