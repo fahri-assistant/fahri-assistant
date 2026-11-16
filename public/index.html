@@ -1,263 +1,95 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<link rel="manifest" href="/manifest.json">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0B0D1A">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Fahri Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FahriAI - Fahri Assistant</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{background:#0B0D1A;color:#fff;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
-header{padding:20px 16px 12px;text-align:center;background:linear-gradient(180deg,#141737,#0B0D1A);transition:all .25s ease;flex-shrink:0}
-header.small{padding:8px 16px}
-header.small h1{font-size:18px}
-header.small p, header.small .theme-row{display:none}
-header h1{font-size:26px;transition:all .25s}header p{font-size:13px;opacity:.6;margin-top:4px}
-.theme-row{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
-.theme-row button{padding:6px 12px;border-radius:999px;border:1px solid #262B4A;background:#1A1E35;color:#C7C9E0;font-size:12px;cursor:pointer}
-.theme-row button.active{background:#4F46E5;color:#fff}
-.modes{display:flex;gap:8px;padding:12px;max-width:720px;width:100%;margin:0 auto}
-.modes button{flex:1;padding:12px;border:none;border-radius:14px;font-weight:700;cursor:pointer;font-size:14px}
-#btnChat{background:#4F46E5;color:#fff}#btnImage{background:#1A1E35;color:#A5A8C3}
-#chatBox{flex:1;max-width:720px;width:100%;margin:0 auto;padding:12px 16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
-.msg{padding:13px 15px;border-radius:18px;max-width:88%;line-height:1.6;font-size:15px;white-space:pre-wrap;word-break:break-word}
-.user{background:#4F46E5;align-self:flex-end;border-bottom-right-radius:4px}
-.ai{background:#1A1E35;align-self:flex-start;border:1px solid #262B4A;border-bottom-left-radius:4px}
-.ai img{width:100%;border-radius:12px;margin-top:10px;display:block}
-.ai a{color:#B4B0FF;overflow-wrap:anywhere}
-.tts-btn{margin-top:8px;background:transparent;border:1px solid #262B4A;color:#C7C9E0;padding:5px 10px;border-radius:999px;font-size:12px;cursor:pointer}
-.input-area{max-width:720px;width:100%;margin:0 auto;padding:12px 16px calc(16px + env(safe-area-inset-bottom));display:flex;gap:10px;background:#0B0D1A;position:sticky;bottom:0}
-input{flex:1;min-width:0;padding:15px 16px;border-radius:16px;border:1px solid #262B4A;background:#141737;color:#fff;outline:none;font-size:15px}
-#sendBtn{padding:0 20px;border:none;border-radius:16px;background:#4F46E5;color:#fff;font-weight:700;cursor:pointer}
-.suggest{display:flex;gap:8px;flex-wrap:wrap;max-width:720px;width:100%;margin:0 auto;padding:0 16px 8px}
-.suggest button{padding:8px 12px;border-radius:20px;border:1px solid #262B4A;background:#141737;color:#C7C9E0;font-size:12px;cursor:pointer}
-button:disabled{opacity:.6;cursor:wait}
-#accountBar{text-align:center;padding:4px 12px 8px;font-size:12px;color:#C7C9E0}
-#splashScreen{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#0B0D1A;transition:opacity .45s ease}
-#splashScreen.leaving{opacity:0;pointer-events:none}.splash-center{display:flex;flex-direction:column;align-items:center;gap:24px}
-.splash-icon{width:94px;height:94px;border-radius:29px;background:linear-gradient(135deg,#A779FF,#4BA7EE);display:grid;place-items:center;font-size:48px;font-weight:800}.splash-brand{position:absolute;left:12px;right:12px;bottom:36px;text-align:center;font-size:18px;font-weight:700;letter-spacing:4px}
-dialog{margin:auto;border:1px solid #262B4A;border-radius:18px;padding:24px;background:#141737;color:white;width:min(90%,380px)}dialog::backdrop{background:#000a}dialog h2{margin-bottom:14px}dialog button{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid #262B4A;background:#4F46E5;color:white;cursor:pointer}#authStatus{font-size:12px;line-height:1.6;margin-top:14px;color:#FFD27A;white-space:pre-wrap}
-/* TAMBAHAN TEMA - cuma nimpa warna */
-[data-theme="terang"] body, body[data-theme="terang"]{background:#f5f5f7;color:#111}
-[data-theme="terang"] header{background:linear-gradient(180deg,#fff,#f5f5f7)}
-[data-theme="terang"] .ai{background:#ececff;border-color:#ddd;color:#111}
-[data-theme="terang"] .input-area{background:#f5f5f7}
-[data-theme="terang"] input{background:#fff;color:#111}
-[data-theme="terang"] .suggest button, [data-theme="terang"] .theme-row button{background:#fff;color:#333;border-color:#ddd}
-[data-theme="biru"] body{background:#071426;color:#fff}
-[data-theme="biru"] header{background:linear-gradient(180deg,#0e2a4a,#071426)}
-[data-theme="biru"] .ai{background:#132f52;border-color:#1e4a7a}
-[data-theme="biru"] input, [data-theme="biru"] .suggest button{background:#0e2a4a;color:#fff}
-[data-theme="pink"] body{background:#1c0f1a;color:#fff}
-[data-theme="pink"] header{background:linear-gradient(180deg,#2a1826,#1c0f1a)}
-[data-theme="pink"] .ai{background:#351f30;border-color:#4a2a42}
-[data-theme="pink"] input, [data-theme="pink"] .suggest button{background:#2a1826;color:#fff}
-.log-item{background:#1A1E35;padding:12px;border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:13px;text-align:left}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: #fff; height: 100vh; display: flex; flex-direction: column; }
+  header { padding: 14px 16px; background: #1a1a1a; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; gap: 10px; }
+  header .logo { width: 38px; height: 38px; background: linear-gradient(135deg,#7c3aed,#06b6d4); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+  header h1 { font-size: 17px; }
+  header p { font-size: 12px; color: #aaa; }
+  #chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { max-width: 85%; padding: 12px 14px; border-radius: 16px; line-height: 1.5; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+  .msg.user { align-self: flex-end; background: #7c3aed; }
+  .msg.ai { align-self: flex-start; background: #1f1f1f; border: 1px solid #2a2a2a; }
+  /* === WATERMARK FahriAI === */
+  .fahri-img-wrap { position: relative; display: inline-block; max-width: 100%; margin-top: 8px; }
+  .fahri-img-wrap img { width: 100%; max-width: 480px; border-radius: 12px; display: block; }
+  .fahri-watermark { position: absolute; bottom: 10px; right: 12px; background: rgba(0,0,0,0.6); color: #fff; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; pointer-events: none; font-family: sans-serif; }
+  .fahri-caption { font-size: 12px; color: #aaa; margin-top: 6px; }
+  #inputArea { padding: 12px; background: #1a1a1a; border-top: 1px solid #2a2a2a; display: flex; gap: 8px; }
+  #input { flex: 1; padding: 12px 14px; border-radius: 24px; border: 1px solid #333; background: #262626; color: #fff; outline: none; font-size: 15px; }
+  #sendBtn { padding: 0 20px; border-radius: 24px; border: none; background: #7c3aed; color: #fff; font-weight: bold; cursor: pointer; }
+  .quick { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 12px 10px; background: #1a1a1a; }
+  .quick button { padding: 7px 12px; border-radius: 20px; border: 1px solid #333; background: #262626; color: #ddd; font-size: 13px; cursor: pointer; }
 </style>
 </head>
 <body>
-<div id="splashScreen"><div class="splash-center"><div class="splash-icon">F</div><p>Menyiapkan ruang percakapan Anda…</p></div><div class="splash-brand">FAHRI ASSISTANT</div></div>
-<script>(()=>{const s=document.getElementById('splashScreen');setTimeout(()=>{s.classList.add('leaving');setTimeout(()=>s.remove(),500)},1400)})();</script>
-<header id="mainHeader"><h1 id="headerTitle">✨ Fahri Assistant</h1><p>Asisten Pintar Buatan Fahri</p>
-<div class="theme-row" id="themeRow">
-<button data-t="gelap" onclick="setThemeFahri('gelap')">🌑 Gelap</button>
-<button data-t="terang" onclick="setThemeFahri('terang')">☀️ Terang</button>
-<button data-t="biru" onclick="setThemeFahri('biru')">💙 Biru</button>
-<button data-t="pink" onclick="setThemeFahri('pink')">💗 Pink</button>
-</div>
+<header>
+  <div class="logo">F</div>
+  <div><h1>FahriAI</h1><p>Fahri Assistant • Online</p></div>
 </header>
-<button id="loginBtn" type="button" style="margin:8px auto 0;padding:8px 16px;border:none;border-radius:12px;background:#4F46E5;color:white;font-weight:700;cursor:pointer;display:block;">Masuk / Login</button>
-<div id="accountBar"><span id="accountText">Login diperlukan</span> <button id="accountButton" type="button" style="padding:6px 12px;border-radius:20px;border:1px solid #262B4A;background:#141737;color:#C7C9E0;">Masuk</button> <button id="riwayatBtn" type="button" onclick="openLogFahri()" style="padding:6px 12px;border-radius:20px;border:1px solid #262B4A;background:#141737;color:#C7C9E0;">📜 Riwayat</button> <button id="baruBtn" type="button" onclick="newChatFahri()" style="padding:6px 12px;border-radius:20px;border:1px solid #262B4A;background:#141737;color:#C7C9E0;">＋ Baru</button></div>
-<div class="modes"><button id="btnChat" type="button">💬 Chat</button><button id="btnImage" type="button">🎨 Bikin Gambar</button></div>
-<div class="suggest" id="suggestBox"><button type="button" data-question="Siapa kamu?">Siapa kamu?</button><button type="button" data-question="Buatkan pantun lucu">Pantun lucu</button><button type="button" data-question="Jelaskan mobil listrik dengan singkat">Mobil listrik</button></div>
-<div id="chatBox"><div class="msg ai">Halo! Aku <b>Fahri Assistant</b> 👋<br><br>Login dulu ya, baru bisa chat & bikin gambar.</div></div>
-<form class="input-area" id="chatForm"><input id="chatInput" placeholder="Tanya apa aja ke Fahri..." maxlength="6000" autocomplete="off"><button id="sendBtn" type="submit">Kirim</button></form>
-<dialog id="loginDialog"><h2>Masuk ke Fahri Assistant</h2><button id="googleLogin" type="button">Lanjutkan dengan Google</button><button id="githubLogin" type="button">Lanjutkan dengan GitHub</button><p id="authStatus">Menyiapkan login...</p><button id="closeLogin" type="button">Tutup</button></dialog>
-<dialog id="logDialog"><h2>📜 Riwayat Chat</h2><div id="logListFahri"></div><button type="button" onclick="clearLogsFahri()" style="background:transparent;color:#ff6b6b;border-color:#ff6b6b">Hapus Semua Riwayat</button><button type="button" onclick="document.getElementById('logDialog').close()">Tutup</button></dialog>
+
+<div id="chat">
+  <div class="msg ai">Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik "buatkan gambar kucing di pantai" ✨</div>
+</div>
+
+<div class="quick">
+  <button onclick="quickAsk('buatkan gambar kucing tidur di pantai saat sunset')">🎨 Gambar Kucing</button>
+  <button onclick="quickAsk('buatkan gambar kota Jakarta futuristik')">🏙️ Gambar Kota</button>
+  <button onclick="quickAsk('siapa kamu?')">Siapa kamu?</button>
+</div>
+
+<div id="inputArea">
+  <input id="input" placeholder="Tanya apa aja / minta gambar..." onkeydown="if(event.key==='Enter') send()" />
+  <button id="sendBtn" onclick="send()">Kirim</button>
+</div>
+
 <script>
-// ===== TAMBAHAN FITUR - TIDAK MENGUBAH LOGIKA LAMA =====
-const THEMEKEY_F='fahri_theme_v1';
-function setThemeFahri(t){ if(t==='gelap') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t); localStorage.setItem(THEMEKEY_F,t); document.querySelectorAll('#themeRow button').forEach(b=>b.classList.toggle('active',b.dataset.t===t)); }
-setThemeFahri(localStorage.getItem(THEMEKEY_F)||'gelap');
-function speakFahri(text){ if(!('speechSynthesis' in window)) return alert('HP ini belum support Text-to-Speech'); speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='id-ID'; speechSynthesis.speak(u); }
-const LOGKEY_F='fahri_logs_v1';
-let logsFahri=JSON.parse(localStorage.getItem(LOGKEY_F)||'[]');
-function saveLogsFahri(){ localStorage.setItem(LOGKEY_F,JSON.stringify(logsFahri)); }
-function openLogFahri(){ const list=document.getElementById('logListFahri'); if(logsFahri.length===0) list.innerHTML='<p style="font-size:13px;opacity:.7">Belum ada riwayat.</p>'; else list.innerHTML=logsFahri.map((l,i)=>`<div class="log-item" onclick="loadLogFahri(${i})"><b>${l.time}</b><br><small>${l.preview}</small><br><span style="color:#B4B0FF">Muat ulang chat ini →</span></div>`).join(''); document.getElementById('logDialog').showModal(); }
-function loadLogFahri(i){ const data=logsFahri[i]?.data||[]; localStorage.setItem('fahri_history_v1',JSON.stringify(data)); location.reload(); }
-function clearLogsFahri(){ if(confirm('Hapus semua riwayat?')){ logsFahri=[]; saveLogsFahri(); openLogFahri(); } }
-function newChatFahri(){ const h=JSON.parse(localStorage.getItem('fahri_history_v1')||'[]'); if(h.length===0) return; logsFahri.unshift({time:new Date().toLocaleString('id-ID'),preview:h[0]?.content?.slice(0,60)||'Chat',data:[...h]}); logsFahri=logsFahri.slice(0,30); saveLogsFahri(); localStorage.removeItem('fahri_history_v1'); location.reload(); }
-</script>
-<script>
-const box=document.getElementById('chatBox'),input=document.getElementById('chatInput'),send=document.getElementById('sendBtn');
-const chatBtn=document.getElementById('btnChat'),imageBtn=document.getElementById('btnImage'),suggest=document.getElementById('suggestBox');
-const dialog=document.getElementById('loginDialog'),accountButton=document.getElementById('accountButton');
-let mode='chat',busy=false,history=[];
-try{ history=JSON.parse(localStorage.getItem('fahri_history_v1')||'[]'); }catch(e){ history=[]; }
-(function restoreHistoryFahri(){ if(!history.length) return; const first=box.querySelector('.msg'); if(first) first.remove(); history.forEach(m=>{ const d=document.createElement('div'); d.className='msg '+(m.role==='user'?'user':'ai'); d.textContent=m.content; if(m.role==='assistant'){ const b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊 Dengarkan'; b.onclick=()=>speakFahri(m.content); d.appendChild(document.createElement('br')); d.appendChild(b); } box.appendChild(d); }); box.scrollTop=box.scrollHeight; })();
-const headerEl=document.getElementById('mainHeader');
-box.addEventListener('scroll',()=>{ if(box.scrollTop>40) headerEl.classList.add('small'); else if(history.length<=3) headerEl.classList.remove('small'); });
-function add(text,role){const d=document.createElement('div');d.className='msg '+role;d.textContent=text; if(role==='ai'){ const b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊 Dengarkan'; b.onclick=()=>speakFahri(text); d.appendChild(document.createElement('br')); d.appendChild(b); } box.append(d);box.scrollTop=box.scrollHeight;return d}
-function setBusy(v){busy=v;send.disabled=v;input.disabled=v;send.textContent=v?'Tunggu...':'Kirim'}
-function setMode(v){if(busy)return;mode=v;const c=mode==='chat';chatBtn.style.background=c?'#4F46E5':'#1A1E35';imageBtn.style.background=c?'#1A1E35':'#E11D48';suggest.style.display=c?'flex':'none';input.placeholder=c?'Tanya apa aja ke Fahri...':'Jelaskan gambar yang ingin dibuat...'}
-chatBtn.onclick=()=>setMode('chat');imageBtn.onclick=()=>setMode('image');
-document.querySelectorAll('[data-question]').forEach(b=>b.onclick=()=>{if(busy)return;setMode('chat');input.value=b.dataset.question;submit()});
-document.getElementById('chatForm').onsubmit=e=>{e.preventDefault();submit()};
-document.getElementById('closeLogin').onclick=()=>dialog.close();
-window.__FAHRI_SET_USER__=function(user){
-  window.__FAHRI_USER__=user||null;
-  var big=document.getElementById('loginBtn'); if(big) big.style.display=user?'none':'block';
-  var bar=document.getElementById('accountBar'); if(bar) bar.style.display=user?'none':'block';
-  var t=document.getElementById('accountText'); if(t) t.textContent=user?('Masuk sebagai '+(user.displayName||user.email)):'Login diperlukan';
-  accountButton.textContent=user?'Keluar':'Masuk';
-  if(user&&dialog.open) dialog.close();
-};
-accountButton.onclick=()=>{if(window.__FAHRI_USER__){if(confirm('Logout?')) window.__FAHRI_LOGOUT__&&window.__FAHRI_LOGOUT__();}else dialog.showModal();};
-document.getElementById('headerTitle').style.cursor='pointer';
-document.getElementById('headerTitle').onclick=function(){if(window.__FAHRI_USER__){if(confirm('Logout?')) window.__FAHRI_LOGOUT__&&window.__FAHRI_LOGOUT__();}};
-async function submit(){
-  if(busy)return; const text=input.value.trim(); if(!text)return;
-  if(!window.__FAHRI_USER__){dialog.showModal();return;}
-  setBusy(true); input.value=''; add(text,'user');
-  const loading=add(mode==='chat'?'⏳ Lagi mikir...':'🎨 Lagi bikin gambar...','ai');
-  const q=text.toLowerCase();
-  if(mode==='chat' && (q.includes('sudah login') || q.includes('apakah saya') || q.includes('siapa saya') || q.includes('login'))){
-    const u=window.__FAHRI_USER__;
-    loading.textContent = u ? 'Iya, kamu udah login sebagai ' + (u.displayName||u.email) + ' ✅' : 'Kamu belum login. Pencet tombol Masuk / Login dulu ya.';
-    setBusy(false); input.focus(); return;
+let history = [];
+function quickAsk(text){ document.getElementById('input').value = text; send(); }
+
+function formatReply(text){
+  // 1. Gambar + Watermark FahriAI - ini yang bikin watermark nempel di gambar
+  let html = text.replace(/!\[.*?\]\(https?:\/\/[^\s\)]+\)/g, (match) => {
+    const url = match.match(/\((https?:\/\/[^\s\)]+)\)/)[1];
+    return `<div class="fahri-img-wrap"><img src="${url}" alt="Gambar FahriAI" loading="lazy"><div class="fahri-watermark">FahriAI</div></div>`;
+  });
+  // 2. Hapus sisa markdown gambar biar nggak dobel
+  html = html.replace(/!\[.*?\]\(.*?\)/g, '');
+  // 3. Bold **teks**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  return html;
+}
+
+async function send(){
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if(!text) return;
+  const chat = document.getElementById('chat');
+  chat.innerHTML += `<div class="msg user">${text}</div>`;
+  input.value = '';
+  history.push({ role: 'user', content: text });
+  const loading = document.createElement('div');
+  loading.className = 'msg ai';
+  loading.textContent = 'FahriAI lagi mikir...';
+  chat.appendChild(loading);
+  chat.scrollTop = chat.scrollHeight;
+
+  try {
+    const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: history }) });
+    const d = await r.json();
+    const reply = d.reply || 'Maaf, lagi sibuk.';
+    loading.innerHTML = formatReply(reply);
+    history.push({ role: 'assistant', content: reply });
+  } catch(e){
+    loading.textContent = 'Maaf, server lagi sibuk. Coba lagi ya.';
   }
-  if(mode==='chat' && (q.includes('siapa kamu') || q==='halo' || q==='hai' || q==='hi')){
-    loading.textContent = 'Halo! Aku Fahri Assistant 👋 Asisten pintar buatan Fahri. Aku bisa bantu jawab pertanyaan, bikin pantun, bantu tugas, sampai bikin gambar. Mau dibantu apa?';
-    setBusy(false); input.focus(); return;
-  }
-  try{
-    if(mode==='chat'){
-      const msgs=[
-        {role:'system',content:'Kamu adalah Fahri Assistant, asisten pintar buatan Fahri, ramah, singkat, jawab dalam Bahasa Indonesia.'},
-        ...history.slice(-6),
-        {role:'user',content:text}
-      ];
-      let reply='';
-      const jalur=[
-        async ()=>{
-          const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs})});
-          if(!r.ok) throw new Error('groq gagal');
-          const d=await r.json(); return (d.reply||'').trim();
-        },
-        async ()=>{
-          const r=await fetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'openai',messages:msgs,temperature:0.7,max_tokens:800})});
-          if(!r.ok) throw new Error('jalur2 gagal');
-          const d=await r.json(); return (d.choices?.[0]?.message?.content||'').trim();
-        }
-        // JALUR 3 DIHAPUS - INI YANG BIKIN JAWABAN NGAWUR, JANGAN DIPAKE LAGI
-      ];
-      for(let i=0;i<jalur.length;i++){
-        try{
-          reply = await Promise.race([
-            jalur[i](),
-            new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), 25000))
-          ]);
-          if(reply) break;
-        }catch(e){ }
-      }
-      if(!reply) throw new Error('AI lagi sibuk sebentar, coba lagi.');
-      let bersih = reply.replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').trim();
-      loading.textContent=bersih; const b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊 Dengarkan'; b.onclick=()=>speakFahri(bersih); loading.appendChild(document.createElement('br')); loading.appendChild(b);
-      history.push({role:'user',content:text},{role:'assistant',content:bersih});
-      localStorage.setItem('fahri_history_v1',JSON.stringify(history));
-    } else {
-      const url='https://image.pollinations.ai/prompt/'+encodeURIComponent(text)+'?width=1024&height=1024&seed='+Math.floor(Math.random()*999999)+'&nologo=true';
-      loading.textContent='Ini hasil untuk: '+text;
-      const img=document.createElement('img'); img.alt=text; img.src=url; img.onload=()=>box.scrollTop=box.scrollHeight; img.onerror=()=>{loading.textContent='Gagal bikin gambar, coba deskripsi lain.'}; loading.append(img);
-      const a=document.createElement('a'); a.textContent='Buka gambar ukuran penuh'; a.href=url; a.target='_blank'; a.style.display='block'; a.style.marginTop='10px'; loading.append(a);
-    }
-  }catch(e){ loading.textContent='Maaf, AI lagi sibuk sebentar. Coba kirim lagi ya.'; input.value=text; }
-  finally{ setBusy(false); input.focus(); }
+  chat.scrollTop = chat.scrollHeight;
 }
 </script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script>
-(function(){
-  function setStatus(m){var el=document.getElementById('authStatus'); if(el) el.textContent=m;}
-  var loginBtn=document.getElementById('loginBtn'),loginDialog=document.getElementById('loginDialog');
-  if(loginBtn&&loginDialog) loginBtn.onclick=()=>{setStatus('Silakan pilih login Google / GitHub');loginDialog.showModal();};
-  setStatus('Menyiapkan login...');
-  fetch('/firebase-config.json',{cache:'no-store'}).then(r=>{if(!r.ok) throw new Error('firebase-config.json tidak ketemu (HTTP '+r.status+')');return r.json();}).then(cfg=>{
-    if(!cfg.apiKey) throw new Error('firebase-config.json kosong / apiKey tidak ada');
-    if(!firebase.apps.length) firebase.initializeApp(cfg);
-    var auth=firebase.auth();
-    window.__FAHRI_LOGOUT__=function(){return auth.signOut().then(()=>location.reload());};
-    auth.getRedirectResult().then(function(result){
-      if(result&&result.user){ if(window.__FAHRI_SET_USER__) window.__FAHRI_SET_USER__(result.user); }
-    }).catch(function(e){ setStatus('Login gagal: '+(e.message||e.code)); });
-    auth.onAuthStateChanged(function(user){
-      if(window.__FAHRI_SET_USER__) window.__FAHRI_SET_USER__(user);
-      setStatus(user?('Berhasil login sebagai: '+(user.displayName||user.email)):'Auth siap - silakan login');
-    });
-    function doLogin(provider){
-      setStatus('Membuka login Google...');
-      auth.signInWithPopup(provider).catch(function(e){
-        setStatus('Popup diblokir, pindah ke Redirect... ('+e.code+')');
-        return auth.signInWithRedirect(provider);
-      }).catch(function(e2){ setStatus('Login gagal: '+(e2.message||e2.code)); });
-    }
-    document.getElementById('googleLogin').onclick=()=>doLogin(new firebase.auth.GoogleAuthProvider());
-    document.getElementById('githubLogin').onclick=()=>doLogin(new firebase.auth.GithubAuthProvider());
-  }).catch(function(e){ setStatus('Auth error: '+e.message+'\nCek file firebase-config.json di Vercel kamu'); if(window.__FAHRI_SET_USER__) window.__FAHRI_SET_USER__(null); });
-})();
-</script>
-  <script>
-// === TAMBAHAN EDIT FOTO - JANGAN UBAH YANG LAIN ===
-let fotoKu = null;
-const formKu = document.getElementById('chatForm');
-const inputKu = document.getElementById('chatInput');
-const btnKamera = document.createElement('button');
-btnKamera.textContent = '📷';
-btnKamera.type = 'button';
-btnKamera.style.cssText = 'display:none;padding:0 12px;border:none;border-radius:16px;background:#1A1E35;color:#fff;font-size:20px;cursor:pointer';
-formKu.prepend(btnKamera);
-
-const inputFoto = document.createElement('input');
-inputFoto.type = 'file'; inputFoto.accept = 'image/*'; inputFoto.style.display = 'none';
-document.body.appendChild(inputFoto);
-
-btnKamera.onclick = () => inputFoto.click();
-inputFoto.onchange = (e) => {
-  const f = e.target.files[0]; if (!f) return;
-  const rd = new FileReader();
-  rd.onload = () => { fotoKu = rd.result; inputKu.placeholder = 'Foto udah kepilih, ketik perintah editnya...'; inputKu.focus(); };
-  rd.readAsDataURL(f);
-};
-
-// Munculin tombol kamera cuma kalau lagi di mode Gambar
-setInterval(() => {
-  const lagiGambar = document.querySelector('.mode-btn.active')?.textContent.includes('Gambar');
-  btnKamera.style.display = lagiGambar ? 'block' : 'none';
-  if (!lagiGambar) fotoKu = null;
-}, 500);
-
-// Kalau ada foto, kirim ke api/image.js, kalau nggak ada biarin cara lama jalan
-formKu.addEventListener('submit', async (e) => {
-  if (!fotoKu) return; // nggak ada foto = biarin yang lama jalan
-  e.preventDefault(); e.stopImmediatePropagation();
-  const teks = inputKu.value.trim(); if (!teks) return;
-  const box = document.getElementById('chatBox') || document.querySelector('.chat-box');
-  const div = document.createElement('div'); div.textContent = '⏳ Lagi ngedit fotonya...'; box.appendChild(div);
-  inputKu.value = '';
-  try {
-    const r = await fetch('/api/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: teks, imageBase64: fotoKu }) });
-    const d = await r.json();
-    if (d.error) throw new Error(d.error);
-    div.textContent = 'Ini hasil edit untuk: ' + teks;
-    const img = document.createElement('img'); img.src = d.imageUrl; img.style.width = '100%'; img.style.borderRadius = '12px'; div.appendChild(img);
-  } catch (err) { div.textContent = 'Gagal: ' + err.message; }
-  fotoKu = null; inputKu.placeholder = 'Tanya apa aja ke Fahri...';
-}, true);
-  </script>
 </body>
-                                                                                                                                                                                                                            </html>
+    </html>
