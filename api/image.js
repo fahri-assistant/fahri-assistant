@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
     // Kalau nggak ada foto, bikin baru kayak dulu
     if (!imageBase64) {
-      const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?width=1024&height=1024&seed=' + Math.floor(Math.random()*999999) + '&nologo=true';
+      const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?width=1024&height=1024&seed=' + Math.floor(Math.random()*999999) + '&nologo=true&private=true&enhance=true';
       return res.json({ imageUrl: url });
     }
 
@@ -22,4 +22,4 @@ export default async function handler(req, res) {
     }
     return res.json({ error: 'Gagal edit. Cek TOGETHER_API_KEY di Vercel lalu Redeploy.' });
   } catch (e) { return res.json({ error: 'Gagal, coba lagi ya.' }); }
-        }
+  }
