@@ -9,57 +9,100 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <style>
 :root{--bg:#0f0f1a;--card:#1a1a2e;--text:#fff;--muted:#a0a0b8;--accent:#7c3aed;--user:#7c3aed;--ai:#23233a;--input:#1e1e32}
-[data-theme="terang"]{--bg:#f5f5f7;--card:#ffffff;--text:#111;--muted:#666;--accent:#7c3aed;--user:#7c3aed;--ai:#ececff;--input:#ffffff}
+[data-theme="terang"]{--bg:#f5f5f7;--card:#fff;--text:#111;--muted:#666;--accent:#7c3aed;--user:#7c3aed;--ai:#ececff;--input:#fff}
 [data-theme="biru"]{--bg:#071426;--card:#0e2a4a;--text:#fff;--muted:#9db8d6;--accent:#2563eb;--user:#2563eb;--ai:#132f52;--input:#0e2a4a}
 [data-theme="pink"]{--bg:#1c0f1a;--card:#2a1826;--text:#fff;--muted:#d8a8c8;--accent:#ec4899;--user:#ec4899;--ai:#351f30;--input:#2a1826}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-header{background:var(--card);padding:28px 16px 20px;text-align:center;transition:all .25s ease;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.hidden{display:none!important}
+/* LOGIN */
+#loginPage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+.login-logo{width:90px;height:90px;border-radius:22px;object-fit:cover;background:#fff;margin-bottom:14px}
+.login-title{font-size:28px;font-weight:800;text-align:center}
+.login-sub{color:var(--muted);font-size:13px;margin:6px 0 18px;text-align:center}
+.login-card{background:var(--card);width:100%;max-width:360px;padding:18px;border-radius:18px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;padding:9px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:var(--input);color:var(--text);font-size:12px;cursor:pointer}
+.tabs button.active{background:var(--accent);color:#fff}
+.login-card input{width:100%;background:var(--input);color:var(--text);border:1px solid rgba(255,255,255,.12);padding:12px 14px;border-radius:12px;outline:none;margin-bottom:10px;font-size:14px}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:13px;border-radius:999px;font-weight:700;cursor:pointer;margin-top:2px}
+.google-btn{width:100%;background:#fff;color:#111;border:none;padding:12px;border-radius:999px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+.login-note{font-size:11px;color:var(--muted);text-align:center;margin-top:10px}
+/* CHAT */
+header{background:var(--card);padding:28px 16px 20px;text-align:center;transition:all .25s;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
 header.small{padding:10px 16px}
 header.small .big-title{font-size:18px}
 header.small .subtitle, header.small .theme-row{display:none}
-header.small .top-row{justify-content:space-between}
-.top-row{display:flex;align-items:center;justify-content:center;gap:10px}
-.logo{width:38px;height:38px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.big-title{font-size:28px;font-weight:800;transition:all .25s}
-.subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.head-left{display:flex;align-items:center;gap:10px}
+.head-logo{width:38px;height:38px;border-radius:10px;object-fit:cover}
+.big-title{font-size:26px;font-weight:800}
+.subtitle{color:var(--muted);font-size:12px;text-align:left}
 .theme-row{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap}
 .theme-row button{background:var(--input);color:var(--text);border:1px solid rgba(255,255,255,.12);padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer}
-.theme-row button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.theme-row button.active{background:var(--accent);color:#fff}
 .header-actions{display:flex;gap:6px}
 .header-actions button{background:var(--input);color:var(--text);border:1px solid rgba(255,255,255,.12);padding:7px 10px;border-radius:999px;font-size:12px;cursor:pointer}
 #chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
 .msg{max-width:85%;padding:12px 14px;border-radius:16px;line-height:1.5;font-size:15px;white-space:pre-wrap;word-break:break-word}
 .msg.user{align-self:flex-end;background:var(--user);color:#fff;border-bottom-right-radius:4px}
-.msg.ai{align-self:flex-start;background:var(--ai);color:var(--text);border-bottom-left-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--ai);border-bottom-left-radius:4px}
 .msg.ai .tts{margin-top:8px;background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--text);padding:5px 10px;border-radius:999px;font-size:12px;cursor:pointer}
 .empty{text-align:center;color:var(--muted);margin:auto;font-size:14px;padding:20px}
-.input-area{padding:12px;background:var(--card);display:flex;gap:8px;border-top:1px solid rgba(255,255,255,.08);padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-input{flex:1;background:var(--input);color:var(--text);border:1px solid rgba(255,255,255,.12);padding:13px 16px;border-radius:999px;outline:none;font-size:15px}
+.input-area{padding:12px;background:var(--card);display:flex;gap:8px;border-top:1px solid rgba(255,255,255,.08)}
+.input-area input{flex:1;background:var(--input);color:var(--text);border:1px solid rgba(255,255,255,.12);padding:13px 16px;border-radius:999px;outline:none}
 button.send{background:var(--accent);color:#fff;border:none;padding:13px 18px;border-radius:999px;font-weight:700;cursor:pointer}
-button.send:disabled{opacity:.5}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;align-items:flex-end;justify-content:center}
 .modal.open{display:flex}
-.modal-box{background:var(--card);color:var(--text);width:100%;max-height:75vh;border-radius:20px 20px 0 0;padding:18px;overflow-y:auto}
-.modal-box h3{margin-bottom:12px}
+.modal-box{background:var(--card);width:100%;max-height:75vh;border-radius:20px 20px 0 0;padding:18px;overflow-y:auto}
 .log-item{background:var(--input);padding:12px;border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:13px}
-.log-item small{color:var(--muted)}
-.modal-box .close{width:100%;margin-top:12px;padding:12px;border-radius:999px;border:none;background:var(--accent);color:#fff;font-weight:700}
 </style>
 </head>
 <body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <img src="/icon-192.png" class="login-logo" onerror="this.src='/icon-512.png'">
+  <div class="login-title">Fahri Assistant</div>
+  <div class="login-sub">Masuk dulu untuk mulai chat</div>
+  <div class="login-card">
+    <div class="tabs">
+      <button id="tabNama" class="active" onclick="switchTab('nama')">Nama</button>
+      <button id="tabEmail" onclick="switchTab('email')">Email</button>
+      <button id="tabGoogle" onclick="switchTab('google')">Google</button>
+    </div>
+    <!-- 1. NAMA -->
+    <div id="formNama">
+      <input id="namaInput" placeholder="Masukkan Nama Kamu">
+      <button class="login-btn" onclick="loginNama()">Masuk dengan Nama</button>
+    </div>
+    <!-- 2. EMAIL + PASSWORD -->
+    <div id="formEmail" class="hidden">
+      <input id="emailInput" type="email" placeholder="Email">
+      <input id="passInput" type="password" placeholder="Password">
+      <button class="login-btn" onclick="loginEmail()">Login / Daftar</button>
+      <div class="login-note">Kalau email belum ada, otomatis dibuatkan akun baru di HP ini.</div>
+    </div>
+    <!-- 3. GOOGLE -->
+    <div id="formGoogle" class="hidden">
+      <button class="google-btn" onclick="loginGoogle()">G Login dengan Google</button>
+      <div class="login-note">Login Google versi gratis, datanya disimpan di HP ini.</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPage" class="hidden" style="display:flex;flex-direction:column;height:100dvh;width:100%">
 <header id="header">
   <div class="top-row">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div class="logo">🤖</div>
-      <div style="text-align:left">
-        <div class="big-title">Fahri Assistant</div>
-        <div class="subtitle">AI kamu, siap bantu kapan aja</div>
-      </div>
+    <div class="head-left">
+      <img src="/icon-192.png" class="head-logo" onerror="this.src='/icon-512.png'">
+      <div><div class="big-title">Fahri Assistant</div><div class="subtitle" id="welcomeText">Halo!</div></div>
     </div>
     <div class="header-actions">
       <button onclick="openLog()">📜 Riwayat</button>
       <button onclick="newChat()">＋ Baru</button>
+      <button onclick="logout()">Keluar</button>
     </div>
   </div>
   <div class="theme-row">
@@ -69,129 +112,105 @@ button.send:disabled{opacity:.5}
     <button data-t="pink" onclick="setTheme('pink')">💗 Pink</button>
   </div>
 </header>
-
 <div id="chat"></div>
-
 <div class="input-area">
   <input id="input" placeholder="Tanya apa aja..." onkeydown="if(event.key==='Enter') send()">
   <button class="send" id="sendBtn" onclick="send()">Kirim</button>
 </div>
-
-<div class="modal" id="logModal">
-  <div class="modal-box">
-    <h3>📜 Log Chat</h3>
-    <div id="logList"></div>
-    <button onclick="clearLogs()" style="width:100%;padding:11px;border-radius:999px;border:1px solid #ef4444;background:transparent;color:#ef4444;margin-top:6px">Hapus Semua Riwayat</button>
-    <button class="close" onclick="closeLog()">Tutup</button>
-  </div>
 </div>
 
+<div class="modal" id="logModal"><div class="modal-box"><h3>📜 Log Chat</h3><div id="logList"></div><button onclick="clearLogs()" style="width:100%;padding:11px;border-radius:999px;border:1px solid #ef4444;background:transparent;color:#ef4444;margin-top:6px">Hapus Semua Riwayat</button><button onclick="closeLog()" style="width:100%;margin-top:12px;padding:12px;border-radius:999px;border:none;background:var(--accent);color:#fff;font-weight:700">Tutup</button></div></div>
+
 <script>
-const chatEl=document.getElementById('chat');
-const inputEl=document.getElementById('input');
-const headerEl=document.getElementById('header');
-const KEY='fahri_chat_v1';
-const LOGKEY='fahri_logs_v1';
-const THEMEKEY='fahri_theme_v1';
-let history=JSON.parse(localStorage.getItem(KEY)||'[]');
-let logs=JSON.parse(localStorage.getItem(LOGKEY)||'[]');
-
-function setTheme(t){
-  if(t==='gelap') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme',t);
-  localStorage.setItem(THEMEKEY,t);
-  document.querySelectorAll('.theme-row button').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+const chatEl=document.getElementById('chat'), inputEl=document.getElementById('input'), headerEl=document.getElementById('header');
+const KEY='fahri_chat_v1', LOGKEY='fahri_logs_v1', THEMEKEY='fahri_theme_v1', USERKEY='fahri_user_v1', USERSKEY='fahri_users_v1';
+// --- PULIHIN CHAT LAMA: cari semua kunci lama ---
+function loadOldChat(){
+  let h=JSON.parse(localStorage.getItem(KEY)||'[]');
+  if(h.length>0) return h;
+  const keys=['chatHistory','messages','fahri_chat','history','chat','fahri_messages','conversations'];
+  for(const k of keys){
+    try{ const v=JSON.parse(localStorage.getItem(k)||'[]'); if(Array.isArray(v)&&v.length>0&&v[0].content) return v; }catch(e){}
+  }
+  // cari semua key di localStorage yang isinya chat
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    try{ const v=JSON.parse(localStorage.getItem(k)); if(Array.isArray(v)&&v.length>0&&v[0].role&&v[0].content) return v; }catch(e){}
+  }
+  return [];
 }
+let history=loadOldChat();
+let logs=JSON.parse(localStorage.getItem(LOGKEY)||'[]');
+function setTheme(t){ if(t==='gelap') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t); localStorage.setItem(THEMEKEY,t); document.querySelectorAll('.theme-row button').forEach(b=>b.classList.toggle('active',b.dataset.t===t)); }
 setTheme(localStorage.getItem(THEMEKEY)||'gelap');
-
-function save(){ localStorage.setItem(KEY, JSON.stringify(history)); }
-function saveLogs(){ localStorage.setItem(LOGKEY, JSON.stringify(logs)); }
-
+function save(){ localStorage.setItem(KEY,JSON.stringify(history)); }
+function saveLogs(){ localStorage.setItem(LOGKEY,JSON.stringify(logs)); }
+function switchTab(t){
+  document.getElementById('tabNama').classList.toggle('active',t==='nama');
+  document.getElementById('tabEmail').classList.toggle('active',t==='email');
+  document.getElementById('tabGoogle').classList.toggle('active',t==='google');
+  document.getElementById('formNama').classList.toggle('hidden',t!=='nama');
+  document.getElementById('formEmail').classList.toggle('hidden',t!=='email');
+  document.getElementById('formGoogle').classList.toggle('hidden',t!=='google');
+}
+function doLogin(user){ localStorage.setItem(USERKEY,JSON.stringify(user)); showApp(user); }
+function loginNama(){ const n=document.getElementById('namaInput').value.trim(); if(!n) return alert('Isi namamu dulu'); doLogin({name:n,type:'nama'}); }
+function loginEmail(){
+  const email=document.getElementById('emailInput').value.trim(), pass=document.getElementById('passInput').value;
+  if(!email||!pass) return alert('Isi email & password');
+  let users=JSON.parse(localStorage.getItem(USERSKEY)||'{}');
+  if(users[email]&&users[email]!==pass) return alert('Password salah untuk email ini');
+  users[email]=pass; localStorage.setItem(USERSKEY,JSON.stringify(users));
+  doLogin({name:email.split('@')[0],email,type:'email'});
+}
+function loginGoogle(){
+  const nama=prompt('Masukkan nama akun Google kamu:'); if(!nama) return;
+  doLogin({name:nama,type:'google'});
+}
+function logout(){ localStorage.removeItem(USERKEY); document.getElementById('appPage').classList.add('hidden'); document.getElementById('loginPage').style.display='flex'; }
+function showApp(user){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('appPage').classList.remove('hidden');
+  document.getElementById('welcomeText').textContent='Halo, '+user.name+'!';
+  render();
+}
 function render(){
   chatEl.innerHTML='';
-  if(history.length===0){
-    chatEl.innerHTML='<div class="empty">Halo, aku Fahri Assistant.<br>Tanya apa aja, chat kamu ke-save otomatis, nggak gampang ke-reset lagi.</div>';
-    return;
-  }
+  if(history.length===0){ chatEl.innerHTML='<div class="empty">Halo, aku Fahri Assistant.<br>Chat kamu ke-save otomatis.</div>'; return; }
   history.forEach(m=>{
-    const d=document.createElement('div');
-    d.className='msg '+(m.role==='user'?'user':'ai');
-    d.textContent=m.content;
-    if(m.role==='assistant'){
-      const b=document.createElement('button');
-      b.className='tts'; b.textContent='🔊 Dengarkan';
-      b.onclick=()=>speak(m.content);
-      d.appendChild(document.createElement('br'));
-      d.appendChild(b);
-    }
+    const d=document.createElement('div'); d.className='msg '+(m.role==='user'?'user':'ai'); d.textContent=m.content;
+    if(m.role==='assistant'){ const b=document.createElement('button'); b.className='tts'; b.textContent='🔊 Dengarkan'; b.onclick=()=>speak(m.content); d.appendChild(document.createElement('br')); d.appendChild(b); }
     chatEl.appendChild(d);
   });
   chatEl.scrollTop=chatEl.scrollHeight;
-  checkHeader();
+  if(history.length>3) headerEl.classList.add('small'); else headerEl.classList.remove('small');
 }
-function checkHeader(){
-  if(chatEl.scrollHeight>chatEl.clientHeight+80 || history.length>3) headerEl.classList.add('small');
-  else headerEl.classList.remove('small');
-}
-chatEl.addEventListener('scroll',()=>{
-  if(chatEl.scrollTop>40) headerEl.classList.add('small');
-  else if(history.length<=3) headerEl.classList.remove('small');
-});
-
-function speak(text){
-  if(!('speechSynthesis' in window)){ alert('HP ini belum support Text-to-Speech'); return; }
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang='id-ID'; u.rate=1;
-  speechSynthesis.speak(u);
-}
-
+chatEl.addEventListener('scroll',()=>{ if(chatEl.scrollTop>40) headerEl.classList.add('small'); else if(history.length<=3) headerEl.classList.remove('small'); });
+function speak(t){ if(!('speechSynthesis' in window)) return alert('HP ini belum support TTS'); speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='id-ID'; speechSynthesis.speak(u); }
 async function send(){
-  const text=inputEl.value.trim();
-  if(!text) return;
-  inputEl.value='';
-  history.push({role:'user',content:text});
-  render();
+  const text=inputEl.value.trim(); if(!text) return; inputEl.value='';
+  history.push({role:'user',content:text}); render();
   document.getElementById('sendBtn').disabled=true;
   try{
-    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});
+    // KIRIM FORMAT LAMA BIAR GROQ NGERTI + KIRIM JUGA FORMAT BARU BUAT JAGA-JAGA
+    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,messages:history,history:history})});
     const data=await res.json();
-    const reply=data.reply||data.choices?.[0]?.message?.content||'Maaf, tidak ada jawaban.';
-    history.push({role:'assistant',content:reply});
-    save();
-    logs.unshift({time:new Date().toLocaleString('id-ID'),preview:text.slice(0,60),data:[...history]});
-    logs=logs.slice(0,30);
-    saveLogs();
-    render();
-  }catch(e){
-    history.push({role:'assistant',content:'Error koneksi, coba lagi ya.'});
-    save(); render();
-  }
-  document.getElementById('sendBtn').disabled=false;
-  inputEl.focus();
+    const reply=data.reply||data.response||data.answer||data.message||data.choices?.[0]?.message?.content||data.choices?.[0]?.text||'';
+    if(!reply) throw new Error('empty');
+    history.push({role:'assistant',content:reply}); save();
+    logs.unshift({time:new Date().toLocaleString('id-ID'),preview:text.slice(0,60),data:[...history]}); logs=logs.slice(0,30); saveLogs(); render();
+  }catch(e){ history.push({role:'assistant',content:'Error koneksi, coba lagi ya. Cek API Groq / Vercel.'}); save(); render(); }
+  document.getElementById('sendBtn').disabled=false; inputEl.focus();
 }
-function newChat(){
-  if(history.length===0) return;
-  logs.unshift({time:new Date().toLocaleString('id-ID'),preview:history[0]?.content?.slice(0,60)||'Chat',data:[...history]});
-  saveLogs();
-  history=[]; save(); render();
-}
-function openLog(){
-  const list=document.getElementById('logList');
-  if(logs.length===0) list.innerHTML='<p style="color:var(--muted);font-size:13px">Belum ada riwayat.</p>';
-  else list.innerHTML=logs.map((l,i)=>`<div class="log-item" onclick="loadLog(${i})"><b>${l.time}</b><br><small>${l.preview}</small><br><span style="color:#7c3aed">Muat ulang chat ini →</span></div>`).join('');
-  document.getElementById('logModal').classList.add('open');
-}
+function newChat(){ if(history.length===0) return; logs.unshift({time:new Date().toLocaleString('id-ID'),preview:history[0]?.content?.slice(0,60)||'Chat',data:[...history]}); saveLogs(); history=[]; save(); render(); }
+function openLog(){ const list=document.getElementById('logList'); if(logs.length===0) list.innerHTML='<p>Belum ada riwayat.</p>'; else list.innerHTML=logs.map((l,i)=>`<div class="log-item" onclick="loadLog(${i})"><b>${l.time}</b><br><small>${l.preview}</small><br><span style="color:#7c3aed">Muat ulang →</span></div>`).join(''); document.getElementById('logModal').classList.add('open'); }
 function closeLog(){ document.getElementById('logModal').classList.remove('open'); }
-function loadLog(i){
-  history=[...(logs[i].data||[])];
-  save(); render(); closeLog();
-}
+function loadLog(i){ history=[...(logs[i].data||[])]; save(); render(); closeLog(); }
 function clearLogs(){ if(confirm('Hapus semua riwayat?')){ logs=[]; saveLogs(); openLog(); } }
-render();
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
-}
+// AUTO LOGIN KALAU UDAH PERNAH LOGIN
+const savedUser=JSON.parse(localStorage.getItem(USERKEY)||'null');
+if(savedUser) showApp(savedUser);
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }); }
 </script>
 </body>
-  </html>
+    </html>
