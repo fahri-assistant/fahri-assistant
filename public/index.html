@@ -15,14 +15,12 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f0f;color:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-  /* HEADER KECIL - muncul setelah chat mulai */
   #topBar{display:none;padding:10px 16px;background:rgba(20,20,20,.92);backdrop-filter:blur(12px);border-bottom:1px solid #2a2a2a;align-items:center;gap:10px;position:relative;z-index:10}
   #topBar.show{display:flex}
   #topBar .logo{width:34px;height:34px;background:linear-gradient(135deg,#7c3aed,#06b6d4,#f472b6);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0}
   #topBar h1{font-size:16px}
   #topBar p{font-size:11px;color:#aaa}
-  /* HERO BESAR - di awal */
-  #hero{padding:28px 20px 10px;text-align:center;background:radial-gradient(ellipse at top,rgba(124,58,237,.35) 0%,transparent 65%),#0f0f0f;transition:all .4s}
+  #hero{padding:28px 20px 10px;text-align:center;background:radial-gradient(ellipse at top,rgba(124,58,237,.35) 0%,transparent 65%),#0f0f0f}
   #hero.hide{display:none}
   #hero .hero-logo{width:84px;height:84px;margin:0 auto 14px;background:linear-gradient(135deg,#7c3aed,#06b6d4,#f472b6);border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:900;box-shadow:0 10px 30px rgba(124,58,237,.5)}
   #hero h1{font-size:28px;letter-spacing:-.5px;background:linear-gradient(90deg,#fff,#c4b5fd,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -50,15 +48,13 @@
 </head>
 <body>
 
-<!-- HEADER KECIL -->
 <div id="topBar">
   <div class="logo">F</div>
-  <div style="flex:1"><h1>Fahri Assistant</h1><p id="topSubtitle">Online • Selamat malam</p></div>
+  <div style="flex:1"><h1>Fahri Assistant</h1><p id="topSubtitle">Fahri Assistant • Online</p></div>
   <div id="topTime" style="font-size:12px;color:#aaa;text-align:right"></div>
   <div style="width:10px;height:10px;background:#22c55e;border-radius:50%"></div>
 </div>
 
-<!-- HERO BESAR DI AWAL -->
 <div id="hero">
   <div class="hero-logo">F</div>
   <h1>Fahri Assistant</h1>
@@ -88,7 +84,6 @@
 let history = [];
 let modeGambar = false;
 let chatStarted = false;
-
 function collapseHero(){
   if(chatStarted) return; chatStarted = true;
   document.getElementById('hero').classList.add('hide');
@@ -104,7 +99,6 @@ function setMode(mode, btn){
   updateHeader();
 }
 function quickAsk(text){ document.getElementById('chatInput').value = text; document.getElementById('chatForm').requestSubmit(); }
-
 function formatReply(text){
   let html = text.replace(/!\[.*?\]\(https?:\/\/[^\s\)]+\)/g, (match) => {
     const url = match.match(/\((https?:\/\/[^\s\)]+)\)/)[1];
@@ -114,7 +108,6 @@ function formatReply(text){
   html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
   return html;
 }
-
 async function send(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
@@ -125,17 +118,35 @@ async function send(){
   input.value = '';
   history.push({ role: 'user', content: text });
 
-  // MODE GAMBAR via teks
-  if(modeGambar || /buatkan gambar|bikin gambar|gambar.*kucing|lukis|draw/i.test(text) && !fotoKu){
-    const loading = document.createElement('div'); loading.className='msg ai'; loading.textContent='Lagi bikin gambarnya...'; chat.appendChild(loading); chat.scrollTop=chat.scrollHeight;
-    const img = document.createElement('img');
-    img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=512&height=512&nologo=true`;
-    img.onload = ()=>{ loading.innerHTML = 'Nih gambarnya: <div class="fahri-img-wrap"><img src="'+img.src+'"><div class="fahri-watermark">FahriAI</div></div>'; };
-    img.onerror = ()=>{ loading.textContent='Maaf gambar gagal, coba lagi ya.'; };
+  // MODE GAMBAR - PAKE API KEY DULU, CADANGAN POLLINATIONS
+  if(modeGambar || (/buatkan gambar|bikin gambar|gambar|lukis|draw/i.test(text) && !fotoKu)){
+    const loading = document.createElement('div'); loading.className='msg ai'; loading.textContent='Lagi bikin gambarnya pake AI Pro...'; chat.appendChild(loading); chat.scrollTop=chat.scrollHeight;
+    try{
+      const r = await fetch('/api/image', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: text }) });
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      loading.innerHTML = 'Nih gambarnya: <div class="fahri-img-wrap"><img src="'+d.imageUrl+'"><div class="fahri-watermark">FahriAI</div></div>';
+    }catch(err){
+      // CADANGAN: Pollinations 3x percobaan, cek ukuran biar nggak dapet gambar "At its limit"
+      loading.textContent = 'Server Pro sibuk, dicoba pake cadangan gratis...';
+      let okUrl = null;
+      for(let i=0;i<3;i++){
+        try{
+          const seed = Math.floor(Math.random()*99999)+i;
+          const u2 = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=512&height=512&seed=${seed}&nologo=true&model=flux`;
+          const rr = await fetch(u2);
+          const bb = await rr.blob();
+          if(bb.size < 15000) continue;
+          okUrl = URL.createObjectURL(bb); break;
+        }catch(e){}
+      }
+      if(okUrl) loading.innerHTML = 'Nih gambarnya: <div class="fahri-img-wrap"><img src="'+okUrl+'"><div class="fahri-watermark">FahriAI</div></div>';
+      else loading.innerHTML = 'Maaf, server gambar lagi penuh banget 😅<br>Coba kirim lagi yang sama persis dalam 10 detik ya.';
+    }
     return;
   }
 
-  // CHAT STREAMING - kata per kata
+  // CHAT STREAMING - kata per kata, 14 AI
   const loading = document.createElement('div'); loading.className='msg ai'; loading.innerHTML='<span class="cursor"></span>'; chat.appendChild(loading); chat.scrollTop=chat.scrollHeight;
   let full = '';
   try{
@@ -212,4 +223,4 @@ function updateHeader(){
 setInterval(updateHeader,1000); updateHeader();
 </script>
 </body>
-   </html>
+ </html>
