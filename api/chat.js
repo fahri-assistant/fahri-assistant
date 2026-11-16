@@ -10,6 +10,22 @@ export default async function handler(req, res) {
     const lastText = msgs[msgs.length - 1]?.content || '';
     if (!lastText) return res.status(200).json({ reply: 'Halo! Mau tanya apa?' });
 
+    // === DETEKSI MINTA GAMBAR ===
+    const lower = lastText.toLowerCase();
+    const isImageRequest = lower.includes('buatkan gambar') || lower.includes('buat gambar') || lower.includes('buatkan foto') || lower.includes('buat foto') || lower.includes('gambar') || lower.includes('foto') || lower.includes('lukis') || lower.includes('desain') || lower.includes('generate image') || lower.includes('gambar kan');
+
+    if (isImageRequest) {
+      let prompt = lastText.replace(/buatkan gambar|buat gambar|buatkan foto|buat foto|gambar kan|tolong|please|dong/gi, '').trim();
+      if (!prompt) prompt = lastText;
+      const enhancedPrompt = prompt + ', high quality, detailed, beautiful, realistic, 4k, with small watermark text "FahriAI" in bottom right corner';
+      const seed = Math.floor(Math.random() * 999999);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true&private=true&enhance=true`;
+      return res.status(200).json({ 
+        reply: `Nih gambarnya, aku buatin sesuai permintaan kamu: "${prompt}"\n\n![gambar](${imageUrl})\n\n✨ Gambar dibuat oleh FahriAI ✨`,
+        image: imageUrl
+      });
+    }
+
     const systemPrompt = `Kamu adalah Fahri Assistant, asisten pintar buatan Fahri AI Akbar.
 Aturan WAJIB:
 - Jawab dalam Bahasa Indonesia yang santai, jelas, dan masuk akal
@@ -75,22 +91,22 @@ Aturan WAJIB:
       const out = await tryOpenAI('https://api.minimax.io/v1/chat/completions', process.env.MINIMAX_API_KEY, 'MiniMax-M2.1');
       if (out) return res.status(200).json({ reply: out });
     }
-    // 8. KLUSTER - BARU
+    // 8. KLUSTER
     if (process.env.KLUSTER_API_KEY) {
       const out = await tryOpenAI('https://api.kluster.ai/v1/chat/completions', process.env.KLUSTER_API_KEY, 'klusterai/Meta-Llama-3.3-70B-Instruct-Turbo');
       if (out) return res.status(200).json({ reply: out });
     }
-    // 9. HYPERBOLIC - BARU
+    // 9. HYPERBOLIC
     if (process.env.HYPERBOLIC_API_KEY) {
       const out = await tryOpenAI('https://api.hyperbolic.xyz/v1/chat/completions', process.env.HYPERBOLIC_API_KEY, 'meta-llama/Meta-Llama-3.1-70B-Instruct');
       if (out) return res.status(200).json({ reply: out });
     }
-    // 10. FEATHERLESS - BARU
+    // 10. FEATHERLESS
     if (process.env.FEATHERLESS_API_KEY) {
       const out = await tryOpenAI('https://api.featherless.ai/v1/chat/completions', process.env.FEATHERLESS_API_KEY, 'meta-llama/Meta-Llama-3.1-8B-Instruct');
       if (out) return res.status(200).json({ reply: out });
     }
-    // 11. ARLI AI - BARU
+    // 11. ARLI AI
     if (process.env.ARLI_API_KEY) {
       const out = await tryOpenAI('https://api.arliai.com/v1/chat/completions', process.env.ARLI_API_KEY, 'ArliAI/Mistral-Small-3.1-24B-Instruct-2503');
       if (out) return res.status(200).json({ reply: out });
@@ -117,7 +133,7 @@ Aturan WAJIB:
         if (out) return res.status(200).json({ reply: out });
       } catch (e) {}
     }
-    // 15. POLLINATIONS - TANPA KEY
+    // 15. POLLINATIONS TEKS - TANPA KEY
     try {
       const r = await fetch('https://text.pollinations.ai/' + encodeURIComponent(lastText));
       const t = await r.text();
@@ -128,4 +144,4 @@ Aturan WAJIB:
   } catch (e) {
     return res.status(200).json({ reply: 'Maaf, server lagi sibuk sebentar. Coba kirim lagi ya.' });
   }
-          }
+      }
