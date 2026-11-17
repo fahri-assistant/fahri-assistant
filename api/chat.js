@@ -149,6 +149,13 @@ Aturan WAJIB:
       const r = await tryOpenAI('https://llm.chutes.ai/v1/chat/completions', process.env.CHUTES_API_KEY, 'deepseek-ai/DeepSeek-V3-0324', 3000);
       if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
     }
+    // TOGETHER - 8 detik
+if (process.env.TOGETHER_API_KEY) {
+  for (const m of ['meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo', 'deepseek-ai/DeepSeek-V3']) {
+    const r = await tryOpenAI('https://api.together.xyz/v1/chat/completions', process.env.TOGETHER_API_KEY, m, 8000);
+    if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
+  }
+                                }
     // 13. HUGGING FACE - 3 detik
     if (process.env.HF_API_KEY) {
       const r = await tryOpenAI('https://router.huggingface.co/v1/chat/completions', process.env.HF_API_KEY, 'meta-llama/Meta-Llama-3.1-8B-Instruct', 3000);
