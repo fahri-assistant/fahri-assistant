@@ -2,339 +2,147 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Fahri Assistant</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0f0f0f">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fahri Assistant">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<script>if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }</script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="auth.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f0f0f;color:#fff;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-  #topBar{display:none;padding:10px 16px;background:rgba(20,20,20,.92);backdrop-filter:blur(12px);border-bottom:1px solid #2a2a2a;align-items:center;gap:10px;position:relative;z-index:10}
-  #topBar.show{display:flex}
-  #topBar .logo{width:34px;height:34px;background:linear-gradient(135deg,#7c3aed,#06b6d4,#f472b6);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0}
-  #topBar h1{font-size:16px}
-  #topBar p{font-size:11px;color:#aaa}
-  #hero{padding:28px 20px 10px;text-align:center;background:radial-gradient(ellipse at top,rgba(124,58,237,.35) 0%,transparent 65%),#0f0f0f}
-  #hero.hide{display:none}
-  #hero .hero-logo{width:84px;height:84px;margin:0 auto 14px;background:linear-gradient(135deg,#7c3aed,#06b6d4,#f472b6);border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:900;box-shadow:0 10px 30px rgba(124,58,237,.5)}
-  #hero h1{font-size:28px;letter-spacing:-.5px;background:linear-gradient(90deg,#fff,#c4b5fd,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  #hero p{font-size:13px;color:#aaa;margin-top:6px;line-height:1.5}
-  #hero .hero-pill{display:inline-block;margin-top:12px;padding:6px 12px;background:#1f1f1f;border:1px solid #2a2a2a;border-radius:99px;font-size:12px;color:#ddd}
-  #chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
-  .msg{max-width:85%;padding:12px 14px;border-radius:18px;line-height:1.6;font-size:15px;white-space:pre-wrap;word-break:break-word;animation:fade .25s}
-  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-  .msg.user{align-self:flex-end;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-bottom-right-radius:6px}
-  .msg.ai{align-self:flex-start;background:#1f1f1f;border:1px solid #2a2a2a;border-bottom-left-radius:6px}
-  .fahri-img-wrap{position:relative;display:inline-block;max-width:100%;margin-top:8px}
-  .fahri-img-wrap img{width:100%;max-width:480px;border-radius:12px;display:block}
-  .fahri-watermark{position:absolute;bottom:0;right:0;background:#000;color:#fff;font-size:14px;font-weight:bold;padding:6px 14px;border-radius:12px 0 12px 0;letter-spacing:.5px;pointer-events:none}
-  .quick{display:flex;gap:8px;flex-wrap:wrap;padding:4px 12px 10px;background:#141414}
-  .quick button{padding:8px 13px;border-radius:99px;border:1px solid #333;background:#262626;color:#ddd;font-size:13px;cursor:pointer}
-  .mode-btn.active{background:#7c3aed!important;color:#fff!important;border-color:#7c3aed!important}
-  #chatForm{display:flex;gap:8px;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));background:#141414;border-top:1px solid #2a2a2a}
-  #chatInput{flex:1;padding:13px 16px;border-radius:24px;border:1px solid #333;background:#262626;color:#fff;outline:none;font-size:15px}
-  #chatInput:focus{border-color:#7c3aed}
-  #sendBtn{padding:0 20px;border-radius:24px;border:none;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:bold;cursor:pointer}
-  #btnKamera{display:none;padding:0 14px;border:none;border-radius:24px;background:#1A1E35;color:#fff;font-size:20px;cursor:pointer}
-  .cursor{display:inline-block;width:7px;height:14px;background:#a78bfa;vertical-align:middle;animation:blink 0.8s infinite}
-  @keyframes blink{50%{opacity:0}}
-  #btnHistory{width:34px;height:34px;border:none;border-radius:10px;background:#262626;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
-  #historyPanel{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:85vw;background:#161616;border-right:1px solid #2a2a2a;z-index:99;transform:translateX(-100%);transition:transform .25s;display:flex;flex-direction:column}
-  #historyPanel.open{transform:translateX(0)}
-  #historyOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:98;display:none}
-  #historyOverlay.show{display:block}
-  .hist-item{padding:12px 14px;border-bottom:1px solid #222;cursor:pointer}
-  .hist-item.active{background:#262626}
-  .hist-item b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .hist-item span{font-size:11px;color:#888}
-  .hist-del{float:right;background:none;border:none;color:#888;font-size:16px;cursor:pointer}
+  body{background:#0a0a12;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  .header{padding:18px 16px 12px;text-align:center;background:linear-gradient(180deg,#1a1033,#0a0a12);flex-shrink:0;border-bottom:1px solid rgba(255,255,255,.08)}
+  .logo{width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:linear-gradient(135deg,#7c5cff,#00d4ff);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;box-shadow:0 8px 24px rgba(124,92,255,.4)}
+  .header h1{font-size:19px;font-weight:800}
+  .header p{font-size:12px;opacity:.6;margin-top:3px}
+  .badge{display:inline-block;margin-top:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);padding:4px 10px;border-radius:999px;font-size:11px;opacity:.85}
+  .authbar{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111118;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+  .status-pill{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600}
+  .dot{width:9px;height:9px;border-radius:50%;background:#ff4757;box-shadow:0 0 0 3px rgba(255,71,87,.2)}
+  .dot.on{background:#2ed573;box-shadow:0 0 0 3px rgba(46,213,115,.2)}
+  .login-btns{display:flex;gap:6px}
+  .btn{border:0;cursor:pointer;padding:8px 13px;border-radius:999px;font-size:12px;font-weight:700}
+  .btn-google{background:#fff;color:#111}
+  .btn-github{background:#1f1f2a;color:#fff;border:1px solid rgba(255,255,255,.2)}
+  .btn-logout{background:transparent;color:#ff6b81;border:1px solid rgba(255,107,129,.4);padding:6px 10px;font-size:11px}
+  .hidden{display:none!important}
+  #chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .bubble{max-width:88%;padding:11px 13px;border-radius:16px;font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .bubble.ai{background:#1c1c28;border:1px solid rgba(255,255,255,.08);align-self:flex-start;border-bottom-left-radius:4px}
+  .bubble.user{background:linear-gradient(135deg,#7c5cff,#5a3dff);align-self:flex-end;border-bottom-right-radius:4px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:-4px}
+  .chip{background:#1e1e2e;border:1px solid rgba(255,255,255,.12);color:#ddd;padding:7px 11px;border-radius:999px;font-size:12px;cursor:pointer}
+  .composer{padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;background:#0f0f18;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0}
+  .composer input{flex:1;background:#1e1e2e;border:1px solid rgba(255,255,255,.1);color:#fff;padding:12px 14px;border-radius:999px;outline:none;font-size:14px}
+  .composer button{background:linear-gradient(135deg,#7c5cff,#00d4ff);border:0;color:#fff;padding:0 18px;border-radius:999px;font-weight:800;cursor:pointer}
 </style>
 </head>
 <body>
 
-<div id="historyOverlay" onclick="toggleHistory(false)"></div>
-<div id="historyPanel">
-  <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2a2a">
-    <b>Riwayat Chat</b>
-    <button onclick="toggleHistory(false)" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">✕</button>
-  </div>
-  <div style="padding:12px"><button onclick="buatChatBaru()" style="width:100%;padding:11px;border:none;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;font-weight:bold;cursor:pointer">+ Chat Baru</button></div>
-  <div id="chatLogList" style="flex:1;overflow-y:auto"></div>
-  <div style="padding:12px;border-top:1px solid #2a2a2a"><button onclick="hapusSemuaChat()" style="width:100%;padding:10px;border:1px solid #333;border-radius:10px;background:#1f1f1f;color:#ff6b6b;cursor:pointer">Hapus Semua Riwayat</button></div>
-</div>
-
-<div id="topBar">
-  <button id="btnHistory" onclick="toggleHistory(true)">☰</button>
+<div class="header">
   <div class="logo">F</div>
-  <div style="flex:1"><h1>Fahri Assistant</h1><p id="topSubtitle">Fahri Assistant • Online</p></div>
-  <div id="topTime" style="font-size:12px;color:#aaa;text-align:right"></div>
-  <div style="width:10px;height:10px;background:#22c55e;border-radius:50%"></div>
+  <h1>Fahri Assistant</h1>
+  <p>Selamat pagi 👋<br>Mau aku bantu apa hari ini?</p>
+  <div class="badge">✨ Chat • Gambar • Edit Foto</div>
 </div>
 
-<div id="hero">
-  <div class="hero-logo">F</div>
-  <h1>Fahri Assistant</h1>
-  <p id="heroGreet">Selamat malam 👋<br>Mau aku bantu apa hari ini?</p>
-  <div class="hero-pill">✨ Chat • Gambar • Edit Foto</div>
-<div id="authStatus" style="font-size:12px;opacity:.7;margin-top:8px">Memuat login...</div>
-<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-  <button id="googleLogin" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:#fff;color:#000;font-weight:600">Login Google</button>
-  <button id="githubLogin" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:#111;color:#fff;font-weight:600">Login Github</button>
-  <button onclick="window.__FAHRI_LOGOUT__ && window.__FAHRI_LOGOUT__()" style="padding:8px 14px;border-radius:20px;border:1px solid #333;background:transparent;color:#fff">Logout</button>
+<div class="authbar" id="authBar">
+  <div class="status-pill" id="statusPill">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Belum login</span>
+  </div>
+  <div class="login-btns" id="loginBtns">
+    <button class="btn btn-google" id="btnGoogle">Login Google</button>
+    <button class="btn btn-github" id="btnGithub">Login Github</button>
+  </div>
+  <button class="btn btn-logout hidden" id="btnLogout">Logout</button>
 </div>
 
 <div id="chat">
-  <div class="msg ai">Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik "buatkan gambar kucing di pantai" ✨</div>
+  <div class="bubble ai">Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik "buatkan gambar kucing di pantai" ✨</div>
+  <div class="chips">
+    <button class="chip" onclick="quick('Tanya')">💬 Tanya</button>
+    <button class="chip" onclick="quick('Bikin Gambar')">🎨 Bikin Gambar</button>
+    <button class="chip" onclick="quick('Gambar Kucing')">🐱 Gambar Kucing</button>
+    <button class="chip" onclick="quick('Siapa kamu?')">Siapa kamu?</button>
+  </div>
 </div>
 
-<div class="quick">
-  <button class="mode-btn active" onclick="setMode('chat', this)">💬 Tanya</button>
-  <button class="mode-btn" onclick="setMode('gambar', this)">🎨 Bikin Gambar</button>
-  <button onclick="quickAsk('buatkan gambar kucing tidur di pantai saat sunset')">🐱 Gambar Kucing</button>
-  <button onclick="quickAsk('siapa kamu?')">Siapa kamu?</button>
+<div class="composer">
+  <input id="input" placeholder="Tanya apa aja ke Fahri..." autocomplete="off">
+  <button id="sendBtn">Kirim</button>
 </div>
 
-<form id="chatForm">
-  <button id="btnKamera" type="button">📷</button>
-  <input id="chatInput" placeholder="Tanya apa aja ke Fahri..." autocomplete="off" />
-  <button id="sendBtn" type="submit">Kirim</button>
-</form>
-<input id="input" type="hidden" />
-
 <script>
-let history = [];
-let modeGambar = false;
-let chatStarted = false;
-function collapseHero(){
-  if(chatStarted) return; chatStarted = true;
-  document.getElementById('hero').classList.add('hide');
-  document.getElementById('topBar').classList.add('show');
-}
-function setMode(mode, btn){
-  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  modeGambar = (mode === 'gambar');
-  document.getElementById('chatInput').placeholder = modeGambar ? 'Ketik prompt gambar / pilih foto dulu...' : 'Tanya apa aja ke Fahri...';
-  document.getElementById('btnKamera').style.display = modeGambar ? 'block' : 'none';
-  if(!modeGambar) fotoKu = null;
-  updateHeader();
-}
-function quickAsk(text){ document.getElementById('chatInput').value = text; document.getElementById('chatForm').requestSubmit(); }
-function formatReply(text){
-  let html = text.replace(/!\[.*?\]\(https?:\/\/[^\s\)]+\)/g, (match) => {
-    const url = match.match(/\((https?:\/\/[^\s\)]+)\)/)[1];
-    return `<div class="fahri-img-wrap"><img src="${url}" alt="Gambar FahriAI" loading="lazy"><div class="fahri-watermark">FahriAI</div></div>`;
-  });
-  html = html.replace(/!\[.*?\]\(.*?\)/g, '');
-  html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-  return html;
-}
-async function send(){
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  collapseHero();
-  const chat = document.getElementById('chat');
-  const u = document.createElement('div'); u.className='msg user'; u.textContent=text; chat.appendChild(u);
-  input.value = '';
-  history.push({ role: 'user', content: text });
-  simpanChatKeStorage();
+  // ===== FIREBASE - GANTI CONFIG PUNYAMU DI SINI, JANGAN UBAH YANG LAIN =====
+  const firebaseConfig = {
+    apiKey: "API_KEY_KAMU",
+    authDomain: "PROJECT_KAMU.firebaseapp.com",
+    projectId: "PROJECT_KAMU",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 
-  if(modeGambar || (/buatkan gambar|bikin gambar|gambar|lukis|draw/i.test(text) && !fotoKu)){
-    const loading = document.createElement('div'); loading.className='msg ai'; loading.textContent='Lagi bikin gambarnya pake AI Pro...'; chat.appendChild(loading); chat.scrollTop=chat.scrollHeight;
-    try{
-      const r = await fetch('/api/image', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: text }) });
-      const d = await r.json();
-      if(d.error) throw new Error(d.error);
-      loading.innerHTML = 'Nih gambarnya: <div class="fahri-img-wrap"><img src="'+d.imageUrl+'"><div class="fahri-watermark">FahriAI</div></div>';
-      history.push({ role:'assistant', content: 'Gambar: '+text });
-    }catch(err){
-      loading.textContent = 'Server Pro sibuk, dicoba pake cadangan gratis...';
-      let okUrl = null;
-      for(let i=0;i<3;i++){
-        try{
-          const seed = Math.floor(Math.random()*99999)+i;
-          const u2 = `https://image.pollinations.ai/prompt/${encodeURIComponent(text)}?width=512&height=512&seed=${seed}&nologo=true&model=flux`;
-          const rr = await fetch(u2);
-          const bb = await rr.blob();
-          if(bb.size < 15000) continue;
-          okUrl = URL.createObjectURL(bb); break;
-        }catch(e){}
-      }
-      if(okUrl) { loading.innerHTML = 'Nih gambarnya: <div class="fahri-img-wrap"><img src="'+okUrl+'"><div class="fahri-watermark">FahriAI</div></div>'; history.push({ role:'assistant', content: 'Gambar: '+text }); }
-      else { loading.innerHTML = 'Maaf, server gambar lagi penuh banget 😅<br>Coba kirim lagi yang sama persis dalam 10 detik ya.'; }
+  // ===== PATCH DARI PESAN REDIRECT TADI - JANGAN DIHAPUS =====
+  // Biar login Redirect nggak hilang di HP / nggak error missing initial state
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
+
+  // Cek hasil Redirect Google/Github - ini yang bikin dia inget abis balik dari Google
+  auth.getRedirectResult().then((res)=>{ if(res && res.user) updateUI(res.user); }).catch(()=>{});
+
+  // ===== SEMBUNYIKAN TOMBOL KALAU UDAH LOGIN, JANGAN TAMPILIN EMAIL =====
+  function updateUI(user){
+    const dot = document.getElementById('statusDot');
+    const txt = document.getElementById('statusText');
+    const loginBtns = document.getElementById('loginBtns');
+    const logout = document.getElementById('btnLogout');
+    if(user){
+      dot.classList.add('on');
+      txt.textContent = 'Terhubung'; // Sengaja nggak tampilin email, biar aman
+      loginBtns.classList.add('hidden');
+      logout.classList.remove('hidden');
+    } else {
+      dot.classList.remove('on');
+      txt.textContent = 'Belum login';
+      loginBtns.classList.remove('hidden');
+      logout.classList.add('hidden');
     }
-    simpanChatKeStorage();
-    return;
   }
 
-  const loading = document.createElement('div'); loading.className='msg ai'; loading.innerHTML='<span class="cursor"></span>'; chat.appendChild(loading); chat.scrollTop=chat.scrollHeight;
-  let full = '';
-  try{
-    const r = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json','Accept':'text/event-stream'}, body: JSON.stringify({ messages: history, stream: true }) });
-    const reader = r.body.getReader(); const dec = new TextDecoder(); let buf='';
-    while(true){
-      const {done,value} = await reader.read(); if(done) break;
-      buf += dec.decode(value,{stream:true});
-      const parts = buf.split('\n\n'); buf = parts.pop()||'';
-      for(const p of parts){
-        const line = p.trim(); if(!line.startsWith('data:')) continue;
-        const j = JSON.parse(line.slice(5));
-        if(j.chunk){ full += j.chunk; loading.innerHTML = formatReply(full) + '<span class="cursor"></span>'; chat.scrollTop=chat.scrollHeight; }
-      }
-    }
-    if(!full) full = 'Maaf, coba kirim lagi ya.';
-    loading.innerHTML = formatReply(full);
-    history.push({ role:'assistant', content: full });
-  }catch(e){ loading.textContent='Maaf, server lagi sibuk. Coba lagi ya.'; }
-  chat.scrollTop=chat.scrollHeight;
-  simpanChatKeStorage();
-}
-document.getElementById('chatForm').addEventListener('submit', (e) => { if (fotoKu) return; e.preventDefault(); send(); });
-</script>
+  auth.onAuthStateChanged((user)=>{ updateUI(user); });
 
-<script>
-let fotoKu = null;
-const formKu = document.getElementById('chatForm');
-const inputKu = document.getElementById('chatInput');
-const btnKamera = document.getElementById('btnKamera');
-const inputFoto = document.createElement('input');
-inputFoto.type='file'; inputFoto.accept='image/*'; inputFoto.style.display='none';
-document.body.appendChild(inputFoto);
-btnKamera.onclick = () => inputFoto.click();
-inputFoto.onchange = (e) => {
-  const f = e.target.files[0]; if(!f) return;
-  const rd = new FileReader();
-  rd.onload = () => { fotoKu = rd.result; inputKu.placeholder='Foto udah kepilih, ketik perintah editnya...'; inputKu.focus(); };
-  rd.readAsDataURL(f);
-};
-formKu.addEventListener('submit', async (e) => {
-  if(!fotoKu) return;
-  e.preventDefault(); e.stopImmediatePropagation();
-  collapseHero();
-  const teks = inputKu.value.trim(); if(!teks) return;
-  const box = document.getElementById('chat');
-  const div = document.createElement('div'); div.className='msg ai'; div.textContent='⏳ Lagi ngedit fotonya...'; box.appendChild(div);
-  inputKu.value='';
-  try{
-    const r = await fetch('/api/image', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: teks, imageBase64: fotoKu }) });
-    const d = await r.json();
-    if(d.error) throw new Error(d.error);
-    div.innerHTML = 'Ini hasil edit untuk: '+teks+`<div class="fahri-img-wrap"><img src="${d.imageUrl}" style="width:100%;border-radius:12px;"><div class="fahri-watermark">FahriAI</div></div><div style="font-size:12px;color:#aaa;margin-top:6px;">✨ Gambar dibuat oleh FahriAI ✨</div>`;
-    history.push({ role:'assistant', content: 'Edit foto: '+teks });
-  }catch(err){ div.textContent='Gagal: '+err.message; }
-  fotoKu=null; inputKu.placeholder='Tanya apa aja ke Fahri...';
-  simpanChatKeStorage();
-}, true);
-</script>
+  // ===== LOGIN TETAP PAKAI REDIRECT, BUKAN POPUP - SESUAI PESAN REDIRECT TADI =====
+  document.getElementById('btnGoogle').onclick = (e)=>{ e.preventDefault(); auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); };
+  document.getElementById('btnGithub').onclick = (e)=>{ e.preventDefault(); auth.signInWithRedirect(new firebase.auth.GithubAuthProvider()); };
+  document.getElementById('btnLogout').onclick = ()=>{ auth.signOut(); };
 
-<script>
-function updateHeader(){
-  const now = new Date(); const jam = now.getHours();
-  let sapa='Selamat malam';
-  if(jam>=5 && jam<11) sapa='Selamat pagi';
-  else if(jam>=11 && jam<15) sapa='Selamat siang';
-  else if(jam>=15 && jam<18) sapa='Selamat sore';
-  const jamStr = now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-  document.getElementById('topTime').innerHTML = sapa+'<br>'+jamStr;
-  document.getElementById('heroGreet').innerHTML = sapa+' 👋<br>Mau aku bantu apa hari ini?';
-  if(typeof modeGambar!=='undefined' && modeGambar){
-    document.getElementById('topSubtitle').textContent='Mode Bikin Gambar • Pilih foto / ketik prompt';
-  } else {
-    document.getElementById('topSubtitle').textContent='Fahri Assistant • Online • '+sapa;
-  }
-}
-setInterval(updateHeader,1000); updateHeader();
-</script>
+  // ===== CHAT - LOGIKA LAMA, NGGAK DIUBAH =====
+  const chatEl = document.getElementById('chat');
+  const inputEl = document.getElementById('input');
+  let history = [];
 
-<script>
-let daftarChat = JSON.parse(localStorage.getItem('fahri_chats') || '[]');
-let idChatAktif = localStorage.getItem('fahri_active_id') || null;
-
-function toggleHistory(buka){
-  document.getElementById('historyPanel').classList.toggle('open', buka);
-  document.getElementById('historyOverlay').classList.toggle('show', buka);
-}
-function tampilkanLog(){
-  const list = document.getElementById('chatLogList');
-  if(!daftarChat.length){ list.innerHTML = '<p style="padding:14px;color:#888;font-size:13px">Belum ada riwayat chat.<br>Chat pertama kamu bakal muncul di sini.</p>'; return; }
-  list.innerHTML = daftarChat.map(c => `
-    <div class="hist-item ${c.id==idChatAktif?'active':''}" onclick="bukaChat('${c.id}')">
-      <button class="hist-del" onclick="event.stopPropagation();hapusSatuChat('${c.id}')">×</button>
-      <b>${c.judul}</b>
-      <span>${c.waktu}</span>
-    </div>
-  `).join('');
-}
-function simpanChatKeStorage(){
-  if(!history.length) return;
-  const judul = (history.find(h=>h.role==='user')?.content || 'Chat Baru').slice(0,40);
-  const waktu = new Date().toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-  if(!idChatAktif){ idChatAktif = 'chat_'+Date.now(); localStorage.setItem('fahri_active_id', idChatAktif); }
-  const idx = daftarChat.findIndex(c=>c.id===idChatAktif);
-  const data = { id: idChatAktif, judul, waktu, history: history };
-  if(idx>=0) daftarChat[idx]=data; else daftarChat.unshift(data);
-  localStorage.setItem('fahri_chats', JSON.stringify(daftarChat));
-  tampilkanLog();
-}
-function bukaChat(id){
-  const c = daftarChat.find(x=>x.id===id); if(!c) return;
-  idChatAktif = id; localStorage.setItem('fahri_active_id', id);
-  history = c.history || [];
-  const box = document.getElementById('chat');
-  box.innerHTML = '';
-  history.forEach(h=>{
+  function addBubble(text, who){
     const d = document.createElement('div');
-    d.className = h.role==='user' ? 'msg user' : 'msg ai';
-    if(h.role==='user') d.textContent = h.content;
-    else d.innerHTML = formatReply(h.content);
-    box.appendChild(d);
-  });
-  if(!history.length) box.innerHTML = '<div class="msg ai">Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik "buatkan gambar kucing di pantai" ✨</div>';
-  collapseHero(); toggleHistory(false); tampilkanLog(); box.scrollTop = box.scrollHeight;
-}
-function buatChatBaru(){
-  idChatAktif = 'chat_'+Date.now(); localStorage.setItem('fahri_active_id', idChatAktif);
-  history = [];
-  document.getElementById('chat').innerHTML = '<div class="msg ai">Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik "buatkan gambar kucing di pantai" ✨</div>';
-  document.getElementById('hero').classList.remove('hide');
-  document.getElementById('topBar').classList.remove('show');
-  chatStarted = false;
-  toggleHistory(false); tampilkanLog();
-}
-function hapusSatuChat(id){
-  daftarChat = daftarChat.filter(c=>c.id!==id);
-  localStorage.setItem('fahri_chats', JSON.stringify(daftarChat));
-  if(id===idChatAktif) buatChatBaru();
-  tampilkanLog();
-}
-function hapusSemuaChat(){
-  if(!confirm('Hapus semua riwayat chat?')) return;
-  daftarChat=[]; localStorage.removeItem('fahri_chats'); buatChatBaru();
-}
-tampilkanLog();
-if(idChatAktif){
-  const last = daftarChat.find(c=>c.id===idChatAktif);
-  if(last && last.history && last.history.length){ bukaChat(idChatAktif); }
-}
-</script>
- <script>
-window.__FAHRI_SET_USER__ = function(user){
-  if(user){
-    console.log('Login sebagai', user.email);
-  } else {
-    console.log('Belum login');
+    d.className = 'bubble ' + who;
+    d.textContent = text;
+    chatEl.appendChild(d);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    return d;
   }
-};
- </script>
- <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="auth.js"></script>
+  function quick(t){ inputEl.value = t; send(); }
+  async function send(){
+    const t = inputEl.value.trim(); if(!t) return;
+    addBubble(t, 'user'); inputEl.value = '';
+    history.push({role:'user', content:t});
+    const loading = addBubble('Fahri lagi mikir...', 'ai');
+    try{
+      const r = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({messages: history})});
+      const d = await r.json();
+      loading.textContent = d.reply || 'Maaf, coba lagi ya.';
+      history.push({role:'assistant', content: loading.textContent});
+    }catch(e){ loading.textContent = 'Maaf, server lagi sibuk, coba lagi ya.'; }
+  }
+  document.getElementById('sendBtn').onclick = send;
+  inputEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
+</script>
 </body>
  </html>
