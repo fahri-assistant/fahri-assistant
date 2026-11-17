@@ -134,4 +134,12 @@ async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'use
 document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
 chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
-function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}ca
+function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
+document.getElementById('btnLog').onclick=openLog;
+document.getElementById('btnCloseLog').onclick=function(){document.getElementById('logPanel').classList.remove('open')};
+document.getElementById('btnClearLog').onclick=function(){localStorage.removeItem('fahri_log');document.getElementById('logBox').textContent='Log sudah dihapus'};
+</script>
+<script src="auth.js"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}</script>
+</body>
+</html>
