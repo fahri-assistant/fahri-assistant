@@ -139,4 +139,26 @@ let history=[];try{history=JSON.parse(localStorage.getItem('fahri_history')||'[]
 function saveHistory(){try{localStorage.setItem('fahri_history',JSON.stringify(history))}catch(e){}}
 function saveLog(role,text){try{const logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');logs.push({role,text,time:new Date().toISOString()});localStorage.setItem('fahri_log',JSON.stringify(logs.slice(-200)))}catch(e){}}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function renderMarkdown(t){let text=esc(t);const lines=text.split('\n');let out='',i=0;while(i<lines.length){if(lines[i].includes('|')&&lines[i+1]&&lines[i+1].includes('---')){const headers=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';i+=2;while(i<lines.length&&lines[i].includes('|')){const cells=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';i++}out+='</table>';continue}out+=lines[i]+'\n';i++}text=out;text=
+function renderMarkdown(t){let text=esc(t);const lines=text.split('\n');let out='',i=0;while(i<lines.length){if(lines[i].includes('|')&&lines[i+1]&&lines[i+1].includes('---')){const headers=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';i+=2;while(i<lines.length&&lines[i].includes('|')){const cells=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';i++}out+='</table>';continue}out+=lines[i]+'\n';i++}text=out;text=text.replace(/^###\s*(.+)$/gm,'<h3>$1</h3>');text=text.replace(/^---$/gm,'<hr>');text=text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');return text.replace(/\n/g,'<br>')}
+function addBubble(text,who,isHtml){const d=document.createElement('div');d.className='bubble '+who;if(isHtml)d.innerHTML=text;else d.textContent=text;if(welcomeEl)welcomeEl.style.display='none';chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;return d}
+history.forEach(m=>{if(m.role==='user')addBubble(m.content,'user');else addBubble(renderMarkdown(m.content),'ai',true)});
+if(history.length>0&&welcomeEl)welcomeEl.style.display='none';
+function quick(t){inputEl.value=t;send()}
+async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'user');inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const loading=addBubble('Fahri lagi mikir...','ai');try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});const d=await r.json();const reply=d.reply||'Maaf, coba lagi ya.';loading.innerHTML=renderMarkdown(reply);history.push({role:'assistant',content:reply});saveHistory();saveLog('assistant',reply)}catch(e){loading.textContent='Maaf, server lagi sibuk, coba lagi ya.'}}
+document.getElementById('sendBtn').onclick=send;
+inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
+chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
+function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
+document.getElementById('btnLog').onclick=openLog;
+document.getElementById('btnCloseLog').onclick=function(){document.getElementById('logPanel').classList.remove('open')};
+document.getElementById('btnClearLog').onclick=function(){localStorage.removeItem('fahri_log');document.getElementById('logBox').textContent='Log sudah dihapus'};
+document.getElementById('btnMenu').onclick=function(e){e.stopPropagation();document.getElementById('drawer').classList.add('open');try{var u=auth.currentUser;document.getElementById('drawerName').textContent=u?(u.displayName||'Pengguna'):'Pengguna';document.getElementById('drawerEmail').textContent=u?(u.email||'Login dengan Google / Github'):'Belum login';}catch(e){}};
+document.getElementById('drawer').onclick=function(e){if(e.target.id==='drawer')document.getElementById('drawer').classList.remove('open')};
+document.getElementById('btnCloseDrawer').onclick=function(){document.getElementById('drawer').classList.remove('open')};
+document.getElementById('btnClearChat').onclick=function(){if(!confirm('Hapus semua chat?'))return;history=[];localStorage.removeItem('fahri_history');var bubbles=chatEl.querySelectorAll('.bubble');bubbles.forEach(function(b){if(!b.closest('#welcome'))b.remove()});if(welcomeEl)welcomeEl.style.display='flex';document.getElementById('drawer').classList.remove('open')};
+document.getElementById('btnProfile').onclick=function(){try{var u=auth.currentUser;if(!u){alert('Belum login. Login dulu lewat tombol Google / Github di atas.');return}alert('Profil Pengguna\n\nNama: '+(u.displayName||'-')+'\nEmail: '+(u.email||'-')+'\nLogin: '+(u.providerData[0]?u.providerData[0].providerId:'-'))}catch(e){alert('Belum login')}};
+</script>
+<script src="auth.js"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}</script>
+</body>
+</html>
