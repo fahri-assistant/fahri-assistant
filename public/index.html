@@ -11,20 +11,24 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  /* BACKGROUND - SAMA CONTOH: ungu gelap + sinar dari atas tengah, bukan hitam flat */
   body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.65) 0%, rgba(147,51,234,.28) 32%, transparent 65%), linear-gradient(180deg,#150826 0%,#0b021a 48%,#070112 100%);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-  /* HEADER - SAMA CONTOH: ungu gelap ke biru, border neon ungu */
-  .header{padding:calc(env(safe-area-inset-top) + 30px) 28px 26px;text-align:left;background:linear-gradient(135deg,#3b0a8a 0%,#4c1d95 35%,#312e81 68%,#1d4ed8 100%);flex-shrink:0;border-radius:32px;margin:14px 14px 10px;box-shadow:0 0 0 1.8px rgba(192,132,252,1), 0 0 34px rgba(168,85,247,.9), 0 0 68px rgba(147,51,234,.5)}
-  .header-top{display:flex;align-items:flex-start;gap:18px}
-  .logo{width:80px;height:80px;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:900;letter-spacing:-1px;color:#d8b4fe;box-shadow:0 0 0 5px #8b5cf6, 0 0 0 9px #a855f7, 0 0 30px rgba(192,132,252,1)}
-  .header h1{font-size:46px;font-weight:900;letter-spacing:-1.3px;line-height:.92}
-  .subtitle{color:#c4b5fd!important;opacity:1!important;font-size:17px!important;font-weight:600!important;margin:8px 0 0!important}
-  .greet{margin-top:24px!important;font-size:23px!important;font-weight:800!important;letter-spacing:-.5px!important;opacity:1!important;line-height:1.28}
-  .greet2{font-size:23px!important;font-weight:800!important;letter-spacing:-.5px!important;opacity:1!important;margin-top:0!important;line-height:1.28}
-  .badge-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+  /* HEADER - BISA MENGECIL PAS SCROLL */
+  .header{padding:calc(env(safe-area-inset-top) + 30px) 28px 26px;text-align:left;background:linear-gradient(135deg,#3b0a8a 0%,#4c1d95 35%,#312e81 68%,#1d4ed8 100%);flex-shrink:0;border-radius:32px;margin:14px 14px 10px;box-shadow:0 0 0 1.8px rgba(192,132,252,1), 0 0 34px rgba(168,85,247,.9), 0 0 68px rgba(147,51,234,.5);transition:all .35s ease;overflow:hidden}
+  .header.collapsed{padding:calc(env(safe-area-inset-top) + 12px) 20px 14px;border-radius:24px;margin:8px 10px 6px}
+  .header-top{display:flex;align-items:flex-start;gap:18px;transition:all .35s ease}
+  .logo{width:80px;height:80px;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:900;color:#d8b4fe;box-shadow:0 0 0 5px #8b5cf6, 0 0 0 9px #a855f7, 0 0 30px rgba(192,132,252,1);transition:all .35s ease}
+  .header.collapsed .logo{width:46px;height:46px;font-size:26px;box-shadow:0 0 0 3px #8b5cf6, 0 0 0 5px #a855f7, 0 0 16px rgba(192,132,252,1)}
+  .header h1{font-size:46px;font-weight:900;letter-spacing:-1.3px;line-height:.92;transition:all .35s ease}
+  .header.collapsed h1{font-size:28px;letter-spacing:-.8px}
+  .subtitle{color:#c4b5fd!important;opacity:1!important;font-size:17px!important;font-weight:600!important;margin:8px 0 0!important;transition:all .35s ease}
+  .header.collapsed .subtitle{font-size:13px!important;margin:3px 0 0!important}
+  .greet{margin-top:24px!important;font-size:23px!important;font-weight:800!important;letter-spacing:-.5px!important;opacity:1!important;line-height:1.28;transition:all .35s ease;max-height:100px}
+  .greet2{font-size:23px!important;font-weight:800!important;letter-spacing:-.5px!important;opacity:1!important;margin-top:0!important;line-height:1.28;transition:all .35s ease;max-height:100px}
+  .header.collapsed .greet, .header.collapsed .greet2{margin-top:0!important;font-size:0!important;max-height:0!important;opacity:0!important}
+  .badge-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;transition:all .35s ease;max-height:100px}
+  .header.collapsed .badge-row{margin-top:0;max-height:0;opacity:0}
   .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(8,2,20,.75);border:1.5px solid rgba(168,85,247,.9);padding:11px 16px;border-radius:999px;font-size:15.5px;font-weight:700;box-shadow:0 0 16px rgba(168,85,247,.4)}
   .badge i{font-style:normal;font-size:17px;color:#c084fc}
-  /* AUTHBAR */
   .authbar{margin:0 14px 0;padding:8px 8px 8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#12051f;border:1.5px solid rgba(168,85,247,.7);border-radius:999px;flex-shrink:0;box-shadow:0 0 22px rgba(168,85,247,.4)}
   .status-pill{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:#a1a1aa}
   .dot{width:9px;height:9px;border-radius:50%;background:#f43f5e;box-shadow:0 0 10px rgba(244,63,94,1)}
@@ -35,21 +39,25 @@
   .btn-github{background:#1f1f2a;color:#fff;border:1px solid rgba(255,255,255,.22)}
   .btn-logout{background:transparent;color:#ff6b81;border:1px solid rgba(255,107,129,.5);padding:6px 10px;font-size:11px}
   .hidden{display:none!important}
-  /* CHAT - DIPERBAIKI: bubble balik ke BAWAH, nempel ke kotak ketik kayak contoh */
-  #chat{flex:1;overflow-y:auto;padding:10px 14px 12px;display:flex;flex-direction:column;gap:12px;justify-content:flex-end}
-  .welcome{display:flex;flex-direction:column;gap:14px;justify-content:flex-end}
-  .bubble{max-width:92%;padding:13px 15px;border-radius:18px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-  /* BUBBLE - DIPERBESAR + SHADOW UNGU KAYAK CONTOH */
-  .bubble.ai{background:linear-gradient(180deg,#1c0b33,#150826);border:1.8px solid rgba(192,132,252,1);align-self:flex-start;border-radius:26px;box-shadow:0 0 30px rgba(168,85,247,.65), 0 0 60px rgba(147,51,234,.3)}
+  /* CHAT - DIPERBAIKI: bisa scroll ke atas lagi */
+  #chat{flex:1;overflow-y:auto;padding:10px 14px 12px;display:flex;flex-direction:column;gap:12px;justify-content:flex-start;overscroll-behavior:contain}
+  .welcome{display:flex;flex-direction:column;gap:14px;justify-content:flex-end;margin-top:auto}
+  .bubble{max-width:92%;padding:13px 15px;border-radius:18px;font-size:15px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+  /* BUBBLE AI - HITAM + SHADOW UNGU MENYEBAR KE DALAM */
+  .bubble.ai{background:#0a0218;border:1.8px solid rgba(192,132,252,1);align-self:flex-start;border-radius:26px;box-shadow:inset 0 0 42px rgba(168,85,247,.55), inset 0 0 90px rgba(147,51,234,.28), 0 0 28px rgba(168,85,247,.5)}
   .welcome .bubble.ai{max-width:100%;margin:0 auto;padding:22px 22px;font-size:17.5px;width:100%;font-weight:500;line-height:1.62}
   .ai-row{display:flex;gap:15px;align-items:flex-start}
   .mini-logo{width:46px;height:46px;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:900;color:#d8b4fe;box-shadow:0 0 0 4px #8b5cf6, 0 0 0 6.5px #a855f7, 0 0 20px rgba(192,132,252,1)}
   .bubble.user{background:linear-gradient(135deg,#8b5cf6,#5a3dff);align-self:flex-end;border-bottom-right-radius:4px}
-  /* CHIPS - DIPERBESAR */
+  .bubble b{font-weight:800}
+  .bubble h3{font-size:16.5px;margin:10px 0 6px}
+  .bubble hr{border:0;border-top:1px solid rgba(192,132,252,.4);margin:12px 0}
+  .bubble table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  .bubble th,.bubble td{border:1px solid rgba(192,132,252,.5);padding:8px 8px;text-align:left}
+  .bubble th{background:rgba(168,85,247,.3)}
   .chips{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:2px}
   .chip{background:rgba(8,2,20,.68);border:1.5px solid rgba(168,85,247,.85);color:#fff;padding:18px 15px;border-radius:17px;font-size:16.5px;font-weight:600;cursor:pointer;box-shadow:0 0 18px rgba(168,85,247,.32);text-align:left;display:flex;align-items:center;gap:12px;line-height:1.3}
   .chip i{font-style:normal;font-size:22px;color:#c084fc;flex-shrink:0}
-  /* COMPOSER */
   .composer{margin:0 14px 14px;padding:6px 6px 6px 20px;display:flex;gap:10px;background:rgba(18,5,31,.95);border-radius:999px;align-items:center;border:1.5px solid rgba(168,85,247,.7);flex-shrink:0;box-shadow:0 0 24px rgba(168,85,247,.38);padding-bottom:calc(6px + env(safe-area-inset-bottom))}
   .composer input{flex:1;background:transparent;border:0;color:#fff;padding:13px 4px;outline:none;font-size:16.5px;font-weight:500}
   .composer input::placeholder{color:#8b8b9e}
@@ -60,7 +68,7 @@
 </head>
 <body>
 
-<div class="header">
+<div class="header" id="header">
   <div class="header-top">
     <div class="logo">F</div>
     <div>
@@ -90,7 +98,7 @@
 </div>
 
 <div id="chat">
-  <div class="welcome">
+  <div class="welcome" id="welcome">
     <div class="bubble ai"><div class="ai-row"><div class="mini-logo">F</div><span>Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik buatkan gambar kucing di pantai.</span></div></div>
     <div class="chips">
       <button class="chip" onclick="quick('Tanya')"><i>💡</i>Tanya</button>
@@ -116,30 +124,89 @@
   const auth = firebase.auth();
   const chatEl = document.getElementById('chat');
   const inputEl = document.getElementById('input');
+  const headerEl = document.getElementById('header');
+  const welcomeEl = document.getElementById('welcome');
+
+  // LOG + SIMPAN CHAT - dibalikin, biar gak hilang pas refresh
   let history = [];
-  function addBubble(text, who){
+  try{ history = JSON.parse(localStorage.getItem('fahri_history') || '[]'); }catch(e){ history = []; }
+  function saveHistory(){ try{ localStorage.setItem('fahri_history', JSON.stringify(history)); }catch(e){} }
+  function saveLog(role, text){
+    try{
+      const logs = JSON.parse(localStorage.getItem('fahri_log') || '[]');
+      logs.push({role, text, time: new Date().toISOString()});
+      localStorage.setItem('fahri_log', JSON.stringify(logs.slice(-200)));
+    }catch(e){}
+  }
+
+  // Render Markdown biar ** dan | gak muncul mentah lagi
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function renderMarkdown(t){
+    let text = esc(t);
+    // tabel | ... |
+    const lines = text.split('\n');
+    let out = '', i = 0;
+    while(i < lines.length){
+      if(lines[i].includes('|') && lines[i+1] && lines[i+1].includes('---')){
+        const headers = lines[i].split('|').map(s=>s.trim()).filter(Boolean);
+        out += '<table><tr>' + headers.map(h=>'<th>'+h+'</th>').join('') + '</tr>';
+        i += 2;
+        while(i < lines.length && lines[i].includes('|')){
+          const cells = lines[i].split('|').map(s=>s.trim()).filter(Boolean);
+          out += '<tr>' + cells.map(c=>'<td>'+c+'</td>').join('') + '</tr>';
+          i++;
+        }
+        out += '</table>';
+        continue;
+      }
+      out += lines[i] + '\n'; i++;
+    }
+    text = out;
+    text = text.replace(/^###\s*(.+)$/gm, '<h3>$1</h3>');
+    text = text.replace(/^---$/gm, '<hr>');
+    text = text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+    return text.replace(/\n/g,'<br>');
+  }
+
+  function addBubble(text, who, isHtml){
     const d = document.createElement('div');
     d.className = 'bubble ' + who;
-    d.textContent = text;
+    if(isHtml) d.innerHTML = text; else d.textContent = text;
+    // kalau ada chat lama, welcome disembunyiin, bubble nempel di atas welcome
+    if(welcomeEl) welcomeEl.style.display = 'none';
     chatEl.appendChild(d);
     chatEl.scrollTop = chatEl.scrollHeight;
     return d;
   }
+  // Load chat lama pas buka
+  history.forEach(m => {
+    if(m.role === 'user') addBubble(m.content, 'user');
+    else addBubble(renderMarkdown(m.content), 'ai', true);
+  });
+  if(history.length > 0 && welcomeEl) welcomeEl.style.display = 'none';
+
   function quick(t){ inputEl.value = t; send(); }
   async function send(){
     const t = inputEl.value.trim(); if(!t) return;
     addBubble(t, 'user'); inputEl.value = '';
-    history.push({role:'user', content:t});
+    history.push({role:'user', content:t}); saveHistory(); saveLog('user', t);
     const loading = addBubble('Fahri lagi mikir...', 'ai');
     try{
       const r = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({messages: history})});
       const d = await r.json();
-      loading.textContent = d.reply || 'Maaf, coba lagi ya.';
-      history.push({role:'assistant', content: loading.textContent});
+      const reply = d.reply || 'Maaf, coba lagi ya.';
+      loading.innerHTML = renderMarkdown(reply);
+      history.push({role:'assistant', content: reply}); saveHistory(); saveLog('assistant', reply);
     }catch(e){ loading.textContent = 'Maaf, server lagi sibuk, coba lagi ya.'; }
   }
   document.getElementById('sendBtn').onclick = send;
   inputEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
+
+  // HEADER MENGECIL PAS SCROLL KE BAWAH
+  chatEl.addEventListener('scroll', ()=>{
+    if(chatEl.scrollTop > 60) headerEl.classList.add('collapsed');
+    else headerEl.classList.remove('collapsed');
+  });
 </script>
 <script src="auth.js"></script>
  <script>
