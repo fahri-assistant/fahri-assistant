@@ -195,5 +195,30 @@ window.send=send;
 function quick(t){var i=document.getElementById('input');if(i)i.value=t;send();}
 window.quick=quick;
     </script>
+  <script>
+// KIRIM SATU PESAN AJA - tanpa history rusak
+window.send = function(){
+  var inp=document.getElementById('input');
+  var t=inp?inp.value.trim():'';
+  if(!t) return;
+  var chatEl=document.getElementById('chat');
+  var w=document.getElementById('welcome');if(w)w.style.display='none';
+  var d=document.createElement('div');d.className='bubble user';d.textContent=t;
+  chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;
+  if(inp)inp.value='';
+  try{localStorage.removeItem('fahri_history');}catch(e){}
+  var load=document.createElement('div');load.className='bubble ai';load.textContent='Fahri lagi mikir...';
+  chatEl.appendChild(load);chatEl.scrollTop=chatEl.scrollHeight;
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:t}]})})
+  .then(function(r){return r.json()})
+  .then(function(data){
+    var reply=(data&&data.reply)||'Maaf, coba lagi ya.';
+    load.innerHTML=reply.replace(/\n/g,'<br>');
+    chatEl.scrollTop=chatEl.scrollHeight;
+  })
+  .catch(function(){load.textContent='Maaf, server lagi sibuk, coba lagi ya.'});
+};
+window.quick=function(t){var i=document.getElementById('input');if(i)i.value=t;window.send();};
+  </script>
 </body>
 </html>
