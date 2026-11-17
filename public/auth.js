@@ -36,9 +36,9 @@ function pasang(id, provName){
   b.onclick = function(e){
     e.preventDefault();
     var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
-    auth.signInWithRedirect(p).catch(function(err){
-      alert('Login gagal: ' + err.message);
-    });
+    auth.signInWithPopup(p).catch(function(){
+  return auth.signInWithRedirect(p);
+});
   };
 }
 
