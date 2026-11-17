@@ -72,7 +72,7 @@
 </div>
 
 <script>
-  // ===== FIREBASE - GANTI CONFIG PUNYAMU DI SINI, JANGAN UBAH YANG LAIN =====
+  // Config Firebase - cuma ini yang kamu ganti
   const firebaseConfig = {
     apiKey: "API_KEY_KAMU",
     authDomain: "PROJECT_KAMU.firebaseapp.com",
@@ -81,44 +81,10 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 
-  // ===== PATCH DARI PESAN REDIRECT TADI - JANGAN DIHAPUS =====
-  // Biar login Redirect nggak hilang di HP / nggak error missing initial state
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
-
-  // Cek hasil Redirect Google/Github - ini yang bikin dia inget abis balik dari Google
-  auth.getRedirectResult().then((res)=>{ if(res && res.user) updateUI(res.user); }).catch(()=>{});
-
-  // ===== SEMBUNYIKAN TOMBOL KALAU UDAH LOGIN, JANGAN TAMPILIN EMAIL =====
-  function updateUI(user){
-    const dot = document.getElementById('statusDot');
-    const txt = document.getElementById('statusText');
-    const loginBtns = document.getElementById('loginBtns');
-    const logout = document.getElementById('btnLogout');
-    if(user){
-      dot.classList.add('on');
-      txt.textContent = 'Terhubung'; // Sengaja nggak tampilin email, biar aman
-      loginBtns.classList.add('hidden');
-      logout.classList.remove('hidden');
-    } else {
-      dot.classList.remove('on');
-      txt.textContent = 'Belum login';
-      loginBtns.classList.remove('hidden');
-      logout.classList.add('hidden');
-    }
-  }
-
-  auth.onAuthStateChanged((user)=>{ updateUI(user); });
-
-  // ===== LOGIN TETAP PAKAI REDIRECT, BUKAN POPUP - SESUAI PESAN REDIRECT TADI =====
-  document.getElementById('btnGoogle').onclick = (e)=>{ e.preventDefault(); auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider()); };
-  document.getElementById('btnGithub').onclick = (e)=>{ e.preventDefault(); auth.signInWithRedirect(new firebase.auth.GithubAuthProvider()); };
-  document.getElementById('btnLogout').onclick = ()=>{ auth.signOut(); };
-
-  // ===== CHAT - LOGIKA LAMA, NGGAK DIUBAH =====
+  // Chat - jangan diubah
   const chatEl = document.getElementById('chat');
   const inputEl = document.getElementById('input');
   let history = [];
-
   function addBubble(text, who){
     const d = document.createElement('div');
     d.className = 'bubble ' + who;
@@ -143,5 +109,6 @@
   document.getElementById('sendBtn').onclick = send;
   inputEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
 </script>
+<script src="auth.js"></script>
 </body>
  </html>
