@@ -89,11 +89,13 @@ Aturan WAJIB:
         const r = await tryOpenAI('https://api.groq.com/openai/v1/chat/completions', process.env.GROQ_API_KEY, m, 8000);
         if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
       }
-      // TOGETHER - 8 detik
-if (process.env.TOGETHER_API_KEY) {
-  for (const m of ['meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo', 'deepseek-ai/DeepSeek-V3']) {
-    const r = await tryOpenAI('https://api.together.xyz/v1/chat/completions', process.env.TOGETHER_API_KEY, m, 8000);
-    if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text);  
+    }
+    // TOGETHER - 8 detik
+    if (process.env.TOGETHER_API_KEY) {
+      for (const m of ['meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo', 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo', 'deepseek-ai/DeepSeek-V3']) {
+        const r = await tryOpenAI('https://api.together.xyz/v1/chat/completions', process.env.TOGETHER_API_KEY, m, 8000);
+        if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
+      }
     }
     // 2. OPENROUTER - 3 detik
     if (process.env.OPENROUTER_API_KEY) {
@@ -101,12 +103,14 @@ if (process.env.TOGETHER_API_KEY) {
         const r = await tryOpenAI('https://openrouter.ai/api/v1/chat/completions', process.env.OPENROUTER_API_KEY, m, 3000, { 'HTTP-Referer': 'https://fahri-assistant.vercel.app', 'X-Title': 'Fahri Assistant' });
         if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
       }
+    }
     // 3. SAMBANOVA - 3 detik
     if (process.env.SAMBANOVA_API_KEY) {
       for (const m of ['Meta-Llama-3.3-70B-Instruct', 'Meta-Llama-3.1-8B-Instruct']) {
         const r = await tryOpenAI('https://api.sambanova.ai/v1/chat/completions', process.env.SAMBANOVA_API_KEY, m, 3000);
         if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
       }
+    }
     // 4. MISTRAL - 3 detik
     if (process.env.MISTRAL_API_KEY) {
       const r = await tryOpenAI('https://api.mistral.ai/v1/chat/completions', process.env.MISTRAL_API_KEY, 'mistral-small-latest', 3000);
@@ -173,16 +177,16 @@ if (process.env.TOGETHER_API_KEY) {
       } catch {}
     }
 
-          // CADANGAN TERAKHIR - Pollinations, tanpa API Key, gratis
-try {
-  const pr = await fetch('https://text.pollinations.ai/' + encodeURIComponent(lastText), { headers: { 'Accept': 'text/plain' } });
-  if (pr.ok) {
-    const ptext = (await pr.text()).trim();
-    if (ptext) return await sendText(ptext);
-  }
-} catch {}
+    // CADANGAN TERAKHIR - Pollinations, tanpa API Key, gratis
+    try {
+      const pr = await fetch('https://text.pollinations.ai/' + encodeURIComponent(lastText), { headers: { 'Accept': 'text/plain' } });
+      if (pr.ok) {
+        const ptext = (await pr.text()).trim();
+        if (ptext) return await sendText(ptext);
+      }
+    } catch {}
     return await sendText('Maaf, semua AI lagi sibuk sebentar. Coba kirim lagi pertanyaan yang sama ya, jangan ganti pertanyaan dulu.');
   } catch (e) {
     return res.status(200).json({ reply: 'Maaf, server lagi sibuk sebentar. Coba kirim lagi ya.' });
   }
-      }
+                     }
