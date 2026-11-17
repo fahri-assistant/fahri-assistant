@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.fahri_assistant.twa",
+        "sha256_cert_fingerprints": ["B4:E5:85:2B:38:9C:99:EB:46:3C:9F:56:4F:42:5E:B3:AC:2C:9A:61:DE:CD:4E:24:D2:D3:9B:84:47:83:73:4C"]
+      }
+    }]
