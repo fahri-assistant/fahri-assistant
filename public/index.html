@@ -27,7 +27,8 @@ body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.6
 @keyframes headerBreath{0%,100%{box-shadow:inset 0 0 48px rgba(168,85,247,.55), inset 0 0 110px rgba(147,51,234,.30), inset 0 0 22px rgba(216,180,254,.35), 0 0 32px rgba(168,85,247,.6), 0 0 70px rgba(147,51,234,.28)}50%{box-shadow:inset 0 0 56px rgba(168,85,247,.7), inset 0 0 120px rgba(147,51,234,.38), inset 0 0 28px rgba(216,180,254,.45), 0 0 48px rgba(168,85,247,.85), 0 0 105px rgba(147,51,234,.45)}}
 .header::before{content:"";position:absolute;top:0;right:0;width:180px;height:180px;pointer-events:none;opacity:.35;background-image:radial-gradient(rgba(216,180,254,.55) 1.2px, transparent 1.3px);background-size:14px 14px}
 .header.collapsed{padding:calc(env(safe-area-inset-top) + 12px) 20px 14px;border-radius:24px;margin:8px 10px 6px;animation:none}
-.header-top{display:flex;align-items:flex-start;gap:18px;transition:all .35s ease;position:relative;z-index:1}
+.header-top{display:flex;align-items:flex-start;gap:30px;transition:all .35s ease;position:relative;z-index:1}
+.header-top > div:last-child{margin-left:6px;padding-left:2px}
 .logo{width:80px;height:80px;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:900;letter-spacing:-1px;color:#d8b4fe;box-shadow:0 0 0 5px #8b5cf6, 0 0 0 9px #a855f7, 0 0 30px rgba(192,132,252,1);transition:all .35s ease;position:relative}
 .logo::before{content:"";position:absolute;inset:-19px;border-radius:50%;background:conic-gradient(from 0deg, transparent 0 70%, rgba(233,213,255,1) 78%, #fff 82%, rgba(233,213,255,1) 86%, transparent 94%);-webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));mask:radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));animation:spinGlow 3.5s linear infinite;pointer-events:none}
 .logo::after{content:"";position:absolute;inset:-17px;border-radius:50%;border:4.5px dotted rgba(233,213,255,1);box-shadow:0 0 14px rgba(192,132,252,.9);pointer-events:none}
@@ -61,8 +62,12 @@ body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.6
 .btn-logout{background:transparent;color:#ff6b81;border:1px solid rgba(255,107,129,.5);padding:6px 10px;font-size:11px}
 .hidden{display:none!important}
 #chat{flex:1;overflow-y:auto;padding:10px 14px 12px;display:flex;flex-direction:column;gap:12px;justify-content:flex-start;overscroll-behavior:contain;position:relative;background-color:#080113;isolation:isolate}
-#chat::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.18;background-image:url("/wallpaper.png");background-size:cover;background-position:center;background-repeat:no-repeat}
-#chat::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg, rgba(8,1,19,.82), rgba(8,1,19,.86) 50%, rgba(8,1,19,.90))}
+#chat::before{content:"";position:absolute;inset:-30px 0;pointer-events:none;z-index:0;opacity:.92;background-image:url("/wallpaper.png");background-size:cover;background-position:center 30%;background-repeat:no-repeat;animation:wallLive 16s ease-in-out infinite alternate}
+#chat::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle at 85% 18%, rgba(168,85,247,.32) 0, transparent 38%),radial-gradient(circle at 15% 82%, rgba(147,51,234,.26) 0, transparent 35%),radial-gradient(circle at 80% 85%, rgba(192,132,252,.26) 0, transparent 34%),linear-gradient(180deg, rgba(8,1,19,.22), rgba(8,1,19,.28) 50%, rgba(8,1,19,.34));animation:orbLive 5s ease-in-out infinite}
+@keyframes wallLive{0%{transform:scale(1) translateY(0);filter:brightness(1.15)}50%{transform:scale(1.06) translateY(-12px);filter:brightness(1.32)}100%{transform:scale(1.02) translateY(8px);filter:brightness(1.12)}}
+@keyframes orbLive{0%,100%{opacity:.85}50%{opacity:1}}
+.twinkle{position:absolute;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(rgba(255,255,255,.95) 1.2px, transparent 1.6px),radial-gradient(rgba(216,180,254,1) 1.5px, transparent 2px),radial-gradient(rgba(192,132,252,1) 1px, transparent 1.5px);background-size:120px 120px,190px 190px,90px 90px;background-position:0 0,40px 60px,80px 20px;animation:twinkle 2.8s ease-in-out infinite alternate;opacity:.75}
+@keyframes twinkle{0%{opacity:.35;transform:translateY(0)}50%{opacity:.95}100%{opacity:.45;transform:translateY(-6px)}}
 #chat>*{position:relative;z-index:1}
 .date-pill{align-self:center;background:rgba(18,5,31,.85);border:1.2px solid rgba(168,85,247,.7);color:#d8b4fe;padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:700;box-shadow:0 0 14px rgba(168,85,247,.3)}
 .welcome{display:flex;flex-direction:column;gap:14px;justify-content:flex-start;margin-top:0}
@@ -100,7 +105,7 @@ body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.6
 <div class="badge-row"><span class="badge"><i>💬</i> Chat</span><span class="badge"><i>🖼️</i> Gambar</span><span class="badge"><i>✏️</i> Edit Foto</span></div>
 </div>
 <div class="authbar" id="authBar"><div class="status-pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Belum login</span></div><div class="login-btns" id="loginBtns"><button class="btn btn-google" id="btnGoogle">G Login Google</button><button class="btn btn-github" id="btnGithub">◉ Login Github</button></div><button class="btn btn-logout" id="btnLog" style="color:#d8b4fe;border-color:#a855f7">Log</button><button class="btn btn-logout hidden" id="btnLogout">Logout</button></div>
-<div id="chat"><div class="date-pill" id="datePill">Hari ini</div><div class="welcome" id="welcome"><div class="bubble ai"><div class="ai-row"><div class="mini-logo">F</div><span>Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik buatkan gambar kucing di pantai.</span></div></div><div class="chips"><button class="chip" onclick="quick('Tanya')"><i>💡</i>Tanya</button><button class="chip" onclick="quick('Bikin Gambar')"><i>✨</i>Bikin Gambar</button><button class="chip" onclick="quick('Gambar Kucing')"><i>🐱</i>Gambar Kucing</button><button class="chip" onclick="quick('Siapa kamu?')"><i>👤</i>Siapa kamu?</button></div></div></div>
+<div id="chat"><div class="twinkle"></div><div class="date-pill" id="datePill">Hari ini</div><div class="welcome" id="welcome"><div class="bubble ai"><div class="ai-row"><div class="mini-logo">F</div><span>Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik buatkan gambar kucing di pantai.</span></div></div><div class="chips"><button class="chip" onclick="quick('Tanya')"><i>💡</i>Tanya</button><button class="chip" onclick="quick('Bikin Gambar')"><i>✨</i>Bikin Gambar</button><button class="chip" onclick="quick('Gambar Kucing')"><i>🐱</i>Gambar Kucing</button><button class="chip" onclick="quick('Siapa kamu?')"><i>👤</i>Siapa kamu?</button></div></div></div>
 <div class="composer"><input id="input" placeholder="Tanya apa aja ke Fahri..." autocomplete="off"><button id="sendBtn">➤</button></div>
 <div id="logPanel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:18px">Log Chat</b><button id="btnCloseLog" style="background:#a855f7;border:0;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700">Tutup</button></div><div class="log-box" id="logBox">Belum ada log</div><button id="btnClearLog" style="margin-top:12px;background:transparent;border:1px solid #ff6b81;color:#ff6b81;padding:10px;border-radius:999px">Hapus Semua Log</button></div>
 <script>
@@ -129,12 +134,4 @@ async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'use
 document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
 chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
-function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
-document.getElementById('btnLog').onclick=openLog;
-document.getElementById('btnCloseLog').onclick=function(){document.getElementById('logPanel').classList.remove('open')};
-document.getElementById('btnClearLog').onclick=function(){localStorage.removeItem('fahri_log');document.getElementById('logBox').textContent='Log sudah dihapus'};
-</script>
-<script src="auth.js"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}</script>
-</body> 
-</html>
+function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}ca
