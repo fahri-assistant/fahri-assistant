@@ -163,5 +163,37 @@ document.getElementById('btnClearLog').onclick=function(){localStorage.removeIte
 </script>
 <script src="auth.js"></script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}</script>
+  <script>
+// PENAMBAL - ganti send() yang rusak karena history
+var chatHistory=[];
+try{chatHistory=JSON.parse(localStorage.getItem('fahri_history')||'[]')}catch(e){chatHistory=[]}
+function send(){
+  var inp=document.getElementById('input');
+  var t=inp?inp.value.trim():'';
+  if(!t) return;
+  var chatEl=document.getElementById('chat');
+  var d=document.createElement('div');d.className='bubble user';d.textContent=t;
+  var w=document.getElementById('welcome');if(w)w.style.display='none';
+  chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;
+  if(inp)inp.value='';
+  chatHistory.push({role:'user',content:t});
+  try{localStorage.setItem('fahri_history',JSON.stringify(chatHistory))}catch(e){}
+  var load=document.createElement('div');load.className='bubble ai';load.textContent='Fahri lagi mikir...';
+  chatEl.appendChild(load);chatEl.scrollTop=chatEl.scrollHeight;
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})})
+  .then(function(r){return r.json()})
+  .then(function(data){
+    var reply=(data&&data.reply)||'Maaf, coba lagi ya.';
+    load.innerHTML=reply.replace(/\n/g,'<br>');
+    chatHistory.push({role:'assistant',content:reply});
+    try{localStorage.setItem('fahri_history',JSON.stringify(chatHistory))}catch(e){}
+    chatEl.scrollTop=chatEl.scrollHeight;
+  })
+  .catch(function(){load.textContent='Maaf, server lagi sibuk, coba lagi ya.'});
+}
+window.send=send;
+function quick(t){var i=document.getElementById('input');if(i)i.value=t;send();}
+window.quick=quick;
+    </script>
 </body>
 </html>
