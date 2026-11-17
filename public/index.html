@@ -34,6 +34,8 @@
   .composer input{flex:1;background:#1e1e2e;border:1px solid rgba(255,255,255,.1);color:#fff;padding:12px 14px;border-radius:999px;outline:none;font-size:14px}
   .composer button{background:linear-gradient(135deg,#7c5cff,#00d4ff);border:0;color:#fff;padding:0 18px;border-radius:999px;font-weight:800;cursor:pointer}
 </style>
+ <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0f0f0f">
 </head>
 <body>
 
@@ -110,5 +112,10 @@
   inputEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') send(); });
 </script>
 <script src="auth.js"></script>
+ <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+ </script>
 </body>
  </html>
