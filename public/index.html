@@ -14,8 +14,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.65) 0%, rgba(147,51,234,.28) 32%, transparent 65%), linear-gradient(180deg,#150826 0%,#0b021a 48%,#070112 100%);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-#loader{position:fixed;inset:0;z-index:9999;background:#080113;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s ease}
-#loader.hide{opacity:0;pointer-events:none}
+#loader{position:fixed;inset:0;z-index:9999;background:#080113;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s ease;animation:loaderForceHide .5s ease 2.8s forwards}
+#loader.hide{opacity:0;pointer-events:none;visibility:hidden}
+@keyframes loaderForceHide{to{opacity:0;pointer-events:none;visibility:hidden}}
 #loader .l-logo{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:900;color:#d8b4fe;box-shadow:0 0 0 5px #8b5cf6, 0 0 0 9px #a855f7, 0 0 34px rgba(192,132,252,1);position:relative}
 #loader .l-logo::after{content:"";position:absolute;inset:-17px;border-radius:50%;border:2.5px dotted rgba(233,213,255,1);animation:spinRing 9s linear infinite}
 #loader .l-text{font-size:22px;font-weight:900;letter-spacing:-.5px}
@@ -96,6 +97,7 @@ body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.6
 </head>
 <body>
 <div id="loader"><div class="l-logo">F</div><div class="l-text">Fahri Assistant</div><div class="l-sub">AI cerdas buatan FahriAI</div><div class="l-bar"><i></i></div></div>
+<script>setTimeout(function(){var l=document.getElementById('loader');if(l)l.classList.add('hide')},2200);</script>
 <div class="header" id="header">
 <div class="header-top"><div class="logo">F</div><div><h1>Fahri<br>Assistant</h1><p class="subtitle">AI cerdas buatan FahriAI</p><div class="online-status"><span class="online-dot"></span><span>Online - Siap Membantu</span></div></div></div>
 <p class="greet" id="greetText">Selamat siang, Mau aku bantu apa</p><p class="greet2">hari ini?</p>
@@ -106,15 +108,12 @@ body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.6
 <div class="composer"><input id="input" placeholder="Tanya apa aja ke Fahri..." autocomplete="off"><button id="sendBtn">➤</button></div>
 <div id="logPanel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:18px">Log Chat</b><button id="btnCloseLog" style="background:#a855f7;border:0;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700">Tutup</button></div><div class="log-box" id="logBox">Belum ada log</div><button id="btnClearLog" style="margin-top:12px;background:transparent;border:1px solid #ff6b81;color:#ff6b81;padding:10px;border-radius:999px">Hapus Semua Log</button></div>
 <script>
-const firebaseConfig={apiKey:"AIzaSyC_enCjCWHSq4GTFHABA6kcCgjWeww1hks",authDomain:"fahri-assistant.firebaseapp.com",projectId:"fahri-assistant"};
-firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
+try{const firebaseConfig={apiKey:"AIzaSyC_enCjCWHSq4GTFHABA6kcCgjWeww1hks",authDomain:"fahri-assistant.firebaseapp.com",projectId:"fahri-assistant"};firebase.initializeApp(firebaseConfig);}catch(e){}
+var auth=null;try{auth=firebase.auth()}catch(e){}
 const chatEl=document.getElementById('chat');
 const inputEl=document.getElementById('input');
 const headerEl=document.getElementById('header');
 const welcomeEl=document.getElementById('welcome');
-window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loader').classList.add('hide')},900)});
-setTimeout(()=>{document.getElementById('loader').classList.add('hide')},2500);
 try{const d=new Date();const hari=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];const bln=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][d.getMonth()];document.getElementById('datePill').textContent='Hari ini - '+hari+', '+d.getDate()+' '+bln;}catch(e){}
 function updateGreeting(){const jam=new Date().getHours();let sapa='Selamat malam,';let icon='🌙';if(jam>=4&&jam<11){sapa='Selamat pagi,';icon='☀️'}else if(jam>=11&&jam<15){sapa='Selamat siang,';icon='🌤️'}else if(jam>=15&&jam<18){sapa='Selamat sore,';icon='🌇'}const el=document.getElementById('greetText');if(el)el.textContent=icon+' '+sapa+' Mau aku bantu apa';}
 updateGreeting();setInterval(updateGreeting,60000);
@@ -131,5 +130,4 @@ async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'use
 document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
 chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
-function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
-document.getEl
+function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTo
