@@ -43,4 +43,5 @@ function pasang(id, provName){
     auth.signInWithRedirect(p);
   };
       }
-pasang('google-login-btn', 'google');
+pasang('btnGoogle', 'google');
+pasang('btnGithub', 'github');
