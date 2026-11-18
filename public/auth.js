@@ -8,6 +8,7 @@ const firebaseConfig = {
   measurementId: "G-E25LVGYHNL"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+alert('auth.js KE-LOAD!');
 var auth = firebase.auth();
 
 // ===== EDGE TO EDGE - status bar transparan =====
