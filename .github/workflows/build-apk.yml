@@ -15,13 +15,23 @@ jobs:
           java-version: 17
       - name: Install Capacitor
         run: |
-          npm install @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0
+          npm install --legacy-peer-deps @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0 @capacitor/status-bar@6.0.1
           npx cap init FahriAssistant app.fahri.assistant --web-dir=public
-      - name: Add Android
+      - name: Add Android + Edge to Edge
         run: |
-          echo '{"appId":"app.fahri.assistant","appName":"FahriAssistant","webDir":"public","server":{"url":"https://fahri-assistant.vercel.app","cleartext":true}}' > capacitor.config.json
+          echo '{"appId":"app.fahri.assistant","appName":"FahriAssistant","webDir":"public","backgroundColor":"#0a0014","server":{"url":"https://fahri-assistant.vercel.app","cleartext":true},"plugins":{"StatusBar":{"overlaysWebView":true,"style":"DARK","backgroundColor":"#00000000"}}}' > capacitor.config.json
           npx cap add android
           npx cap sync
+          npx @capacitor/assets generate --iconBackgroundColor '#0a0014' --iconBackgroundColorDark '#0a0014' --splashBackgroundColor '#0a0014' --splashBackgroundColorDark '#0a0014'
+          python3 -c "
+          import pathlib
+          p = pathlib.Path('android/app/src/main/java/app/fahri/assistant/MainActivity.java')
+          t = p.read_text()
+          t = t.replace('import com.getcapacitor.BridgeActivity;', 'import com.getcapacitor.BridgeActivity;\nimport androidx.core.view.WindowCompat;\nimport android.graphics.Color;\nimport android.os.Build;')
+          t = t.replace('super.onCreate(savedInstanceState);', 'super.onCreate(savedInstanceState);\n    WindowCompat.setDecorFitsSystemWindows(getWindow(), false);\n    getWindow().setStatusBarColor(Color.TRANSPARENT);\n    getWindow().setNavigationBarColor(Color.TRANSPARENT);\n    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { getWindow().setNavigationBarContrastEnforced(false); }\n    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { getWindow().setStatusBarContrastEnforced(false); }')
+          p.write_text(t)
+          print('MainActivity patched OK')
+          "
       - name: Build APK
         run: |
           cd android
