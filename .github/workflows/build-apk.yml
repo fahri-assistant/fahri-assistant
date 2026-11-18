@@ -37,9 +37,11 @@ jobs:
           cp google-services.json android/app/google-services.json || echo "no google-services yet"
           # 3. Icon - kalau ada icon.png baru generate, kalau gak ada skip biar gak error
           if [ -f assets/icon.png ]; then
-            npx @capacitor/assets generate --android || true
+           cp assets/icon.png assets/icon-only.png
+           cp assets/icon.png assets/icon-foreground.png
+           npx @capacitor/assets generate --android || true
           else
-            echo "no icon.png, skip"
+           echo "no icon.png, skip"
           fi
           # 4. Edge to Edge
           MAIN=android/app/src/main/java/app/fahri/assistant/MainActivity.java
