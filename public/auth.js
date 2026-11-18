@@ -22,32 +22,25 @@ auth.onAuthStateChanged(function(user){
   }
 });
 
-// ===== TOMBOL LOGIN - FINAL =====
 function pasang(id, provName){
   var b = document.getElementById(id);
   if(!b) return;
   b.onclick = async function(e){
     e.preventDefault();
-    var isNative = false;
-    try { isNative = window.Capacitor && window.Capacitor.isNativePlatform(); } catch (_) {}
-    if (isNative) {
-      try {
-        var plugin = (window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication) || window.FirebaseAuthentication;
-        if (!plugin) throw new Error('Plugin FirebaseAuthentication tidak ketemu - cap sync gagal');
-        var res = await plugin.signInWithGoogle();
-        var idToken = res && res.credential && res.credential.idToken;
-        if (!idToken && res && res.user) idToken = res.user.idToken;
-        if (!idToken) throw new Error('idToken kosong dari Google');
-        var cred = firebase.auth.GoogleAuthProvider.credential(idToken);
-        await auth.signInWithCredential(cred);
-        return;
-      } catch (err) {
-        alert('Login gagal: ' + (err && err.message ? err.message : err));
-        return;
+    // Di APK: coba plugin native dulu, kalau gak ada langsung Redirect (bukan Popup)
+    try {
+      var isNative = window.Capacitor && window.Capacitor.isNativePlatform();
+      if (isNative) {
+        var plugin = window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication;
+        if (plugin) {
+          var res = provName === 'google' ? await plugin.signInWithGoogle() : await plugin.signInWithGithub();
+          var idToken = res && res.credential && res.credential.idToken;
+          if (idToken) { await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken)); return; }
+        }
       }
-    }
-    var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : null;
-    auth.signInWithPopup(p).catch(function(){ return auth.signInWithRedirect(p); });
+    } catch(err){ console.log('Native login gagal, lanjut Redirect:', err); }
+    var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
+    auth.signInWithRedirect(p);
   };
-}
+      }
 pasang('google-login-btn', 'google');
