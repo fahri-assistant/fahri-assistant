@@ -126,65 +126,46 @@ button.badge{font-family:inherit;cursor:pointer;color:#fff}
 .profile-row{text-align:left;background:rgba(8,2,20,.7);border:1px solid rgba(168,85,247,.4);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px}
 .profile-row span{color:#c4b5fd;font-size:11px;display:block;margin-bottom:2px}
 .profile-btn{width:100%;padding:12px;border-radius:999px;border:0;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(135deg,#a855f7,#3b82f6);color:#fff;margin-top:8px}
-</style>
-</head>
-<body>
-<div id="loader"><div class="l-logo">F</div><div class="l-text">Fahri Assistant</div><div class="l-sub">AI cerdas buatan FahriAI</div><div class="l-bar"><i></i></div></div>
-<div class="header" id="header">
-<button class="menu-btn" id="btnMenu">☰</button>
-<div class="header-top"><div class="logo">F</div><div><h1>Fahri<br>Assistant</h1><p class="subtitle">AI cerdas buatan FahriAI</p><div class="online-status"><span class="online-dot"></span><span>Online - Siap Membantu</span></div></div></div>
-<p class="greet" id="greetText">Selamat siang, Mau aku bantu apa</p><p class="greet2">hari ini?</p>
-<div class="badge-row"><button class="badge" onclick="quick('Tanya')"><i>💬</i> Chat</button><button class="badge" onclick="quick('Bikin Gambar')"><i>🖼️</i> Gambar</button><button class="badge" onclick="quick('Edit Foto')"><i>✏️</i> Edit Foto</button></div>
-</div>
-<div class="authbar" id="authBar"><div class="status-pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Belum login</span></div><div class="login-btns" id="loginBtns"><button class="btn btn-google" id="btnGoogle">G Login Google</button><button class="btn btn-github" id="btnGithub">◉ Login Github</button></div><button class="btn btn-logout" id="btnLog" style="color:#d8b4fe;border-color:#a855f7">Log</button><button class="btn btn-logout hidden" id="btnLogout">Logout</button></div>
-<div id="chat"><div class="twinkle"></div><div class="date-pill" id="datePill">Hari ini</div><div class="welcome" id="welcome"><div class="bubble ai"><div class="ai-row"><div class="mini-logo">F</div><span>Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik buatkan gambar kucing di pantai.</span></div></div><div class="chips"><button class="chip" onclick="quick('Tanya')"><i>💡</i>Tanya</button><button class="chip" onclick="quick('Bikin Gambar')"><i>✨</i>Bikin Gambar</button><button class="chip" onclick="quick('Gambar Kucing')"><i>🐱</i>Gambar Kucing</button><button class="chip" onclick="quick('Siapa kamu?')"><i>👤</i>Siapa kamu?</button></div></div></div>
-<div class="composer"><input id="input" placeholder="Tanya apa aja ke Fahri..." autocomplete="off"><button id="sendBtn">➤</button></div>
-<div class="drawer" id="drawer"><div class="drawer-box"><div class="drawer-profile"><b id="drawerName">Pengguna</b><p id="drawerEmail">Belum login</p></div><button class="drawer-item" id="btnClearChat">🧹 Bersihkan Chat</button><button class="drawer-item" id="btnProfile">👤 Profil Pengguna</button><button class="drawer-item" id="btnCloseDrawer">✖ Tutup</button><div class="drawer-ver">Fahri Assistant v1.3.0<br>buatan FahriAI</div></div></div>
-<div class="confirm" id="confirmClear"><div class="confirm-box"><div class="c-icon">🧹</div><b>Hapus Semua Chat?</b><p>Semua riwayat chat akan dihapus. Ini tidak bisa dibatalkan.</p><div class="confirm-row"><button class="confirm-btn cancel" id="btnCancelClear">Batal</button><button class="confirm-btn delete" id="btnYesClear">Ya, Hapus</button></div></div></div>
-<div class="profile" id="profilePopup"><div class="profile-box"><div class="profile-avatar" id="profileAvatar">F</div><b id="profileName">Pengguna</b><p class="p-email" id="profileEmail">Belum login</p><div class="profile-row"><span>Login dengan</span><b id="profileProvider" style="font-size:14px">-</b></div><div class="profile-row"><span>Status</span><b id="profileStatus" style="font-size:14px">Belum login</b></div><button class="profile-btn" id="btnCloseProfile">Tutup</button></div></div>
-<div id="logPanel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:18px">Log Chat</b><button id="btnCloseLog" style="background:#a855f7;border:0;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700">Tutup</button></div><div class="log-box" id="logBox">Belum ada log</div><button id="btnClearLog" style="margin-top:12px;background:transparent;border:1px solid #ff6b81;color:#ff6b81;padding:10px;border-radius:999px">Hapus Semua Log</button></div>
-<script>
-const firebaseConfig={apiKey:"AIzaSyC_enCjCWHSq4GTFHABA6kcCgjWeww1hks",authDomain:"fahri-assistant.firebaseapp.com",projectId:"fahri-assistant"};
-firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const chatEl=document.getElementById('chat');
-const inputEl=document.getElementById('input');
-const headerEl=document.getElementById('header');
-const welcomeEl=document.getElementById('welcome');
-window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loader').classList.add('hide')},900)});
-setTimeout(()=>{document.getElementById('loader').classList.add('hide')},2500);
-try{const d=new Date();const hari=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];const bln=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][d.getMonth()];document.getElementById('datePill').textContent='Hari ini - '+hari+', '+d.getDate()+' '+bln;}catch(e){}
-function updateGreeting(){const jam=new Date().getHours();let sapa='Selamat malam,';let icon='🌙';if(jam>=4&&jam<11){sapa='Selamat pagi,';icon='☀️'}else if(jam>=11&&jam<15){sapa='Selamat siang,';icon='🌤️'}else if(jam>=15&&jam<18){sapa='Selamat sore,';icon='🌇'}const el=document.getElementById('greetText');if(el)el.textContent=icon+' '+sapa+' Mau aku bantu apa';}
-updateGreeting();setInterval(updateGreeting,60000);
-let history=[];try{history=JSON.parse(localStorage.getItem('fahri_history')||'[]')}catch(e){history=[]}
-function saveHistory(){try{localStorage.setItem('fahri_history',JSON.stringify(history))}catch(e){}}
-function saveLog(role,text){try{const logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');logs.push({role,text,time:new Date().toISOString()});localStorage.setItem('fahri_log',JSON.stringify(logs.slice(-200)))}catch(e){}}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function renderMarkdown(t){let text=esc(t);const lines=text.split('\n');let out='',i=0;while(i<lines.length){if(lines[i].includes('|')&&lines[i+1]&&lines[i+1].includes('---')){const headers=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';i+=2;while(i<lines.length&&lines[i].includes('|')){const cells=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';i++}out+='</table>';continue}out+=lines[i]+'\n';i++}text=out;text=text.replace(/^###\s*(.+)$/gm,'<h3>$1</h3>');text=text.replace(/^---$/gm,'<hr>');text=text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');return text.replace(/\n/g,'<br>')}
-function addBubble(text,who,isHtml){const d=document.createElement('div');d.className='bubble '+who;if(isHtml)d.innerHTML=text;else d.textContent=text;if(welcomeEl)welcomeEl.style.display='none';chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;return d}
-history.forEach(m=>{if(m.role==='user')addBubble(m.content,'user');else addBubble(renderMarkdown(m.content),'ai',true)});
-if(history.length>0&&welcomeEl)welcomeEl.style.display='none';
-function quick(t){inputEl.value=t;send()}
-async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'user');inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const loading=addBubble('Fahri lagi mikir...','ai');try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});const d=await r.json();const reply=d.reply||'Maaf, coba lagi ya.';loading.innerHTML=renderMarkdown(reply);history.push({role:'assistant',content:reply});saveHistory();saveLog('assistant',reply)}catch(e){loading.textContent='Maaf, server lagi sibuk, coba lagi ya.'}}
-document.getElementById('sendBtn').onclick=send;
-inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
-chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
-function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
-document.getElementById('btnLog').onclick=openLog;
-document.getElementById('btnCloseLog').onclick=function(){document.getElementById('logPanel').classList.remove('open')};
-document.getElementById('btnClearLog').onclick=function(){localStorage.removeItem('fahri_log');document.getElementById('logBox').textContent='Log sudah dihapus'};
-document.getElementById('btnMenu').onclick=function(e){e.stopPropagation();document.getElementById('drawer').classList.add('open');try{var u=auth.currentUser;document.getElementById('drawerName').textContent=u?(u.displayName||'Pengguna'):'Pengguna';document.getElementById('drawerEmail').textContent=u?(u.email||'Login dengan Google / Github'):'Belum login';}catch(e){}};
-document.getElementById('drawer').onclick=function(e){if(e.target.id==='drawer')document.getElementById('drawer').classList.remove('open')};
-document.getElementById('btnCloseDrawer').onclick=function(){document.getElementById('drawer').classList.remove('open')};
-document.getElementById('btnClearChat').onclick=function(){document.getElementById('drawer').classList.remove('open');document.getElementById('confirmClear').classList.add('open')};
-document.getElementById('btnCancelClear').onclick=function(){document.getElementById('confirmClear').classList.remove('open')};
-document.getElementById('confirmClear').onclick=function(e){if(e.target.id==='confirmClear')document.getElementById('confirmClear').classList.remove('open')};
-document.getElementById('btnYesClear').onclick=function(){history=[];localStorage.removeItem('fahri_history');var bubbles=chatEl.querySelectorAll('.bubble');bubbles.forEach(function(b){if(!b.closest('#welcome'))b.remove()});if(welcomeEl)welcomeEl.style.display='flex';document.getElementById('confirmClear').classList.remove('open')};
-document.getElementById('btnProfile').onclick=function(){document.getElementById('drawer').classList.remove('open');try{var u=auth.currentUser;if(!u){document.getElementById('profileAvatar').textContent='?';document.getElementById('profileName').textContent='Belum Login';document.getElementById('profileEmail').textContent='Login dulu lewat tombol Google / Github di atas.';document.getElementById('profileProvider').textContent='-';document.getElementById('profileStatus').textContent='Belum login';}else{var nm=u.displayName||'Pengguna';document.getElementById('profileAvatar').textContent=nm.charAt(0).toUpperCase();document.getElementById('profileName').textContent=nm;document.getElementById('profileEmail').textContent=u.email||'-';document.getElementById('profileProvider').textContent=u.providerData[0]?u.providerData[0].providerId:'-';document.getElementById('profileStatus').textContent='Login - Aktif';}}catch(e){document.getElementById('profileName').textContent='Belum Login';document.getElementById('profileEmail').textContent='Belum login';}document.getElementById('profilePopup').classList.add('open')};
-document.getElementById('btnCloseProfile').onclick=function(){document.getElementById('profilePopup').classList.remove('open')};
-document.getElementById('profilePopup').onclick=function(e){if(e.target.id==='profilePopup')document.getElementById('profilePopup').classList.remove('open')};
-</script>
-<script src="auth.js"></script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}</script>
-</body>
-</html>
+/* === PERBAIKAN 1: MATIIN TITIK ORBIT LAMA - LOGO JADI PAS === */
+.logo::before,.logo::after,#loader .l-logo::after{display:none!important}
+.logo{position:relative}
+#loader .l-logo{position:relative}
+/* === PERBAIKAN 3: STRIP PUTIH ANTARA COMPOSER & KEYBOARD DIHILANGIN === */
+html{background:#070112}
+body{background-color:#070112}
+.composer{margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+/* === FITUR BARU: TEMA DI GARIS 3 - CUMA GANTI WALLPAPER, STROKE, SHADOW, BUBBLE USER === */
+.theme-section{padding:10px 12px 12px;border-top:1px solid rgba(168,85,247,.3);border-bottom:1px solid rgba(168,85,247,.3);margin:8px 0}
+.theme-title{font-size:12px;color:#c4b5fd;font-weight:700;letter-spacing:.5px;margin-bottom:10px}
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.theme-btn{border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;padding:10px 6px;border-radius:12px;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.theme-btn i{width:22px;height:22px;border-radius:50%;display:block;border:2px solid rgba(255,255,255,.6)}
+.theme-btn.active{border-color:#d8b4fe;background:rgba(168,85,247,.35);box-shadow:0 0 12px rgba(168,85,247,.5)}
+.theme-btn[data-theme="original"] i{background:linear-gradient(135deg,#a855f7,#150826)}
+.theme-btn[data-theme="midnight"] i{background:#0a1628}
+.theme-btn[data-theme="ivory"] i{background:#faf6ec}
+.theme-btn[data-theme="champagne"] i{background:linear-gradient(135deg,#d4af6a,#1a1510)}
+.theme-btn[data-theme="forest"] i{background:#0d241a}
+/* --- MIDNIGHT --- */
+body[data-theme="midnight"]{background:linear-gradient(180deg,#0a1628 0%,#060d1a 55%,#03060e 100%)}
+body[data-theme="midnight"] .header{border-color:rgba(120,160,220,.9);box-shadow:inset 0 0 48px rgba(40,80,160,.4),0 0 30px rgba(40,80,160,.35);animation:none}
+body[data-theme="midnight"] .bubble.ai{border-color:#7aa0d4;box-shadow:inset 0 0 30px rgba(40,80,160,.35),0 0 22px rgba(40,80,160,.35);background:#0a1628}
+body[data-theme="midnight"] .bubble.user{background:linear-gradient(135deg,#1e3a6e,#16294d);border-color:rgba(160,190,240,.5);box-shadow:0 0 18px rgba(40,80,160,.5)}
+body[data-theme="midnight"] .bubble th,body[data-theme="midnight"] .bubble td{border-color:rgba(120,160,220,.5)}
+body[data-theme="midnight"] .composer{border-color:rgba(120,160,220,.7);background:#0a1628;box-shadow:0 0 18px rgba(40,80,160,.35)}
+body[data-theme="midnight"] .composer button{background:linear-gradient(135deg,#2b5aa6,#1e3a6e)}
+body[data-theme="midnight"] #chat::before{opacity:.25}
+body[data-theme="midnight"] .twinkle{opacity:.3}
+/* --- IVORY --- */
+body[data-theme="ivory"]{background:linear-gradient(180deg,#faf6ec 0%,#f3ecdc 100%);color:#1a1a1a}
+body[data-theme="ivory"] .header{background:#fffdf7;border-color:#d8d0bc;box-shadow:0 0 20px rgba(0,0,0,.08);animation:none}
+body[data-theme="ivory"] .header h1{color:#1a1a1a}
+body[data-theme="ivory"] .subtitle{color:#7c6bb5!important}
+body[data-theme="ivory"] .bubble.ai{background:#ffffff;border-color:#d8d0bc;box-shadow:0 0 14px rgba(0,0,0,.07);color:#1a1a1a}
+body[data-theme="ivory"] .bubble.user{background:linear-gradient(135deg,#c4b5fd,#a78bfa);border-color:rgba(255,255,255,.6);color:#fff}
+body[data-theme="ivory"] .bubble th,body[data-theme="ivory"] .bubble td{border-color:#d8d0bc}
+body[data-theme="ivory"] .bubble th{background:rgba(196,181,253,.25)}
+body[data-theme="ivory"] .composer{background:#ffffff;border-color:#d8d0bc;box-shadow:0 0 14px rgba(0,0,0,.07)}
+body[data-theme="ivory"] .composer input{color:#1a1a1a}
+body[data-theme="ivory"] .composer input::placeholder{color:#9a9a9a}
+body[data-theme="ivory"] #chat::before{opacity:
