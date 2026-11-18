@@ -15,7 +15,7 @@ jobs:
           java-version: 17
       - name: Install Capacitor
         run: |
-          npm install @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2
+          npm install @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0
           npx cap init FahriAssistant app.fahri.assistant --web-dir=public
       - name: Add Android
         run: |
