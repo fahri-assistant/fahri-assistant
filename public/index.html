@@ -16,7 +16,7 @@
 body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.65) 0%, rgba(147,51,234,.28) 32%, transparent 65%), linear-gradient(180deg,#150826 0%,#0b021a 48%,#070112 100%);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding-top:14px}
 #loader{position:fixed;inset:0;z-index:9999;background:#080113;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s ease}
 #loader.hide{opacity:0;pointer-events:none}
-#loader .l-logo{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:900;color:#d8b4fe;box-shadow:0 0 0 5px #8b5cf6, 0 0 0 9px #a855f7, 0 0 34px rgba(192,132,252,1);position:relative}
+#loader .l-logo{width:92px;height:92px;border-radius:50%;background-image:url(logo.png);background-size:cover;background-position:center}
 #loader .l-logo::after{content:"";position:absolute;inset:-17px;border-radius:50%;border:2.5px dotted rgba(233,213,255,1);animation:spinRing 9s linear infinite}
 #loader .l-text{font-size:22px;font-weight:900;letter-spacing:-.5px}
 #loader .l-sub{font-size:13px;color:#c4b5fd;font-weight:600}
