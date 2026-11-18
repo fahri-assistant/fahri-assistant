@@ -33,19 +33,27 @@ auth.onAuthStateChanged(function(user){
 function pasang(id, provName){
   var b = document.getElementById(id);
   if(!b) return;
-  b.onclick = function(e){
+  b.onclick = async function(e){
     e.preventDefault();
-    var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
+    // Kalau di APK - pake login native, langsung muncul pilih akun di dalam app
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      try {
+        var res = await window.Capacitor.Plugins.FirebaseAuthentication.signInWithGoogle();
+        var idToken = res && res.credential && res.credential.idToken;
+        if (idToken) {
+          var cred = firebase.auth.GoogleAuthProvider.credential(idToken);
+          await auth.signInWithCredential(cred);
+        }
+        return;
+      } catch (err) {
+        alert('Login gagal: ' + err.message);
+        return;
+      }
+    }
+    // Kalau di web Vercel - pake cara lama
+    var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : null;
     auth.signInWithPopup(p).catch(function(){
-  return auth.signInWithRedirect(p);
-});
+      return auth.signInWithRedirect(p);
+    });
   };
-}
-
-pasang('btnGoogle', 'google');
-pasang('btnGithub', 'github');
-
-var logoutBtn = document.getElementById('btnLogout');
-if(logoutBtn){
-  logoutBtn.onclick = function(){ auth.signOut(); };
     }
