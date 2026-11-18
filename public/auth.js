@@ -52,7 +52,14 @@ function pasang(id, provName){
     auth.signInWithRedirect(p);
   };
       }
-pasang('btnGoogle', 'google');
-pasang('btnGithub', 'github');
-pasang('google-login-btn', 'google');
-pasang('github-login-btn', 'github');
+function pasangSemua(){
+  pasang('btnGoogle', 'google');
+  pasang('btnGithub', 'github');
+  pasang('google-login-btn', 'google');
+  pasang('github-login-btn', 'github');
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', pasangSemua);
+} else {
+  pasangSemua();
+      }
