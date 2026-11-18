@@ -54,3 +54,5 @@ function pasang(id, provName){
       }
 pasang('btnGoogle', 'google');
 pasang('btnGithub', 'github');
+pasang('google-login-btn', 'google');
+pasang('github-login-btn', 'github');
