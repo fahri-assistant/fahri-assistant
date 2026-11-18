@@ -246,7 +246,23 @@ function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 function renderMarkdown(t){let text=esc(t);const lines=text.split('\n');let out='',i=0;while(i<lines.length){if(lines[i].includes('|')&&lines[i+1]&&lines[i+1].includes('---')){const headers=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';i+=2;while(i<lines.length&&lines[i].includes('|')){const cells=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';i++}out+='</table>';continue}out+=lines[i]+'\n';i++}text=out;text=text.replace(/^###\s*(.+)$/gm,'<h3>$1</h3>');text=text.replace(/^---$/gm,'<hr>');text=text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');return text.replace(/\n/g,'<br>')}
 /* === TTS 2: FUNGSI NGOMONG === */
 let currentUtter=null;
-function speakText(btn,rawText){try{if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();document.querySelectorAll('.tts-btn').forEach(b=>b.classList.remove('playing'));if(btn.dataset.playing==='1'){btn.dataset.playing='0';return}}let txt=document.createElement('div');txt.innerHTML=rawText;let clean=(txt.textContent||'').replace(/\*/g,'').slice(0,2000);let u=new SpeechSynthesisUtterance(clean);u.lang='id-ID';u.rate=1;u.onend=function(){btn.classList.remove('playing');btn.dataset.playing='0'};btn.classList.add('playing');btn.dataset.playing='1';currentUtter=u;window.speechSynthesis.speak(u)}catch(e){}}
+async function speakText(btn, rawText){
+  try{
+    const text = (rawText || "").toString().replace(/[*#_`]/g,"").trim();
+    if(!text) return;
+    // Kalau lagi ngomong, berhentiin dulu
+    if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech){
+      try{ await window.Capacitor.Plugins.TextToSpeech.stop(); }catch(e){}
+      await window.Capacitor.Plugins.TextToSpeech.speak({ text: text, lang: 'id-ID', rate: 1.0, pitch: 1.0, volume: 1.0 });
+      return;
+    }
+    // Kalau di web / Chrome, pake cara lama
+    if(window.speechSynthesis.speaking){ window.speechSynthesis.cancel(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID'; u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+    window.speechSynthesis.speak(u);
+  }catch(e){ console.log("TTS error", e); }
+  }
 /* === TTS 3: addBubble UDAH ADA TOMBOL 🔊 === */
 function addBubble(text,who,isHtml){const d=document.createElement('div');d.className='bubble '+who;if(isHtml)d.innerHTML=text;else d.textContent=text;if(who==='ai'){const b=document.createElement('button');b.className='tts-btn';b.textContent='🔊';b.onclick=function(){speakText(b,text)};d.appendChild(b)}if(welcomeEl)welcomeEl.style.display='none';chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;return d}
 history.forEach(m=>{if(m.role==='user')addBubble(m.content,'user');else addBubble(renderMarkdown(m.content),'ai',true)});
