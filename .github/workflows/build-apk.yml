@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
       - name: Install Capacitor
         run: |
           npm install --legacy-peer-deps @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0 @capacitor/status-bar@6.0.1
