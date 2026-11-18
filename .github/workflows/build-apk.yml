@@ -27,13 +27,26 @@ jobs:
 
       - name: Add Android + Edge to Edge + Icon
         run: |
-          cp google-services.json android/app/google-services.json || echo "no google-services yet"
+          # 1. Bikin config kalau belum ada
+          if [ ! -f capacitor.config.json ]; then
+            echo '{"appId":"app.fahri.assistant","appName":"Fahri Assistant","webDir":"public"}' > capacitor.config.json
+          fi
+          mkdir -p assets
+          # 2. Add android DULU, baru copy google-services
           npx cap add android || true
-          npx @capacitor/assets generate --android || true
-          # Edge to Edge - biar gak ada hitam atas bawah
-          sed -i 's/getWindow().setFlags.*/WindowCompat.setDecorFitsSystemWindows(getWindow(), false); getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT); getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);/' android/app/src/main/java/app/fahri/assistant/MainActivity.java || true
-          # Tambah import WindowCompat kalau belum ada
-          grep -q "WindowCompat" android/app/src/main/java/app/fahri/assistant/MainActivity.java || sed -i 's/import android.os.Bundle;/import android.os.Bundle;\nimport androidx.core.view.WindowCompat;/' android/app/src/main/java/app/fahri/assistant/MainActivity.java || true
+          cp google-services.json android/app/google-services.json || echo "no google-services yet"
+          # 3. Icon - kalau ada icon.png baru generate, kalau gak ada skip biar gak error
+          if [ -f assets/icon.png ]; then
+            npx @capacitor/assets generate --android || true
+          else
+            echo "no icon.png, skip"
+          fi
+          # 4. Edge to Edge
+          MAIN=android/app/src/main/java/app/fahri/assistant/MainActivity.java
+          if [ -f "$MAIN" ]; then
+            grep -q "WindowCompat" "$MAIN" || sed -i 's/import android.os.Bundle;/import android.os.Bundle;\nimport androidx.core.view.WindowCompat;/' "$MAIN" || true
+            grep -q "setDecorFitsSystemWindows" "$MAIN" || sed -i 's/super.onCreate.*/super.onCreate(savedInstanceState);\n    WindowCompat.setDecorFitsSystemWindows(getWindow(), false);/' "$MAIN" || true
+          fi
           npx cap sync android
 
       - name: Build APK
