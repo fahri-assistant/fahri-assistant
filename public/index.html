@@ -903,6 +903,109 @@ var obs=new MutationObserver(function(){ cobaIsiDrawer(); hapusTTS(); });
 obs.observe(document.body, {childList:true, subtree:true});
 setInterval(cobaIsiDrawer, 1000);
 })();
+/* === FIX V4.2 - BAGIAN 4/4: POPUP APP + HAPUS DOBEL === */
+(function(){
+if(window.__fahriFix42) return; window.__fahriFix42 = true;
+
+// --- CSS POPUP APP KAYAK "HAPUS SEMUA CHAT?" YANG LAMA ---
+var css=document.createElement('style');
+css.textContent=`
+  .f-app-overlay{ position:fixed !important; inset:0 !important; background:rgba(0,0,0,.65) !important; z-index:999999 !important; display:flex !important; align-items:center !important; justify-content:center !important; padding:20px !important; }
+  .f-app-popup{ background:#1a1a22 !important; color:#fff !important; width:100% !important; max-width:340px !important; border-radius:22px !important; padding:24px 20px 20px !important; text-align:center !important; border:1.5px solid #a855f7 !important; box-shadow:0 0 30px rgba(168,85,247,.45) !important; }
+  .f-app-popup .f-ap-icon{ font-size:36px !important; margin-bottom:10px !important; }
+  .f-app-popup .f-ap-title{ font-size:18px !important; font-weight:800 !important; margin:0 0 8px !important; }
+  .f-app-popup .f-ap-msg{ font-size:13.5px !important; line-height:1.5 !important; opacity:.85 !important; margin:0 0 18px !important; white-space:pre-line !important; text-align:center !important; }
+  .f-app-popup .f-ap-input{ width:100% !important; padding:12px !important; border-radius:12px !important; border:1px solid #444 !important; background:#222 !important; color:#fff !important; box-sizing:border-box !important; margin-bottom:14px !important; }
+  .f-app-popup .f-ap-btns{ display:flex !important; gap:10px !important; }
+  .f-app-popup .f-ap-btns button{ flex:1 !important; padding:11px !important; border-radius:99px !important; border:none !important; font-weight:800 !important; font-size:14px !important; cursor:pointer !important; }
+  .f-ap-batal{ background:#3a3a44 !important; color:#fff !important; }
+  .f-ap-oke{ background:#d946ef !important; color:#fff !important; }
+  .f-ap-opt{ width:100% !important; padding:11px !important; border-radius:12px !important; border:1px solid #333 !important; background:#222 !important; color:#fff !important; margin-bottom:8px !important; font-weight:600 !important; }
+`;
+document.head.appendChild(css);
+
+function showAppPopup(opt){
+  // opt: {icon, title, msg, inputPlaceholder, showInput, showCancel, okText, cancelText, onOk(value), onCancel}
+  var old=document.querySelector('.f-app-overlay'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup"><div class="f-ap-icon">'+(opt.icon||'ℹ️')+'</div><div class="f-ap-title">'+(opt.title||'Info')+'</div><div class="f-ap-msg">'+(opt.msg||'')+'</div>'+(opt.showInput?'<input class="f-ap-input" placeholder="'+(opt.inputPlaceholder||'')+'">':'')+(opt.extraHtml||'')+'<div class="f-ap-btns">'+(opt.showCancel?'<button class="f-ap-batal">'+(opt.cancelText||'Batal')+'</button>':'')+'<button class="f-ap-oke">'+(opt.okText||'Oke')+'</button></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('.f-ap-input'); if(inp) setTimeout(function(){ inp.focus(); }, 100);
+  ov.addEventListener('click',function(e){ if(e.target===ov){ ov.remove(); if(opt.onCancel) opt.onCancel(); } });
+  ov.querySelector('.f-ap-oke').onclick=function(){ var v=inp?inp.value:''; ov.remove(); if(opt.onOk) opt.onOk(v); };
+  var b=ov.querySelector('.f-ap-batal'); if(b) b.onclick=function(){ ov.remove(); if(opt.onCancel) opt.onCancel(); };
+  return ov;
+}
+window.__f_showAppPopup = showAppPopup;
+
+// --- GANTI SEMUA ALERT CHROME JADI POPUP APP ---
+window.alert = function(msg){
+  var t=String(msg||''); var icon='ℹ️'; var title='Info';
+  if(t.includes('✅')){ icon='✅'; title='Berhasil'; }
+  else if(t.includes('BOOKMARK')){ icon='🔖'; title='Bookmark / Favorit'; }
+  else if(t.includes('TERSIMPAN')){ icon='📌'; title='Chat Tersimpan'; }
+  else if(t.includes('CARA PAKAI')){ icon='❓'; title='Bantuan / Cara Pakai'; }
+  else if(t.includes('Fahri Assistant v')){ icon='ℹ️'; title='Tentang Aplikasi'; }
+  else if(t.includes('Chat disalin')||t.includes('disalin')){ icon='📤'; title='Export Chat'; }
+  else if(t.includes('Tulisan diperbaiki')){ icon='✍️'; title='Perbaiki Tulisan'; }
+  else if(t.includes('Pengingat')){ icon='⏰'; title='Pengingat Belajar'; }
+  showAppPopup({icon:icon, title:title, msg:t, showCancel:false, okText:'Oke'});
+};
+// Ganti confirm Chrome juga, biar gak pernah muncul lagi
+window.confirm = function(msg){
+  showAppPopup({icon:'⚠️', title:'Konfirmasi', msg:String(msg||''), showCancel:true, okText:'Ya', cancelText:'Batal'});
+  return false; // Biar kode lama gak langsung jalan, nunggu user pencet Ya di popup app (khusus hapus sudah di-handle di bawah)
+};
+
+// --- HAPUS DOBEL: PROFIL SAYA + HAPUS SEMUA CHAT ---
+function hapusDobel(){
+  document.querySelectorAll('.f-menu-kanan [data-a="profil"], .f-menu-kanan [data-a="hapus"]').forEach(function(b){ b.remove(); });
+  // Kalau ada tombol Profil Saya / Hapus Semua Chat di menu kita yang lain, hapus juga
+  document.querySelectorAll('.f-menu-kanan .f-item').forEach(function(b){
+    var tx=b.textContent||'';
+    if(tx.includes('Profil Saya') || tx.includes('Hapus Semua Chat')) b.remove();
+  });
+}
+setInterval(hapusDobel, 800);
+
+// --- GANTI PROMPT CHROME (BAHASA, PENGINGAT, DLL) JADI POPUP APP ---
+// Kita tangkap klik di menu garis 3 SEBELUM handler lama jalan
+document.addEventListener('click', function(e){
+  var b=e.target.closest('.f-menu-kanan [data-a]');
+  if(!b) return;
+  var a=b.getAttribute('data-a');
+  // Yang kita ambil alih: bahasa, ingat, bookmark, bantuan, tentang, bagikan
+  if(a==='bahasa'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'🌐', title:'Bahasa', msg:'Pilih bahasa:', showCancel:true, okText:'Tutup', cancelText:'Batal',
+      extraHtml:'<button class="f-ap-opt" data-lang="Indonesia">🇮🇩 Indonesia</button><button class="f-ap-opt" data-lang="English">🇺🇸 English</button><button class="f-ap-opt" data-lang="Jawa">Jawa</button>',
+      onOk:function(){}});
+    var ov=document.querySelector('.f-app-overlay');
+    ov.querySelectorAll('[data-lang]').forEach(function(btn){ btn.onclick=function(){ var lang=btn.getAttribute('data-lang'); ov.remove(); showAppPopup({icon:'🌐', title:'Bahasa', msg:lang+' aktif!', showCancel:false}); }; });
+  }
+  if(a==='ingat'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'⏰', title:'Pengingat Belajar', msg:'Mau diingetin jam berapa?', showInput:true, inputPlaceholder:'Contoh: 19:00', showCancel:true, okText:'Simpan', cancelText:'Batal', onOk:function(v){ if(v){ localStorage.setItem('fahri_inget',v); showAppPopup({icon:'✅', title:'Berhasil', msg:'Pengingat diset jam '+v, showCancel:false}); } }});
+  }
+  if(a==='bookmark'){
+    e.preventDefault(); e.stopPropagation();
+    var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]');
+    showAppPopup({icon:'🔖', title:'Bookmark / Favorit', msg:arr.length?arr.slice(-3).join('\n---\n'):'Belum ada bookmark.\nPencet 🔖 di bawah tiap jawaban AI.', showCancel:false});
+  }
+  if(a==='bantuan'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'❓', title:'Bantuan / Cara Pakai', msg:'1. Ketik untuk chat\n2. 📎 Kirim foto / PDF\n3. 🎤 Ngomong jadi teks\n4. 🃏 Flashcards\n5. 📄 Template Cepat\n6. ✅ To-Do\n7. 🔖 Bookmark jawaban bagus', showCancel:false});
+  }
+  if(a==='tentang'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'ℹ️', title:'Tentang Aplikasi', msg:'Fahri Assistant v1.4.0\n\nAsisten AI untuk belajar, kerja, dan sehari-hari.\nFlashcards, Rangkum PDF, Template, To-Do, Cuaca & Jadwal Sholat, Bookmark, Auto Translate.', showCancel:false});
+  }
+  if(a==='bagikan'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'↗️', title:'Bagikan Aplikasi', msg:'Bagikan Fahri Assistant ke teman kamu!', showCancel:true, okText:'Bagikan', cancelText:'Batal', onOk:function(){ if(navigator.share) navigator.share({title:'Fahri Assistant', url:location.href}); else { navigator.clipboard.writeText(location.href); showAppPopup({icon:'✅', title:'Berhasil', msg:'Link disalin!', showCancel:false}); } }});
+  }
+}, true); // capture = true, biar jalan duluan sebelum handler lama
+})();
 </script>
 <script src="auth.js"></script>
 </body>
