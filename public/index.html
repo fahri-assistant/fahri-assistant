@@ -1421,6 +1421,170 @@ function fixSend(){
 setInterval(function(){ buatCuaca(); buatFiturBar(); fixSend(); }, 800);
 buatCuaca(); buatFiturBar(); fixSend();
 })();
+/* === BAGIAN 11 - 1 TOMBOL FITUR DI ATAS INPUT, HAPUS BAR, HAPUS MIC KIRI, CUACA VERSI LAMA, NO DOBEL MENU === */
+(function(){
+if(window.__fahriFix11) return; window.__fahriFix11 = true;
+
+var css=document.createElement('style');
+css.textContent=`
+  /* === HAPUS SEMUA BAR DI ATAS PAPAN TEKS - TOTAL === */
+  #f-fitur-bar, #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2,
+  #f-mode-bar, #f-mode-bar2{ display:none !important; }
+
+  /* === 1 TOMBOL FITUR DI ATAS PAPAN TEKS, DI TEMPAT BAR TADI === */
+  #f-fitur-satu{
+    display:flex !important; align-items:center !important; gap:6px !important;
+    margin:0 12px 8px !important; padding:0 !important; background:transparent !important; border:none !important;
+  }
+  #f-fitur-satu button{
+    display:flex !important; align-items:center !important; gap:6px !important;
+    padding:8px 16px !important; border-radius:99px !important; font-size:12px !important; font-weight:800 !important;
+    background:linear-gradient(135deg,#a855f7,#7c3aed) !important; color:#fff !important;
+    border:none !important; box-shadow:0 4px 14px rgba(168,85,247,.4) !important;
+    width:auto !important; height:auto !important; flex-shrink:0 !important;
+  }
+
+  /* === CUACA + SHOLAT VERSI LAMA (FOTO KE-2) - 2 KOTAK === */
+  #f-cuaca-atas{
+    display:flex !important; gap:8px !important; padding:0 12px 10px !important;
+    margin:0 !important; background:transparent !important; border:none !important; box-shadow:none !important;
+  }
+  #f-cuaca-atas .f-ca-box{
+    flex:1 !important; padding:10px 12px !important; border-radius:16px !important;
+    background:rgba(20,15,35,.78) !important; border:1px solid rgba(168,85,247,.3) !important;
+    color:#fff !important; overflow:hidden !important;
+  }
+  #f-cuaca-atas .f-ca-title{ font-size:12px !important; font-weight:800 !important; margin-bottom:2px !important; display:block !important; }
+  #f-cuaca-atas .f-ca-sub{ font-size:11px !important; font-weight:500 !important; color:rgba(255,255,255,.9) !important; line-height:1.4 !important; display:block !important; }
+  #f-widget-mini{ display:none !important; }
+  #f-fitur-fab{ display:none !important; }
+
+  /* === PAPAN TEKS LEGA - MIC KIRI DIHAPUS === */
+  .f-input-lega{ display:flex !important; align-items:center !important; gap:8px !important; }
+  .f-input-lega input, .f-input-lega textarea{ flex:1 !important; min-width:0 !important; }
+
+  /* Pas loading, sembunyiin semua */
+  body:not(.f-ready) #f-cuaca-atas, body:not(.f-ready) #f-fitur-satu, body:not(.f-ready) #f-sheet{ display:none !important; }
+`;
+document.head.appendChild(css);
+
+function getLoginRow(){
+  var els=document.querySelectorAll('div, button');
+  for(var i=0;i<els.length;i++){ if(els[i].textContent.includes('Belum login') && els[i].offsetHeight<80) return els[i].closest('div') || els[i]; }
+  var h=document.querySelectorAll('div, header');
+  for(var i=0;i<h.length;i++){ if(h[i].textContent.includes('FahriAssistant') && h[i].offsetHeight>30 && h[i].offsetHeight<180) return h[i]; }
+  return null;
+}
+function getInp(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]'); }
+
+// 1. CUACA VERSI LAMA - 2 KOTAK
+function buatCuacaLama(){
+  var w=document.getElementById('f-cuaca-atas');
+  if(!w){
+    w=document.createElement('div'); w.id='f-cuaca-atas';
+    w.innerHTML='<div class="f-ca-box"><span class="f-ca-title">🌦️ Tahuna</span><span class="f-ca-sub" id="f-ca-cuaca">25°C • Memuat...</span></div><div class="f-ca-box"><span class="f-ca-title">🕌 Sholat Hari Ini</span><span class="f-ca-sub" id="f-ca-sholat">Memuat...</span></div>';
+    var t=getLoginRow();
+    if(t && t.parentNode) t.parentNode.insertBefore(w, t.nextSibling);
+    else return;
+  } else {
+    var t=getLoginRow();
+    if(t && w.previousElementSibling!==t && t.parentNode) t.parentNode.insertBefore(w, t.nextSibling);
+  }
+  var cuaca=document.getElementById('f-ca-cuaca');
+  if(cuaca && cuaca.textContent.includes('Memuat')){
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){
+      var code=d.current.weather_code; var ket=code===0?'Cerah':code<=3?'Berawan':code<=67?'Hujan ringan':'Hujan';
+      cuaca.textContent=Math.round(d.current.temperature_2m)+'°C • '+ket+' 🌥️';
+    }).catch(function(){ cuaca.textContent='25°C • Berawan 🌥️'; });
+  }
+  var sholat=document.getElementById('f-ca-sholat');
+  if(sholat && sholat.textContent.includes('Memuat')){
+    var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+      var t=d.data.timings;
+      sholat.textContent='Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+    }).catch(function(){ sholat.textContent='Subuh 04:04 • Dzuhur 11:24 • Ashar 14:47 • Maghrib 17:22 • Isya 18:35'; });
+  }
+}
+
+// 2. HAPUS SEMUA BAR + BIKIN 1 TOMBOL FITUR DI ATAS INPUT
+function buatSatuFitur(){
+  // Hapus bar lama dari DOM biar bener-bener ilang, bukan cuma di-hide
+  document.querySelectorAll('#f-fitur-bar, #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2, #f-mode-bar, #f-mode-bar2, #f-fitur-fab').forEach(function(el){ el.remove(); });
+  var inp=getInp(); if(!inp||!inp.parentElement) return;
+  if(document.getElementById('f-fitur-satu')) return;
+  var wrap=document.createElement('div'); wrap.id='f-fitur-satu';
+  var btn=document.createElement('button'); btn.innerHTML='✨ Fitur';
+  btn.onclick=function(){
+    var s=document.getElementById('f-sheet'); if(s) s.classList.add('open');
+    else alert('Menu Fitur belum ke-load, refresh dulu ya');
+  };
+  wrap.appendChild(btn);
+  inp.parentElement.parentNode.insertBefore(wrap, inp.parentElement);
+}
+
+// 3. HAPUS MIC KIRI PAPAN TEKS, SISAIN DI DALAM MENU AJA
+function hapusMicKiri(){
+  var inp=getInp(); if(!inp||!inp.parentElement) return;
+  var wadah=inp.parentElement;
+  wadah.classList.add('f-input-lega');
+  // Mic yang di kiri input (biasanya tombol pertama sebelum input)
+  var btns=wadah.querySelectorAll('button');
+  btns.forEach(function(b){
+    var txt=b.textContent.trim();
+    // Hapus mic kiri + mic dobel, tapi JANGAN hapus tombol send (➤ / ↑ / ✈)
+    if(txt==='🎤' || txt==='🎙️' || txt.includes('🎤') || txt.includes('🎙️') || b.id.includes('ngobrol')){
+      // Kalau tombolnya ada di kiri input (sebelum input), hapus. Kalau di kanan, biarin dulu, nanti Bagian 8 yang handle
+      if(b.compareDocumentPosition(inp) & Node.DOCUMENT_POSITION_FOLLOWING){
+        b.remove();
+      } else if(txt==='🎙️'){
+        b.remove();
+      }
+    }
+  });
+  // Hapus juga mic tambahan dari Bagian 5/8
+  document.querySelectorAll('#f-ngobrol-btn, #f-ngobrol-btn2').forEach(function(el){ el.remove(); });
+  // Pastiin tombol send gak kegencet
+  wadah.querySelectorAll('button').forEach(function(b){
+    if(b.textContent.includes('➤')||b.textContent.includes('↑')||b.textContent.includes('✈')) b.style.cssText='flex-shrink:0 !important; width:42px !important; height:42px !important; display:flex !important; align-items:center !important; justify-content:center !important;';
+  });
+}
+
+// 4. JANGAN DOBEL SAMA MENU GARIS 3 (☰) - HAPUS YANG SAMA DARI MENU FITUR
+function antiDobelMenu(){
+  // Ambil teks yang ada di menu garis 3
+  var hamburgerTeks=[];
+  document.querySelectorAll('button, a, div').forEach(function(el){
+    // Menu garis 3 biasanya ada di drawer / sidebar
+    if(el.closest('[class*="drawer"], [class*="sidebar"], [class*="menu"]')){
+      var t=el.textContent.trim();
+      if(t && t.length<30) hamburgerTeks.push(t.toLowerCase());
+    }
+  });
+  // Yang udah pasti ada di garis 3, jangan ditambah di Fitur: Chat Baru, Riwayat, Tersimpan, Pengaturan, dll
+  var sudahDiGaris3=['chat baru','riwayat','riwayat chat','tersimpan','bookmark','pengaturan','settings','profil','logout','keluar','export','bantuan','tentang'];
+  var sheet=document.getElementById('f-sheet');
+  if(!sheet) return;
+  sheet.querySelectorAll('button').forEach(function(b){
+    var txt=b.textContent.trim().toLowerCase();
+    // Kalau tombol di sheet sama persis dengan yang di garis 3, sembunyiin
+    for(var i=0;i<sudahDiGaris3.length;i++){
+      if(txt.includes(sudahDiGaris3[i])){ b.style.display='none'; break; }
+    }
+    // Kalau tombolnya duplikat di dalam sheet sendiri, sembunyiin yang ke-2 dst
+    // (dihandle sama setInterval, cek data-f yang sama)
+  });
+  // Hapus duplikat data-f di dalam sheet
+  var seen={};
+  sheet.querySelectorAll('[data-f]').forEach(function(b){
+    var f=b.getAttribute('data-f');
+    if(seen[f]) b.remove(); else seen[f]=true;
+  });
+}
+
+setInterval(function(){ buatCuacaLama(); buatSatuFitur(); hapusMicKiri(); antiDobelMenu(); }, 800);
+buatCuacaLama(); buatSatuFitur(); hapusMicKiri(); antiDobelMenu();
+})();
 </script>
 <script src="auth.js"></script>
 </body>
