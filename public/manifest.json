@@ -3,12 +3,14 @@
   "short_name": "Fahri Assistant",
   "description": "Fahri Assistant - Asisten AI buatan FahriAI untuk tanya jawab, bikin gambar, dan edit foto. Gratis.",
   "lang": "id",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
   "orientation": "portrait",
-  "background_color": "#0f0f0f",
-  "theme_color": "#0f0f0f",
+  "background_color": "#070112",
+  "theme_color": "#070112",
   "icons": [
     {
       "src": "/icon-192.png",
