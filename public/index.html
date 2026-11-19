@@ -326,6 +326,58 @@ body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
   0%{background-position:200% 0}
   100%{background-position:-200% 0}
   }
+  /* === TEMA PREMIUM CLASS - PERSIS GAMBAR CONTOH === */
+body[data-theme="premium"]{
+  background:#0a0614 !important;
+}
+body[data-theme="premium"] .bubble{
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+  background:#1e1b4b !important;
+}
+body[data-theme="premium"] .bubble.user{
+  background:#2e2a7a !important;
+  border:1px solid rgba(255,255,255,.15) !important;
+  box-shadow:none !important;
+}
+body[data-theme="premium"] .badge, body[data-theme="premium"] .chip{
+  background:rgba(255,255,255,.08) !important;
+  border:1px solid rgba(255,255,255,.15) !important;
+  box-shadow:none !important;
+  backdrop-filter:blur(10px) !important;
+}
+body[data-theme="premium"] .composer{
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:none !important;
+}
+/* Tombol Copy / Regenerate */
+.ai-actions{display:flex;gap:8px;margin-top:10px}
+.ai-actions button{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:#e9d5ff;font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;
+}
+body[data-theme="premium"] .ai-actions button{background:rgba(255,255,255,.08) !important}
+body:not([data-theme="premium"]) .ai-actions button{
+  background:#2a0a4a;border:1px solid #a855f7;box-shadow:0 0 12px #a855f7;
+}
+/* Saran Pertanyaan */
+.suggest-wrap{margin:14px 0}
+.suggest-title{text-align:center;font-size:12px;opacity:.6;margin-bottom:8px}
+.suggest-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.suggest-card{
+  padding:12px;border-radius:14px;font-size:12px;line-height:1.4;cursor:pointer;text-align:left;
+}
+body[data-theme="premium"] .suggest-card{
+  background:rgba(139,92,246,.35) !important;border:1px solid rgba(255,255,255,.15) !important;box-shadow:none !important;
+}
+body:not([data-theme="premium"]) .suggest-card{
+  background:#2a0a4a;border:1px solid #a855f7;box-shadow:0 0 15px rgba(168,85,247,.5);
+}
+/* Kursor ngetik */
+.typing-cursor{display:inline-block;width:2px;height:14px;background:#a855f7;animation:blink .7s infinite;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 </style>
 </head>
 <body>
