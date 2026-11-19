@@ -248,6 +248,34 @@ body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
   display:inline-flex !important;align-items:center !important;justify-content:center !important;
   border-radius:50% !important;
   }
+  /* === SUPER SMOOTH - PASTE 1X AJA === */
+/* 1. Matin animasi bayangan yang bikin berat */
+.header{animation:none !important;will-change:transform, padding !important}
+.header::before{animation:none !important}
+.twinkle{animation:none !important;opacity:.35 !important}
+.logo::before{animation:none !important}
+#chat::before,#chat::after{animation:none !important}
+
+/* 2. Semua transisi jadi halus, pake GPU */
+.header,.header-top,.logo,.header h1,.subtitle,.online-status,.greet,.greet2,.badge-row,.badge,.menu-btn,.bubble,.composer,.drawer-box{
+  transition:all .45s cubic-bezier(.22,1,.36,1) !important;
+  will-change:transform !important;
+  backface-visibility:hidden !important;
+  -webkit-backface-visibility:hidden !important;
+}
+
+/* 3. Scroll chat jadi licin, gak patah-patah */
+#chat{
+  scroll-behavior:smooth !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+  transform:translateZ(0) !important;
+  will-change:scroll-position !important;
+}
+#chat > *{transform:translateZ(0) !important}
+
+/* 4. Header mengecilnya pake transform, bukan padding doang */
+.header.collapsed{transform:translateZ(0) scale(.995) !important}
 </style>
 </head>
 <body>
