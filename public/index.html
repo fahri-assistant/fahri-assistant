@@ -1390,6 +1390,143 @@ setInterval(function(){
 setInterval(rebuildBars, 1000);
 rebuildBars();
 })();
+/* === BAGIAN 8 - FIX: SEND + 1 TOMBOL FITUR + LOADING + BUBBLE === */
+(function(){
+if(window.__fahriFix8) return; window.__fahriFix8 = true;
+
+// --- 1. SEMBUNYIIN SEMUA BAR HITAM LAMA, GANTI 1 TOMBOL ---
+var css=document.createElement('style');
+css.textContent=`
+  /* Sembunyiin semua bar lama yang numpuk */
+  #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2, #f-mode-bar, #f-mode-bar2, #f-head-btns, #f-head-btns2{ display:none !important; }
+  /* Widget cuaca/sholat jadi 1 baris kecil transparan, bukan kotak hitam */
+  #f-widget-mini{ display:flex; gap:8px; padding:6px 10px; font-size:11px; opacity:.85; }
+  #f-widget-mini span{ background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.3); padding:6px 10px; border-radius:99px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:48%; }
+  /* Perbaiki wadah input: input fleksibel, tombol gak kegencet */
+  .f-input-fix{ display:flex !important; align-items:center !important; gap:6px !important; }
+  .f-input-fix input, .f-input-fix textarea{ flex:1 !important; min-width:0 !important; }
+  .f-input-fix button{ flex-shrink:0 !important; width:42px !important; height:42px !important; min-width:42px !important; }
+  /* Tombol Fitur melayang */
+  #f-fitur-fab{ display:flex !important; align-items:center !important; gap:6px !important; padding:8px 14px !important; border-radius:99px !important; border:1px solid rgba(168,85,247,.5) !important; background:rgba(139,92,246,.2) !important; color:#fff !important; font-size:12px !important; font-weight:700 !important; cursor:pointer !important; white-space:nowrap !important; width:auto !important; height:auto !important; }
+  /* Bottom sheet fitur */
+  #f-sheet{ position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:999998; display:none; align-items:flex-end; justify-content:center; }
+  #f-sheet.open{ display:flex; }
+  #f-sheet-box{ background:#1a1a22; width:100%; max-width:480px; border-radius:22px 22px 0 0; padding:18px; color:#fff; border:1px solid #a855f7; box-shadow:0 0 30px rgba(168,85,247,.4); max-height:75vh; overflow-y:auto; }
+  .f-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:12px 0; }
+  .f-grid button{ background:#222; border:1px solid #333; border-radius:14px; padding:12px 4px; color:#fff; font-size:11px; font-weight:600; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .f-grid button span{ font-size:22px; }
+  .f-sheet-row{ display:flex; gap:8px; margin:10px 0; }
+  .f-sheet-row button{ flex:1; padding:11px; border-radius:99px; border:none; font-weight:800; font-size:13px; cursor:pointer; }
+  /* Loading: sembunyiin semua UI kita sampai siap */
+  body:not(.f-ready) #f-widget-mini, body:not(.f-ready) #f-fitur-fab, body:not(.f-ready) .f-bubble-tools{ display:none !important; }
+`;
+document.head.appendChild(css);
+
+// Loading: baru kasih .f-ready setelah 2.5 detik + splash ilang
+setTimeout(function(){ document.body.classList.add('f-ready'); }, 2500);
+setInterval(function(){
+  // Kalau masih ada overlay fullscreen logo F, jangan ready dulu
+  var splash=document.querySelector('[class*="splash"], [class*="loading"], [id*="splash"], [id*="loading"]');
+  if(splash && splash.offsetHeight>window.innerHeight*0.8) document.body.classList.remove('f-ready');
+}, 800);
+
+function getInp(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]')||document.querySelector('textarea')||document.querySelector('input[type="text"]'); }
+function getChat(){ return window.__f_getChat ? window.__f_getChat() : document.body; }
+
+// --- 2. FIX TOMBOL SEND: RAPIIH WADAH INPUT ---
+function fixInput(){
+  var inp=getInp(); if(!inp) return;
+  var wadah=inp.parentElement; if(!wadah) return;
+  wadah.classList.add('f-input-fix');
+  // Hapus mic dobel: kalau ada 2 mic, hapus 1 yang dari kita (yang kedua)
+  var mics=wadah.querySelectorAll('button');
+  var micCount=0;
+  mics.forEach(function(b){
+    if(b.textContent.includes('🎤')||b.textContent.includes('🎙️')){
+      micCount++;
+      // Simpan 1 aja (yang pertama), sisanya hapus kalau ada 3+
+      if(micCount>2) b.remove();
+    }
+  });
+  // Kalau tombol Fitur belum ada, tambahin di depan input
+  if(!document.getElementById('f-fitur-fab')){
+    var fab=document.createElement('button'); fab.id='f-fitur-fab'; fab.type='button'; fab.textContent='✨ Fitur';
+    fab.onclick=function(){ document.getElementById('f-sheet').classList.add('open'); };
+    wadah.insertBefore(fab, inp);
+  }
+  // Widget mini cuaca/sholat - taruh di atas wadah, 1 baris aja
+  if(!document.getElementById('f-widget-mini')){
+    var wm=document.createElement('div'); wm.id='f-widget-mini';
+    wm.innerHTML='<span id="f-wm-cuaca">🌦️ Tahuna • Memuat...</span><span id="f-wm-sholat">🕌 Sholat • Memuat...</span>';
+    wadah.parentNode.insertBefore(wm, wadah);
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('f-wm-cuaca'); if(el) el.textContent='🌦️ Tahuna • '+Math.round(d.current.temperature_2m)+'°C • '+(d.current.weather_code===0?'Cerah':'Berawan'); }).catch(function(){});
+    var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('f-wm-sholat'); if(el){ var t=d.data.timings; el.textContent='🕌 Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5); } }).catch(function(){});
+  }
+}
+
+// --- 3. BOTTOM SHEET FITUR (ganti 3 bar hitam) ---
+function buildSheet(){
+  if(document.getElementById('f-sheet')) return;
+  var s=document.createElement('div'); s.id='f-sheet';
+  s.innerHTML='<div id="f-sheet-box"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">✨ Semua Fitur</h3><button id="f-sheet-x" style="width:32px;height:32px;border-radius:50%;border:none;background:#333;color:#fff">✕</button></div><p style="font-size:12px;opacity:.6;margin:6px 0 0">Pencet 1 fitur, langsung jalan.</p><div class="f-grid">'
+    +'<button data-f="flash"><span>🃏</span>Flashcards</button>'
+    +'<button data-f="template"><span>📄</span>Template</button>'
+    +'<button data-f="todo"><span>✅</span>To-Do</button>'
+    +'<button data-f="pdf"><span>📋</span>Rangkum PDF</button>'
+    +'<button data-f="gambar"><span>🎨</span>Buat Gambar</button>'
+    +'<button data-f="edit"><span>✏️</span>Edit Foto</button>'
+    +'<button data-f="web"><span>🌐</span>Cari Web</button>'
+    +'<button data-f="ngobrol"><span>🎙️</span>Ngobrol Suara</button>'
+    +'<button data-f="cari"><span>🔍</span>Cari Chat</button>'
+    +'<button data-f="simpan"><span>📌</span>Tersimpan</button>'
+    +'<button data-f="export"><span>📤</span>Export</button>'
+    +'<button data-f="baru"><span>➕</span>Chat Baru</button>'
+    +'</div><div style="font-size:12px;font-weight:800;opacity:.6;margin:10px 0 6px">MODE</div><div class="f-sheet-row"><button id="f-mode-belajar" style="background:#8b5cf6;color:#fff">🧠 Mode Belajar</button><button id="f-mode-cepat" style="background:#333;color:#fff">⚡ Mode Cepat</button></div><button id="f-fix-tulisan" style="width:100%;padding:11px;border-radius:99px;border:1px solid #22c55e;background:rgba(34,197,94,.12);color:#22c55e;font-weight:800">✍️ Perbaiki Tulisan</button></div>';
+  document.body.appendChild(s);
+  s.addEventListener('click',function(e){ if(e.target===s) s.classList.remove('open'); });
+  document.getElementById('f-sheet-x').onclick=function(){ s.classList.remove('open'); };
+  s.addEventListener('click',function(e){
+    var b=e.target.closest('[data-f]'); if(!b) return; var f=b.getAttribute('data-f'); s.classList.remove('open');
+    if(f==='flash'){ var o=document.getElementById('f-q-flash')||document.getElementById('f-q2-flash'); if(o) o.click(); }
+    if(f==='template'){ var o2=document.getElementById('f-q-template')||document.getElementById('f-q2-template'); if(o2) o2.click(); }
+    if(f==='todo'){ if(window.__f_openTodo) window.__f_openTodo(); }
+    if(f==='pdf'){ var ff=document.getElementById('f-file'); if(ff) ff.click(); }
+    if(f==='gambar'){ var o3=document.getElementById('f-q-gambar')||document.getElementById('f-q2-gambar'); if(o3) o3.click(); }
+    if(f==='edit'){ var o4=document.getElementById('f-q-edit')||document.getElementById('f-q2-edit'); if(o4) o4.click(); }
+    if(f==='web'){ var o5=document.getElementById('f-q-web')||document.getElementById('f-q2-web'); if(o5) o5.click(); }
+    if(f==='ngobrol'){ var o6=document.getElementById('f-ngobrol-btn')||document.getElementById('f-ngobrol-btn2'); if(o6) o6.click(); }
+    if(f==='cari'){ var o7=document.getElementById('f-h-cari')||document.getElementById('f-h2-cari'); if(o7) o7.click(); }
+    if(f==='simpan'){ var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'📌', title:'Chat Tersimpan', msg:arr.length?arr.slice(-5).join('\n---\n'):'Belum ada chat disimpan.', showCancel:false}); }
+    if(f==='export'){ var o8=document.getElementById('f-h-export')||document.getElementById('f-h2-export'); if(o8) o8.click(); }
+    if(f==='baru'){ if(window.__f_buatChatBaru) window.__f_buatChatBaru(); }
+  });
+  function refreshMode(){ var m=localStorage.getItem('fahri_mode')||'belajar'; document.getElementById('f-mode-belajar').style.background=m==='belajar'?'#8b5cf6':'#333'; document.getElementById('f-mode-cepat').style.background=m==='cepat'?'#8b5cf6':'#333'; }
+  refreshMode();
+  document.getElementById('f-mode-belajar').onclick=function(){ localStorage.setItem('fahri_mode','belajar'); refreshMode(); s.classList.remove('open'); };
+  document.getElementById('f-mode-cepat').onclick=function(){ localStorage.setItem('fahri_mode','cepat'); refreshMode(); s.classList.remove('open'); };
+  document.getElementById('f-fix-tulisan').onclick=function(){ s.classList.remove('open'); var inp=getInp(); if(!inp||!inp.value.trim()){ if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'✍️', title:'Perbaiki Tulisan', msg:'Ketik dulu yang mau diperbaiki.', showCancel:false}); return; } var t=inp.value.trim(); t=t.replace(/\s+/g,' '); t=t.charAt(0).toUpperCase()+t.slice(1); if(!/[.!?]$/.test(t)) t+='.'; inp.value=t; };
+}
+
+// --- 4. FIX BUBBLE TOOLS: CUMA DI JAWABAN AI, BUKAN DI CHAT KAMU ---
+setInterval(function(){
+  document.querySelectorAll('.f-bubble-tools').forEach(function(tool){
+    var bubble=tool.parentElement; if(!bubble) return;
+    var txt=bubble.textContent||'';
+    // Kalau bubble ini chat kamu (kanan / ungu / isinya pendek kayak "Tanya"), hapus tools-nya
+    var style=getComputedStyle(bubble);
+    var isUser = txt.trim().startsWith('Tanya') || bubble.style.textAlign==='right' || (bubble.parentElement && bubble.parentElement.style.textAlign==='right');
+    // Cara paling aman: chat kamu itu yang ada di parent dengan align right / bubble ungu terang
+    // Kalau bubble-nya gak ada "Fahri Assistant" dan pendek, itu chat kamu
+    if(!txt.includes('Fahri Assistant') && !txt.includes('Hai! Aku') && txt.length<100 && !txt.includes('Ada yang ingin')){
+      tool.remove();
+    }
+  });
+}, 1000);
+
+setInterval(function(){ fixInput(); buildSheet(); }, 1000);
+fixInput(); buildSheet();
+})();
 </script>
 <script src="auth.js"></script>
 </body>
