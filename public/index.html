@@ -469,7 +469,8 @@ function setTheme(t){
 }
 // pas buka app, load tema terakhir
 const savedTheme = localStorage.getItem('fahri-theme') || 'neon';
-  // === AUTO MASUKIN TOMBOL TEMA KE DRAWER ===
+setTheme(savedTheme);
+// === AUTO MASUKIN TOMBOL TEMA KE DRAWER ===
 setTimeout(()=>{
   const box = document.querySelector('#drawer .drawer-box');
   if(box && !document.getElementById('btnNeon')){
@@ -483,7 +484,6 @@ setTimeout(()=>{
     box.appendChild(div);
   }
 }, 500);
-setTheme(savedTheme);
 
 // === EFEK NGETIK - BUAT SEMUA TEMA ===
 function typeWriter(el, text){
