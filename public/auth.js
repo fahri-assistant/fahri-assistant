@@ -39,32 +39,18 @@ function pasang(id, provName){
   alert('Login gagal: ' + e.message);
 });
 
-function pasangSemua(){
-  pasang('btnGoogle','google');
-  pasang('btnGithub','github');
-  pasang('btn-google','google');
-  pasang('btn-github','github');
-  pasang('login-google','google');
-  pasang('login-github','github');
-  var lo = document.getElementById('btnLogout');
-  if(lo){
-    lo.onclick = function(){ authObj.signOut(); };
-  }
-}
-
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', pasangSemua);
-} else {
-  pasangSemua();
-}
-
-// Capacitor - biarin, udah aman
-if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-  try {
-    var sb = window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
-    if (sb) {
-      sb.setOverlaysWebView({ overlay: true }).catch(function(){});
-      sb.setBackgroundColor({ color: '#00000000' }).catch(function(){});
-    }
-  } catch (_) {}
-    }
+function pasang(id, provName){
+  var b = document.getElementById(id);
+  alert('Cek tombol ' + id + ' ketemu? ' + (b ? 'YA' : 'TIDAK'));
+  if(!b) return;
+  b.onclick = function(e){
+    e.preventDefault();
+    alert('Tombol ' + id + ' DIPENCET, mau buka popup');
+    var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
+    authObj.signInWithPopup(p).then(function(result){
+      updateLoginUI(result.user);
+    }).catch(function(e){
+      alert('Login gagal: ' + e.code + ' - ' + e.message);
+    });
+  };
+                                            }
