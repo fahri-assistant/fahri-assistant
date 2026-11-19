@@ -459,5 +459,81 @@ function setTheme(t){if(t==='original'){document.body.removeAttribute('data-them
 try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(savedTheme)}catch(e){}
 </script>
 <script src="auth.js"></script>
+<script>
+// === GANTI TEMA + SIMPAN PILIHAN ===
+function setTheme(t){
+  document.body.setAttribute('data-theme', t);
+  localStorage.setItem('fahri-theme', t);
+  // tandai tombol aktif
+  document.getElementById('btnNeon').style.outline = t==='neon' ? '2px solid #a855f7' : 'none';
+  document.getElementById('btnPremium').style.outline = t==='premium' ? '2px solid #e9d5ff' : 'none';
+}
+// pas buka app, load tema terakhir
+const savedTheme = localStorage.getItem('fahri-theme') || 'neon';
+setTheme(savedTheme);
+
+// === EFEK NGETIK - BUAT SEMUA TEMA ===
+function typeWriter(el, text){
+  el.innerHTML = '';
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.className = 'typing-cursor';
+  el.appendChild(cursor);
+  const interval = setInterval(()=>{
+    if(i < text.length){
+      cursor.insertAdjacentText('beforebegin', text[i]);
+      i++;
+    } else {
+      clearInterval(interval);
+      cursor.remove();
+      // setelah selesai ngetik, munculin tombol Copy & Saran
+      addAiActions(el, text);
+      addSuggestions(el);
+    }
+  }, 12); // 12ms = cepat tapi kerasa ngetik, ringan di RAM 2GB
+}
+
+// === TOMBOL COPY / REGENERATE ===
+function addAiActions(bubbleEl, fullText){
+  if(bubbleEl.querySelector('.ai-actions')) return;
+  const div = document.createElement('div');
+  div.className = 'ai-actions';
+  div.innerHTML = `<button onclick="copyText(this,'${fullText.replace(/'/g,"")}')">📋 Copy</button><button onclick="regenerate(this)">🔄 Regenerate</button>`;
+  bubbleEl.appendChild(div);
+}
+function copyText(btn, txt){
+  navigator.clipboard.writeText(btn.parentElement.parentElement.innerText.replace('📋 Copy🔄 Regenerate',''));
+  btn.innerText = '✅ Tersalin!'; setTimeout(()=>btn.innerText='📋 Copy',1500);
+}
+function regenerate(btn){
+  const bubble = btn.closest('.bubble');
+  const lastUserMsg = [...document.querySelectorAll('.bubble.user')].pop()?.innerText || 'Buatkan lagi';
+  bubble.innerHTML = 'Membuat ulang...';
+  // panggil fungsi kirim chat kamu yang lama di sini, contoh:
+  // sendMessage(lastUserMsg);
+  alert('Regenerate: akan kirim ulang: ' + lastUserMsg);
+}
+
+// === SARAN PERTANYAAN - MUNCUL HABIS AI JAWAB ===
+function addSuggestions(afterEl){
+  if(document.querySelector('.suggest-wrap')) document.querySelector('.suggest-wrap').remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'suggest-wrap';
+  wrap.innerHTML = `
+    <div class="suggest-title">Saran pertanyaan:</div>
+    <div class="suggest-grid">
+      <div class="suggest-card" onclick="askSuggest(this)">✨ Jelaskan KAMNH lebih lanjut</div>
+      <div class="suggest-card" onclick="askSuggest(this)">🔍 Contoh singkatan militer Rusia</div>
+      <div class="suggest-card" onclick="askSuggest(this)">❓ Bagaimana cara mencari info akurat?</div>
+    </div>`;
+  afterEl.after(wrap);
+}
+function askSuggest(card){
+  const input = document.querySelector('input, textarea');
+  if(input){ input.value = card.innerText.replace(/✨|🔍|❓/g,'').trim(); input.focus(); }
+  // kalau kamu punya fungsi kirim otomatis, panggil di sini
+  // document.querySelector('#sendBtn').click();
+}
+</script>
 </body>
 </html>
