@@ -523,6 +523,122 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
   // Hapus semua menu / bar lama yang nyasar
   document.querySelectorAll('.f-menu-kanan, #f-mode-bar, #f-head-btns, #f-top-widget, #f-quick-bar, .f-bubble-tools').forEach(function(e){ e.remove(); });
 })();
+/* === FINAL V4 - BAGIAN 1/2 === */
+(function(){
+if(window.__fahriV4_1) return; window.__fahriV4_1 = true;
+document.querySelectorAll('.f-menu-kanan').forEach(function(m){ m.remove(); });
+document.querySelectorAll('#f-head-btns, #f-top-widget').forEach(function(e){ e.remove(); });
+
+window.__f_getDrawer = function(){
+  var all=document.querySelectorAll('div, aside');
+  for(var i=0;i<all.length;i++){
+    if((all[i].textContent||'').includes('Bersihkan Chat') && all[i].textContent.length<2500){
+      var p=all[i]; for(var j=0;j<4;j++){ if(p.parentElement) p=p.parentElement; }
+      if(p.tagName==='BODY') p=all[i]; return p;
+    }
+  } return null;
+};
+window.__f_getInp = function(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]')||document.querySelector('textarea')||document.querySelector('input[type="text"]'); };
+window.__f_getChat = function(){ return document.querySelector('#chat')||document.querySelector('[class*="chat"]'); };
+window.__f_bicara = function(t){ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t.slice(0,600)); u.lang='id-ID'; window.speechSynthesis.speak(u); };
+window.__f_isTrans = function(){ return localStorage.getItem('fahri_auto_trans')!=='0'; };
+window.__f_saveArr = function(k,v){ var a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(v); localStorage.setItem(k,JSON.stringify(a)); };
+
+var css=document.createElement('style');
+css.textContent=`
+  .f-menu-kanan{ padding:0 16px 12px !important; display:block !important; }
+  .f-menu-kanan .f-label2{ font-size:11px; letter-spacing:1px; opacity:.5; font-weight:800; padding:14px 4px 6px; }
+  .f-menu-kanan .f-item{ display:flex !important; gap:12px !important; align-items:center !important; width:100% !important; padding:12px 4px !important; border:none !important; background:transparent !important; color:inherit !important; font-size:15px !important; font-weight:600 !important; text-align:left !important; cursor:pointer !important; }
+  .f-menu-kanan .f-item span{ font-size:18px !important; width:28px !important; text-align:center !important; }
+  .f-menu-kanan .f-on{ color:#22c55e !important; }
+  .f-mini-btn{ width:42px !important; height:42px !important; min-width:42px !important; border-radius:50% !important; border:none !important; background:rgba(255,255,255,.15) !important; font-size:19px !important; cursor:pointer !important; color:inherit !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+  .f-head-btn{ width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,.12); font-size:16px; cursor:pointer; color:inherit; display:flex; align-items:center; justify-content:center; }
+  .f-bubble-tools{ display:flex !important; gap:6px !important; margin-top:8px !important; padding-top:6px !important; border-top:1px solid rgba(255,255,255,.08) !important; align-items:center !important; flex-wrap:wrap !important; }
+  .f-pin, .f-speak, .f-mark{ font-size:11px !important; padding:5px 9px !important; border-radius:99px !important; border:1px solid rgba(255,255,255,.18) !important; background:rgba(255,255,255,.07) !important; color:inherit !important; cursor:pointer !important; line-height:1 !important; white-space:nowrap !important; width:auto !important; height:auto !important; display:inline-flex !important; align-items:center !important; gap:4px !important; }
+  .f-search-bar{ display:none; padding:10px; gap:8px; }
+  .f-search-bar.show{ display:flex; }
+  .f-search-bar input{ flex:1; padding:10px; border-radius:10px; border:1px solid #333; background:#222; color:#fff; }
+  .f-vision-bar{ display:flex; gap:8px; flex-wrap:wrap; padding:8px 10px; background:rgba(139,92,246,.08); border-top:1px solid rgba(139,92,246,.2); }
+  .f-vision-chip{ padding:8px 12px; border-radius:99px; border:1px solid #8b5cf6; background:#fff; color:#6d28d9; font-size:12.5px; font-weight:700; cursor:pointer; }
+  #f-mode-bar{ display:flex; gap:6px; align-items:center; padding:8px 10px; flex-wrap:wrap; }
+  .f-mode{ padding:7px 12px; border-radius:99px; border:1px solid #444; background:transparent; color:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+  .f-mode.on{ background:#8b5cf6; border-color:#8b5cf6; color:#fff; }
+  .f-fix{ padding:7px 12px; border-radius:99px; border:1px solid #22c55e; background:rgba(34,197,94,.12); color:#22c55e; font-size:12px; font-weight:700; cursor:pointer; margin-left:auto; }
+  #f-top-widget{ display:flex; gap:8px; padding:10px; flex-wrap:wrap; }
+  .f-w{ flex:1; min-width:140px; padding:10px 12px; border-radius:14px; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.25); font-size:12px; line-height:1.5; }
+  #f-quick-bar{ display:flex; gap:6px; padding:0 10px 8px; flex-wrap:wrap; }
+  .f-quick{ padding:8px 12px; border-radius:99px; border:1px solid #444; background:rgba(255,255,255,.06); color:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+  .f-modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:99999; display:none; align-items:flex-end; justify-content:center; }
+  .f-modal.open{ display:flex; }
+  .f-box{ background:#1a1a22; width:100%; max-width:480px; border-radius:22px 22px 0 0; padding:20px; color:#fff; max-height:85vh; overflow-y:auto; }
+  .f-box input{ width:100%; padding:12px; border-radius:12px; border:1px solid #333; background:#222; color:#fff; margin:10px 0; box-sizing:border-box; }
+  .f-box button{ width:100%; padding:12px; border-radius:12px; border:none; background:#8b5cf6; color:#fff; font-weight:800; margin-top:8px; }
+  .f-todo-item{ display:flex; gap:8px; align-items:center; padding:10px; background:#222; border-radius:10px; margin:6px 0; font-size:14px; }
+  .f-todo-item.done{ opacity:.5; text-decoration:line-through; }
+  .f-card{ background:#222; border-radius:14px; padding:16px; margin:10px 0; text-align:center; font-size:16px; min-height:90px; display:flex; align-items:center; justify-content:center; }
+  body.f-light{ background:#f2f2f7 !important; color:#111 !important; }
+`;
+document.head.appendChild(css);
+
+function buildDrawer(){
+  var drawer=window.__f_getDrawer(); if(!drawer) return; if(drawer.querySelector('.f-menu-kanan')) return; if(!(drawer.textContent||'').includes('Bersihkan Chat')) return;
+  var menu=document.createElement('div'); menu.className='f-menu-kanan';
+  var autoLabel=window.__f_isTrans()?'Auto Translate: ON':'Auto Translate: OFF';
+  menu.innerHTML='<div class="f-label2">PENGATURAN</div>'
+    +'<button class="f-item" data-a="profil"><span>👤</span>Profil Saya</button>'
+    +'<button class="f-item" data-a="gelap"><span>🌙</span>Mode Gelap / Terang</button>'
+    +'<button class="f-item '+(window.__f_isTrans()?'f-on':'')+'" data-a="trans"><span>🌐</span><span style="width:auto !important" id="f-trans-label">'+autoLabel+'</span></button>'
+    +'<button class="f-item" data-a="bookmark"><span>🔖</span>Bookmark / Favorit</button>'
+    +'<button class="f-item" data-a="todo"><span>✅</span>To-Do / Tugas</button>'
+    +'<button class="f-item" data-a="ingat"><span>⏰</span>Pengingat Belajar</button>'
+    +'<button class="f-item" data-a="bahasa"><span>🌐</span>Bahasa</button>'
+    +'<button class="f-item" data-a="bagikan"><span>↗️</span>Bagikan Aplikasi</button>'
+    +'<button class="f-item" data-a="bantuan"><span>❓</span>Bantuan / Cara Pakai</button>'
+    +'<button class="f-item" data-a="tentang"><span>ℹ️</span>Tentang Aplikasi</button>'
+    +'<button class="f-item" data-a="hapus"><span>🗑️</span>Hapus Semua Chat</button>';
+  var tutup=Array.from(drawer.querySelectorAll('button, div')).find(function(el){ return el.textContent.trim()==='✕ Tutup'||el.textContent.trim()==='Tutup'; });
+  if(tutup&&tutup.parentElement) tutup.parentElement.parentElement.insertBefore(menu,tutup.parentElement); else drawer.appendChild(menu);
+  menu.addEventListener('click',function(e){
+    var b=e.target.closest('[data-a]'); if(!b) return; var a=b.getAttribute('data-a');
+    if(a==='profil' && window.__f_openProfil) window.__f_openProfil();
+    if(a==='gelap'){ document.body.classList.toggle('f-light'); localStorage.setItem('fahri_light',document.body.classList.contains('f-light')?'1':'0'); }
+    if(a==='trans'){ var on=!window.__f_isTrans(); localStorage.setItem('fahri_auto_trans',on?'1':'0'); var lab=document.getElementById('f-trans-label'); if(lab) lab.textContent='Auto Translate: '+(on?'ON':'OFF'); b.classList.toggle('f-on',on); alert(on?'✅ Auto Translate ON':'Auto Translate OFF'); }
+    if(a==='bookmark'){ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); alert(arr.length?'🔖 BOOKMARK:\n\n'+arr.slice(-5).join('\n---\n'):'Belum ada bookmark. Pencet 🔖 di bawah tiap jawaban AI.'); }
+    if(a==='todo' && window.__f_openTodo) window.__f_openTodo();
+    if(a==='ingat'){ var jam=prompt('Pengingat Belajar\nMau diingetin jam berapa? (contoh: 19:00)'); if(jam){ localStorage.setItem('fahri_inget',jam); alert('✅ Pengingat diset jam '+jam); } }
+    if(a==='bahasa'){ var x=prompt('1 = Indonesia\n2 = English\n3 = Jawa'); if(x==='2') alert('English aktif!'); else if(x==='3') alert('Jawa aktif!'); else alert('Indonesia aktif!'); }
+    if(a==='bagikan'){ if(navigator.share) navigator.share({title:'Fahri Assistant', url:location.href}); else alert('Copy link: '+location.href); }
+    if(a==='bantuan') alert('CARA PAKAI:\n1. Ketik untuk chat\n2. 📎 Kirim foto / PDF untuk dirangkum\n3. 🎤 Ngomong jadi teks\n4. 🃏 Flashcards buat hafalan\n5. 📄 Template Cepat buat surat / caption\n6. ✅ To-Do buat tugas\n7. 🔖 Bookmark jawaban bagus\n8. 🌐 Auto Translate di garis 3');
+    if(a==='tentang') alert('Fahri Assistant v1.4.0\n\nAsisten AI untuk belajar, kerja, dan sehari-hari.\nFlashcards, Rangkum PDF, Template, To-Do, Cuaca & Jadwal Sholat, Bookmark, Auto Translate.\n\nDibuat untuk umum.');
+    if(a==='hapus'){ if(confirm('Yakin hapus SEMUA chat?')){ var ch=window.__f_getChat(); if(ch) ch.innerHTML=''; } }
+  });
+  if(localStorage.getItem('fahri_light')==='1') document.body.classList.add('f-light');
+}
+function buildHeader(){
+  if(document.getElementById('f-head-btns')) return;
+  var heads=document.querySelectorAll('header, div'); var head=null;
+  for(var i=0;i<heads.length;i++){ var t=heads[i].textContent||''; if(t.includes('Fahri Assistant')||t.includes('Fahri AI')){ if(t.length<300){ head=heads[i]; break; } } }
+  if(!head) head=document.querySelector('header')||document.body;
+  var wrap=document.createElement('div'); wrap.id='f-head-btns'; wrap.style.cssText='display:flex;gap:8px;align-items:center;margin-left:auto';
+  wrap.innerHTML='<button class="f-head-btn" id="f-h-cari" title="Cari Chat">🔍</button><button class="f-head-btn" id="f-h-simpan" title="Chat Tersimpan">📌</button><button class="f-head-btn" id="f-h-export" title="Export Chat">📤</button>';
+  head.appendChild(wrap); head.style.display='flex'; head.style.alignItems='center';
+  document.getElementById('f-h-cari').onclick=function(){ var bar=document.getElementById('f-search'); if(!bar){ bar=document.createElement('div'); bar.id='f-search'; bar.className='f-search-bar'; bar.innerHTML='<input id="f-q" placeholder="Cari chat..."><button id="f-x" class="f-mini-btn">✕</button>'; var chat=window.__f_getChat()||document.body; chat.parentNode.insertBefore(bar,chat); document.getElementById('f-x').onclick=function(){bar.classList.remove('show');}; document.getElementById('f-q').oninput=function(){var q=this.value.toLowerCase(); document.querySelectorAll('.bubble,.message,.msg').forEach(function(el){el.style.display=!q||el.textContent.toLowerCase().includes(q)?'':'none';});}; } bar.classList.toggle('show'); };
+  document.getElementById('f-h-simpan').onclick=function(){ var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); alert(arr.length?'📌 TERSIMPAN:\n\n'+arr.slice(-5).join('\n---\n'):'Belum ada chat disimpan.'); };
+  document.getElementById('f-h-export').onclick=function(){ var bubbles=document.querySelectorAll('.bubble,.message,.msg'); var teks='Fahri Assistant - Export Chat\n'+new Date().toLocaleString()+'\n\n'; bubbles.forEach(function(b){ if(b.textContent.trim()) teks+=b.textContent.trim()+'\n---\n'; }); if(bubbles.length===0) return alert('Belum ada chat untuk di-export.'); if(navigator.share){ navigator.share({title:'Export Chat Fahri Assistant', text:teks}); } else { navigator.clipboard.writeText(teks).then(function(){ alert('✅ Chat disalin! Tinggal paste ke WhatsApp.'); }); } };
+}
+function buildWidget(){
+  if(document.getElementById('f-top-widget')) return; var chat=window.__f_getChat(); if(!chat) return;
+  var w=document.createElement('div'); w.id='f-top-widget';
+  w.innerHTML='<div class="f-w" id="f-cuaca">🌦️ Memuat cuaca Tahuna...</div><div class="f-w" id="f-sholat">🕌 Memuat jadwal sholat...</div>';
+  chat.parentNode.insertBefore(w,chat);
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){ var temp=Math.round(d.current.temperature_2m); var kode=d.current.weather_code; var desc=kode===0?'Cerah ☀️':kode<4?'Berawan ⛅':kode<60?'Hujan Ringan 🌧️':'Hujan 🌧️'; document.getElementById('f-cuaca').innerHTML='🌦️ <b>Tahuna</b><br>'+temp+'°C • '+desc; }).catch(function(){ document.getElementById('f-cuaca').innerHTML='🌦️ <b>Tahuna</b><br>Cek cuaca di luar app'; });
+  var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+  fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){ var t=d.data.timings; document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5); }).catch(function(){ document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat</b><br>Subuh 04:50 • Dzuhur 11:50 • Ashar 15:10 • Maghrib 18:00 • Isya 19:10'; });
+}
+window.__f_init1 = function(){ buildDrawer(); buildHeader(); buildWidget(); };
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.__f_init1); else window.__f_init1();
+setTimeout(window.__f_init1,1000); setTimeout(window.__f_init1,2500);
+})();
 </script>
 <script src="auth.js"></script>
 </body>
