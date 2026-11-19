@@ -427,6 +427,92 @@ document.getElementById('profilePopup').onclick=function(e){if(e.target.id==='pr
 function setTheme(t){if(t==='original'){document.body.removeAttribute('data-theme')}else{document.body.setAttribute('data-theme',t)}try{localStorage.setItem('fahri_theme',t)}catch(e){}document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-theme')===t)})}
 try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(savedTheme)}catch(e){}
 </script>
+/* === FITUR BARU v3 + TOMBOL PREMIUM OTOMATIS === */
+(function(){
+  if(window.__fahriFiturV2) return; window.__fahriFiturV2 = true;
+
+  // --- 1. BUAT TOMBOL PREMIUM OTOMATIS, GAK USAH CARI FOREST CALM ---
+  function buatTombolPremium(){
+    var grid = document.querySelector('.theme-grid');
+    if(!grid) return;
+    if(grid.querySelector('[data-theme="premium"]')) return;
+    var b = document.createElement('button');
+    b.className = 'theme-btn';
+    b.setAttribute('data-theme','premium');
+    b.innerHTML = '<i></i>✨ Premium Class';
+    b.onclick = function(){ setTheme('premium'); };
+    grid.appendChild(b);
+  }
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', buatTombolPremium); }
+  else { buatTombolPremium(); }
+
+  // --- 2. FITUR COPY / ULANG / SARAN / KETIK ---
+  var lastUserText = '';
+  function addCopyBtn(bubble, getText){
+    if(!bubble || bubble.querySelector('.ai-actions')) return;
+    var wrap = document.createElement('div'); wrap.className = 'ai-actions';
+    var b1 = document.createElement('button'); b1.textContent = '📋 Copy';
+    b1.onclick = function(){ try{ navigator.clipboard.writeText(getText()); b1.textContent='✅ Tersalin!'; setTimeout(function(){ b1.textContent='📋 Copy'; },1500); }catch(e){} };
+    var b2 = document.createElement('button'); b2.textContent = '🔄 Buat Ulang';
+    b2.onclick = function(){ if(!lastUserText) return; bubble.remove(); var s = document.querySelector('.suggest-wrap'); if(s) s.remove(); inputEl.value = lastUserText; send(); };
+    wrap.appendChild(b1); wrap.appendChild(b2); bubble.appendChild(wrap);
+  }
+  function addSuggest(afterEl){
+    var old = document.querySelector('.suggest-wrap'); if(old) old.remove();
+    var wrap = document.createElement('div'); wrap.className = 'suggest-wrap';
+    var title = document.createElement('div'); title.className = 'suggest-title'; title.textContent = 'Saran pertanyaan:';
+    var grid = document.createElement('div'); grid.className = 'suggest-grid';
+    ['✨ Jelaskan lebih lanjut','🔍 Kasih contohnya','❓ Apa langkah selanjutnya?'].forEach(function(t){
+      var c = document.createElement('div'); c.className = 'suggest-card'; c.textContent = t;
+      c.onclick = function(){ inputEl.value = t.replace(/✨|🔍|❓/g,'').trim(); inputEl.focus(); };
+      grid.appendChild(c);
+    });
+    wrap.appendChild(title); wrap.appendChild(grid); afterEl.after(wrap);
+  }
+  function typeInto(bubble, html, plain, onDone){
+    var temp = document.createElement('div'); temp.innerHTML = html;
+    var text = temp.textContent || plain || '';
+    bubble.innerHTML = ''; var span = document.createElement('span');
+    var cur = document.createElement('span'); cur.className = 'typing-cursor';
+    bubble.appendChild(span); bubble.appendChild(cur);
+    var i = 0;
+    var iv = setInterval(function(){
+      if(i < text.length){ span.textContent += text[i]; i++; chatEl.scrollTop = chatEl.scrollHeight; }
+      else { clearInterval(iv); cur.remove(); bubble.innerHTML = html; onDone && onDone(); }
+    }, 8);
+  }
+  window.send = async function(){
+    var t = inputEl.value.trim(); if(!t) return;
+    lastUserText = t;
+    addBubble(t,'user'); inputEl.value='';
+    history.push({role:'user',content:t}); saveHistory(); saveLog('user',t);
+    var low = t.toLowerCase();
+    if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){
+      var loading = addBubble('Fahri lagi gambar...','ai');
+      var prompt = encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);
+      var img = document.createElement('img'); img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=512&height=512&seed='+Date.now();
+      img.style.width='100%'; img.style.borderRadius='12px'; img.style.marginTop='8px';
+      loading.innerHTML='Ini gambarnya:'; loading.appendChild(img);
+      var bb=document.createElement('button'); bb.className='tts-btn'; bb.textContent='🔊';
+      bb.onclick=function(){ speakText(bb,'Ini gambarnya') }; loading.appendChild(bb);
+      history.push({role:'assistant',content:'Ini gambarnya:'}); saveHistory(); return;
+    }
+    var loading2 = addBubble('Fahri lagi mikir...','ai');
+    try{
+      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});
+      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.';
+      var html = renderMarkdown(reply);
+      typeInto(loading2, html, reply, function(){
+        var b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊';
+        b.onclick=function(){ speakText(b,reply) }; loading2.appendChild(b);
+        addCopyBtn(loading2, function(){ return reply; });
+        addSuggest(loading2);
+      });
+      history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
+    }catch(e){ loading2.textContent='Maaf, server lagi sibuk, coba lagi ya.'; }
+  };
+  document.getElementById('sendBtn').onclick = send;
+})();
 <script src="auth.js"></script>
 </body>
 </html>
