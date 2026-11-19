@@ -461,17 +461,13 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
 <script>
 // === AUTO MASUKIN TOMBOL TEMA KE DRAWER ===
 setTimeout(()=>{
-  const box = document.querySelector('#drawer .drawer-box');
-  if(box && !document.getElementById('btnNeon')){
-    const div = document.createElement('div');
-    div.innerHTML = `
-    <div style="padding:12px;border-top:1px solid rgba(255,255,255,.1);margin-top:10px">
-      <div style="font-size:12px;opacity:.7;margin-bottom:8px">🎨 Tema Tampilan</div>
-      <button onclick="setTheme('neon')" id="btnNeon" style="width:100%;padding:10px;border-radius:12px;margin-bottom:6px;border:1px solid #a855f7;background:#2a0a4a;color:white">🔥 Neon - Original</button>
-      <button onclick="setTheme('premium')" id="btnPremium" style="width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:white">✨ Premium Class</button>
-    </div>`;
-    box.appendChild(div);
-  }
+  // cari grid TEMA yang lama di drawer
+  const temaGrid = document.querySelector('#drawer .drawer-box');
+  if(!temaGrid || document.getElementById('btnPremium')) return;
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <button onclick="setTheme('premium')" id="btnPremium" style="width:100%;padding:12px;border-radius:14px;margin-top:8px;border:1px solid rgba(255,255,255,.2);background:rgba(139,92,246,.35);color:white">✨ Premium Class</button>`;
+  temaGrid.appendChild(div);
 }, 500);
 
 // === EFEK NGETIK - BUAT SEMUA TEMA ===
