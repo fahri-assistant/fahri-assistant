@@ -33,9 +33,11 @@ function pasang(id, provName){
   b.onclick = function(e){
     e.preventDefault();
     var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
-    authObj.signInWithRedirect(p);
-  };
-}
+    authObj.signInWithPopup(p).then(function(result){
+  updateLoginUI(result.user);
+}).catch(function(e){
+  alert('Login gagal: ' + e.message);
+});
 
 function pasangSemua(){
   pasang('btnGoogle','google');
