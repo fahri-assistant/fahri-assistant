@@ -41,4 +41,21 @@ function pasang(id, provName){
       alert('Login gagal: ' + e.code + ' - ' + e.message);
     });
   };
-                                            }
+  function pasangSemua(){
+  pasang('btnGoogle','google');
+  pasang('btnGithub','github');
+  pasang('btn-google','google');
+  pasang('btn-github','github');
+  pasang('login-google','google');
+  pasang('login-github','github');
+  var lo = document.getElementById('btnLogout');
+  if(lo){
+    lo.onclick = function(){ authObj.signOut(); };
+  }
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', pasangSemua);
+} else {
+  pasangSemua();
+}
