@@ -289,6 +289,43 @@ body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
   max-height:0 !important;opacity:0 !important;visibility:hidden !important;overflow:hidden !important;
 }
 .header.collapsed .menu-btn{top:calc(env(safe-area-inset-top) + 14px) !important;width:40px !important;height:40px !important;font-size:19px !important}
+/* === MICRO INTERACTION LITE - RAM 2GB AMAN - PASTE 1X AJA === */
+
+/* 1. BUTTON ANIMATION - Tombol mengecil dikit pas ditekan */
+.badge, .chip, .menu-btn, #sendBtn, .composer button, .drawer-box button{
+  transition:transform .15s ease, opacity .15s ease !important;
+  will-change:transform !important;
+}
+.badge:active, .chip:active, .menu-btn:active, #sendBtn:active, .composer button:active{
+  transform:scale(.92) !important;
+  opacity:.85 !important;
+}
+.badge:hover, .chip:hover{
+  transform:translateY(-2px) scale(1.02) !important;
+}
+
+/* 2. CARD HOVER - Bubble chat / kartu terangkat halus */
+.bubble{
+  transition:transform .25s cubic-bezier(.22,1,.36,1) !important;
+}
+.bubble:hover{
+  transform:translateY(-2px) !important;
+}
+
+/* 3. SKELETON SHIMMER - Ganti Loading... jadi kilau */
+.thinking{
+  background:linear-gradient(90deg, #2a0a4a 25%, #4c1d95 50%, #2a0a4a 75%) !important;
+  background-size:200% 100% !important;
+  animation:shimmerLite 1.2s infinite linear !important;
+  border-radius:12px !important;
+  width:140px !important;height:16px !important;
+  display:inline-block !important;
+}
+.thinking span{display:none !important}
+@keyframes shimmerLite{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+  }
 </style>
 </head>
 <body>
