@@ -426,7 +426,6 @@ document.getElementById('btnCloseProfile').onclick=function(){document.getElemen
 document.getElementById('profilePopup').onclick=function(e){if(e.target.id==='profilePopup')document.getElementById('profilePopup').classList.remove('open')};
 function setTheme(t){if(t==='original'){document.body.removeAttribute('data-theme')}else{document.body.setAttribute('data-theme',t)}try{localStorage.setItem('fahri_theme',t)}catch(e){}document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-theme')===t)})}
 try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(savedTheme)}catch(e){}
-</script>
 /* === FITUR BARU v3 + TOMBOL PREMIUM OTOMATIS === */
 (function(){
   if(window.__fahriFiturV2) return; window.__fahriFiturV2 = true;
@@ -513,6 +512,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
   };
   document.getElementById('sendBtn').onclick = send;
 })();
+</script>
 <script src="auth.js"></script>
 </body>
 </html>
