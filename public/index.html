@@ -612,6 +612,73 @@ setInterval(function(){
 function init(){ buildDrawer(); buildChat(); }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init(); setTimeout(init,1000);
 })();
+/* === TAMBAHAN - PROFIL + MODE GELAP (cuma ini) === */
+(function(){
+if(window.__fahriTambah2) return; window.__fahriTambah2 = true;
+
+var css = document.createElement('style');
+css.textContent = `
+  .f-modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:99999; display:none; align-items:flex-end; justify-content:center; }
+  .f-modal.open{ display:flex; }
+  .f-box{ background:#1a1a22; width:100%; max-width:480px; border-radius:22px 22px 0 0; padding:20px; color:#fff; }
+  .f-box input{ width:100%; padding:12px; border-radius:12px; border:1px solid #333; background:#222; color:#fff; margin:10px 0; box-sizing:border-box; }
+  .f-box button{ width:100%; padding:12px; border-radius:12px; border:none; background:#8b5cf6; color:#fff; font-weight:800; margin-top:8px; }
+  body.f-light{ background:#f2f2f7 !important; color:#111 !important; }
+`;
+document.head.appendChild(css);
+
+function tambahMenu(){
+  var menu = document.querySelector('.f-menu-kanan');
+  if(!menu || menu.querySelector('[data-a="profil"]')) return;
+
+  // Tambah Profil Saya paling atas, Mode Gelap di bawahnya - sejajar sama yang lain
+  var html = `
+    <button class="f-item" data-a="profil"><span>👤</span>Profil Saya</button>
+    <button class="f-item" data-a="gelap"><span>🌙</span>Mode Gelap / Terang</button>
+  `;
+  var label = menu.querySelector('.f-label2');
+  if(label) label.insertAdjacentHTML('afterend', html);
+  else menu.insertAdjacentHTML('afterbegin', html);
+
+  menu.addEventListener('click', function(e){
+    var b = e.target.closest('[data-a]'); if(!b) return;
+    var a = b.getAttribute('data-a');
+    if(a==='profil') openProfil();
+    if(a==='gelap'){
+      document.body.classList.toggle('f-light');
+      localStorage.setItem('fahri_light', document.body.classList.contains('f-light') ? '1' : '0');
+    }
+  });
+  if(localStorage.getItem('fahri_light')==='1') document.body.classList.add('f-light');
+}
+
+function openProfil(){
+  var m = document.getElementById('f-modal-profil');
+  if(!m){
+    m = document.createElement('div'); m.id='f-modal-profil'; m.className='f-modal';
+    m.innerHTML = '<div class="f-box"><h3 style="margin:0">👤 Profil Saya</h3><input id="f-nama" placeholder="Nama kamu..."><input type="file" id="f-foto" accept="image/*"><button id="f-simpan">Simpan Profil</button><button id="f-tutup" style="background:#333">Tutup</button></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', function(e){ if(e.target===m) m.classList.remove('open'); });
+    document.getElementById('f-tutup').onclick = function(){ m.classList.remove('open'); };
+    document.getElementById('f-simpan').onclick = function(){
+      var n = document.getElementById('f-nama').value.trim();
+      if(n) localStorage.setItem('fahri_nama', n);
+      var f = document.getElementById('f-foto').files[0];
+      if(f){ var r = new FileReader(); r.onload = function(){ localStorage.setItem('fahri_foto', r.result); location.reload(); }; r.readAsDataURL(f); }
+      else location.reload();
+    };
+  }
+  document.getElementById('f-nama').value = localStorage.getItem('fahri_nama') || '';
+  m.classList.add('open');
+  // Tutup drawer biar modal kelihatan
+  var t = Array.from(document.querySelectorAll('button')).find(function(b){ return b.textContent.trim().includes('Tutup'); });
+  if(t) t.click();
+}
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', tambahMenu);
+else tambahMenu();
+setTimeout(tambahMenu, 1200);
+})();
 </script>
 <script src="auth.js"></script>
 </body>
