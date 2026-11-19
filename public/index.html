@@ -1277,6 +1277,119 @@ setInterval(function(){
   });
 }, 1000);
 })();
+/* === BAGIAN 7 - FIX: MATIIN BAGIAN 6 + MUNCULIN LAGI SEMUA UI === */
+(function(){
+if(window.__fahriFix7) return; window.__fahriFix7 = true;
+
+// 1. MATIIN BAGIAN 6 YANG NGE-HIDE SEMUA
+document.body.classList.remove('f-is-loading');
+var css=document.createElement('style');
+css.textContent=`
+  /* Paksa munculin lagi, kalahin Bagian 6 */
+  body.f-is-loading #f-top-widget,
+  body.f-is-loading #f-quick-bar,
+  body.f-is-loading #f-mode-bar,
+  body.f-is-loading #f-head-btns,
+  body.f-is-loading .f-bubble-tools{ display:flex !important; }
+  body.f-is-loading #f-search{ display:flex !important; }
+  #f-top-widget{ display:flex !important; }
+  #f-quick-bar{ display:flex !important; }
+  #f-mode-bar{ display:flex !important; }
+  #f-head-btns{ display:flex !important; }
+`;
+document.head.appendChild(css);
+setInterval(function(){ document.body.classList.remove('f-is-loading'); }, 500);
+
+// 2. CARI ANCHOR YANG BENER: KOLOM INPUT, BUKAN HEADER / CHAT
+function getInp(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]')||document.querySelector('textarea')||document.querySelector('input[type="text"]'); }
+function getAnchor(){
+  var inp=getInp(); if(!inp) return null;
+  // Naik 2 level dari input, itu wadah kolom chat yang paling aman buat nempel bar
+  var a=inp; for(var i=0;i<3;i++){ if(a.parentElement) a=a.parentElement; }
+  return a;
+}
+
+// 3. MUNCULIN LAGI WIDGET + QUICK + MODE PAKAI ANCHOR INPUT
+function rebuildBars(){
+  var anchor=getAnchor(); if(!anchor) return;
+  // Widget Cuaca + Sholat - taruh di atas anchor (di atas kolom chat)
+  if(!document.getElementById('f-top-widget2')){
+    var w=document.createElement('div'); w.id='f-top-widget2'; w.style.cssText='display:flex;gap:8px;padding:10px;flex-wrap:wrap';
+    w.innerHTML='<div class="f-w" id="f-cuaca2" style="flex:1;min-width:140px;padding:10px 12px;border-radius:14px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);font-size:12px;line-height:1.5">🌦️ Tahuna - Memuat...</div><div class="f-w" id="f-sholat2" style="flex:1;min-width:140px;padding:10px 12px;border-radius:14px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);font-size:12px;line-height:1.5">🕌 Sholat - Memuat...</div>';
+    anchor.parentNode.insertBefore(w, anchor);
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('f-cuaca2'); if(el) el.innerHTML='🌦️ <b>Tahuna</b><br>'+Math.round(d.current.temperature_2m)+'°C • '+(d.current.weather_code===0?'Cerah ☀️':'Berawan ⛅'); }).catch(function(){});
+    var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('f-sholat2'); if(el){ var t=d.data.timings; el.innerHTML='🕌 <b>Sholat</b><br>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5); } }).catch(function(){});
+  }
+  // Quick Bar
+  if(!document.getElementById('f-quick-bar2')){
+    var qb=document.createElement('div'); qb.id='f-quick-bar2'; qb.style.cssText='display:flex;gap:6px;padding:0 10px 8px;flex-wrap:wrap';
+    qb.innerHTML='<button class="f-quick" id="f-q2-flash">🃏 Flashcards</button><button class="f-quick" id="f-q2-template">📄 Template</button><button class="f-quick" id="f-q2-todo">✅ To-Do</button><button class="f-quick" id="f-q2-pdf">📋 Rangkum PDF</button><button class="f-quick" id="f-q2-gambar">🎨 Buat Gambar</button><button class="f-quick" id="f-q2-edit">✏️ Edit Foto</button><button class="f-quick" id="f-q2-web">🌐 Cari Web</button>';
+    anchor.parentNode.insertBefore(qb, anchor);
+    // Sambungin ke fungsi yang udah ada di Bagian 2 / 5
+    document.getElementById('f-q2-flash').onclick=function(){ var old=document.getElementById('f-q-flash'); if(old) old.click(); };
+    document.getElementById('f-q2-template').onclick=function(){ var old=document.getElementById('f-q-template'); if(old) old.click(); };
+    document.getElementById('f-q2-todo').onclick=function(){ if(window.__f_openTodo) window.__f_openTodo(); };
+    document.getElementById('f-q2-pdf').onclick=function(){ var f=document.getElementById('f-file'); if(f) f.click(); };
+    document.getElementById('f-q2-gambar').onclick=function(){ var old=document.getElementById('f-q-gambar'); if(old) old.click(); };
+    document.getElementById('f-q2-edit').onclick=function(){ var old=document.getElementById('f-q-edit'); if(old) old.click(); };
+    document.getElementById('f-q2-web').onclick=function(){ var old=document.getElementById('f-q-web'); if(old) old.click(); };
+  }
+  // Mode Bar
+  if(!document.getElementById('f-mode-bar2')){
+    var mode=localStorage.getItem('fahri_mode')||'belajar';
+    var mb=document.createElement('div'); mb.id='f-mode-bar2'; mb.style.cssText='display:flex;gap:6px;align-items:center;padding:8px 10px;flex-wrap:wrap';
+    mb.innerHTML='<button class="f-mode '+(mode==='belajar'?'on':'')+'" data-m2="belajar">🧠 Mode Belajar</button><button class="f-mode '+(mode==='cepat'?'on':'')+'" data-m2="cepat">⚡ Mode Cepat</button><button class="f-fix" id="f-fix2">✍️ Perbaiki Tulisan</button>';
+    anchor.parentNode.insertBefore(mb, anchor);
+    mb.addEventListener('click',function(e){ var b=e.target.closest('[data-m2]'); if(b){ localStorage.setItem('fahri_mode',b.getAttribute('data-m2')); mb.querySelectorAll('.f-mode').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); } });
+    document.getElementById('f-fix2').onclick=function(){ var inp=getInp(); if(!inp||!inp.value.trim()){ if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'✍️', title:'Perbaiki Tulisan', msg:'Ketik dulu yang mau diperbaiki.', showCancel:false}); return; } var t=inp.value.trim(); t=t.replace(/\s+/g,' ').replace(/\s+([,.!?])/g,'$1'); t=t.charAt(0).toUpperCase()+t.slice(1); if(!/[.!?]$/.test(t)) t+='.'; inp.value=t; if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'✅', title:'Berhasil', msg:'Tulisan diperbaiki!\n\n'+t, showCancel:false}); };
+  }
+  // Header buttons - tempel di deket tombol garis 3 (☰), bukan di header gede
+  if(!document.getElementById('f-head-btns2')){
+    var menuBtn=null; document.querySelectorAll('button').forEach(function(b){ if(b.textContent.trim()==='☰'||b.textContent.trim()==='≡') menuBtn=b; });
+    var hb=document.createElement('div'); hb.id='f-head-btns2'; hb.style.cssText='display:flex;gap:6px;align-items:center;justify-content:center;padding:6px 10px;flex-wrap:wrap';
+    hb.innerHTML='<button class="f-head-btn" id="f-h2-cari">🔍</button><button class="f-head-btn" id="f-h2-simpan">📌</button><button class="f-head-btn" id="f-h2-export">📤</button><button class="f-head-btn" id="f-h2-baru">➕</button>';
+    // Taruh di atas anchor juga, biar pasti keliatan
+    anchor.parentNode.insertBefore(hb, anchor);
+    document.getElementById('f-h2-cari').onclick=function(){ var old=document.getElementById('f-h-cari'); if(old) old.click(); };
+    document.getElementById('f-h2-simpan').onclick=function(){ var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'📌', title:'Chat Tersimpan', msg:arr.length?arr.slice(-5).join('\n---\n'):'Belum ada chat disimpan.', showCancel:false}); };
+    document.getElementById('f-h2-export').onclick=function(){ var old=document.getElementById('f-h-export'); if(old) old.click(); };
+    document.getElementById('f-h2-baru').onclick=function(){ if(window.__f_buatChatBaru) window.__f_buatChatBaru(); };
+  }
+  // Tombol Ngobrol Suara - tempel di samping kolom input
+  if(!document.getElementById('f-ngobrol-btn2')){
+    var inp=getInp(); if(inp && inp.parentElement){
+      var b=document.createElement('button'); b.id='f-ngobrol-btn2'; b.className='f-mini-btn'; b.textContent='🎙️'; b.type='button'; b.title='Ngobrol Suara';
+      b.onclick=function(){ var old=document.getElementById('f-ngobrol-btn'); if(old) old.click(); else if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'🎙️', title:'Ngobrol Suara', msg:'Pencet 🎙️ di bawah untuk mulai ngobrol suara.', showCancel:false}); };
+      inp.parentElement.appendChild(b);
+    }
+  }
+}
+
+// 4. BUBBLE TOOLS - DETEKSI BUBBLE ASLI (bukan .bubble)
+setInterval(function(){
+  // Bubble AI itu div yang isinya "Aku Fahri Assistant" / "Hai! Aku Fahri"
+  document.querySelectorAll('div').forEach(function(d){
+    if(d.querySelector('.f-bubble-tools')) return;
+    if(d.children.length>3) return; // cuma bubble kecil, bukan container gede
+    var txt=d.textContent||'';
+    var isAI = txt.includes('Aku Fahri Assistant') || txt.includes('Hai! Aku Fahri') || txt.includes('Aku Fahri');
+    if(!isAI) return;
+    if(txt.length<30 || txt.length>2000) return;
+    // Jangan tempel ke parent yang gede
+    if(d.querySelector('div div div')) return;
+    var tools=document.createElement('div'); tools.className='f-bubble-tools'; tools.style.cssText='display:flex;gap:6px;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.08);flex-wrap:wrap';
+    tools.innerHTML='<button class="f-pin">📌 Simpan</button><button class="f-speak">🔊 Bacakan</button><button class="f-mark">🔖 Bookmark</button>';
+    d.appendChild(tools);
+    tools.querySelector('.f-pin').onclick=function(){ var a=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); a.push(txt.slice(0,200)); localStorage.setItem('fahri_simpan',JSON.stringify(a)); this.textContent='✅ Tersimpan'; };
+    tools.querySelector('.f-speak').onclick=function(){ if(window.__f_bicara) window.__f_bicara(txt.replace('📌 Simpan','').replace('🔊 Bacakan','').replace('🔖 Bookmark','')); };
+    tools.querySelector('.f-mark').onclick=function(){ var a=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); a.push(txt.slice(0,300)); localStorage.setItem('fahri_bookmark',JSON.stringify(a)); this.textContent='✅ Di-bookmark'; };
+  });
+}, 1500);
+
+setInterval(rebuildBars, 1000);
+rebuildBars();
+})();
 </script>
 <script src="auth.js"></script>
 </body>
