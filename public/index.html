@@ -1201,6 +1201,82 @@ function openCariWeb(){
   };
 }
 })();
+/* === BAGIAN 6 - FIX LOADING SCREEN: SEMBUNYIIN UI + HURUF f === */
+(function(){
+if(window.__fahriFixLoad) return; window.__fahriFixLoad = true;
+
+// 1. CSS: Sembunyiin semua UI kita selama loading, + hapus huruf f liar
+var css=document.createElement('style');
+css.textContent=`
+  /* Selama loading, semua UI kita disembunyiin */
+  body.f-is-loading #f-top-widget,
+  body.f-is-loading #f-quick-bar,
+  body.f-is-loading #f-mode-bar,
+  body.f-is-loading #f-head-btns,
+  body.f-is-loading #f-search,
+  body.f-is-loading .f-vision-bar,
+  body.f-is-loading #f-ngobrol-btn,
+  body.f-is-loading .f-bubble-tools{ display:none !important; }
+  /* Hapus huruf f kecil yang liar di loading screen */
+  body.f-is-loading [class*="f-"]::before,
+  body.f-is-loading [class*="f-"]::after{ content:none !important; }
+`;
+document.head.appendChild(css);
+
+function cekLoading(){
+  // Cari loading screen: biasanya ada kata Loading, Splash, atau logo Fahri yang fullscreen
+  var splash=null;
+  var cands=document.querySelectorAll('div, section');
+  for(var i=0;i<cands.length;i++){
+    var t=(cands[i].textContent||'').toLowerCase();
+    var cls=(cands[i].className||'').toString().toLowerCase();
+    var id=(cands[i].id||'').toLowerCase();
+    var isSplash = (cls.includes('splash')||cls.includes('loading')||cls.includes('loader')||cls.includes('intro')||id.includes('splash')||id.includes('loading')||id.includes('loader'));
+    var isFullscreen = cands[i].offsetHeight > window.innerHeight*0.8 && cands[i].offsetWidth > window.innerWidth*0.8;
+    if(isSplash && isFullscreen) splash=cands[i];
+    // Kalau ada elemen yang isinya cuma huruf "f" doang, itu yang liar, hapus
+    if(cands[i].textContent.trim()==='f' && cands[i].offsetHeight<30){
+      // Jangan hapus yang di dalam chat / input, cuma yang di loading
+      if(cls.includes('f-')||cands[i].closest('[class*="splash"], [class*="loading"]')) cands[i].remove();
+    }
+  }
+  // Kalau loading masih ada, kasih class ke body biar UI kita ke-hide
+  // Kalau udah gak ada, hapus class-nya biar UI kita muncul
+  var adaLoading = false;
+  // Cek juga: kalau ada overlay fullscreen yang nutupin layar
+  var overlays=document.querySelectorAll('div');
+  for(var j=0;j<overlays.length;j++){
+    var st=getComputedStyle(overlays[j]);
+    if(st.position==='fixed' && overlays[j].offsetHeight>window.innerHeight*0.8 && overlays[j].offsetWidth>window.innerWidth*0.8 && st.display!=='none' && overlays[j].textContent.toLowerCase().includes('fahri')){
+      // Ini kemungkinan loading screen, tapi jangan anggap loading kalau udah > 5 detik
+      if(Date.now() - window.__fahriStartTime < 6000) adaLoading=true;
+    }
+  }
+  if(splash) adaLoading=true;
+  if(adaLoading) document.body.classList.add('f-is-loading');
+  else document.body.classList.remove('f-is-loading');
+}
+window.__fahriStartTime = Date.now();
+setInterval(cekLoading, 500);
+// Cek juga pas baru load, langsung sembunyiin dulu 2 detik biar loading ke-lewat
+document.body.classList.add('f-is-loading');
+setTimeout(function(){ document.body.classList.remove('f-is-loading'); }, 2500);
+
+// 2. Hapus huruf f liar yang nempel di icon loading
+setInterval(function(){
+  document.querySelectorAll('*').forEach(function(el){
+    // Kalau elemen cuma isi "f" dan kecil banget dan posisinya di atas / di loading
+    if(el.children.length===0 && el.textContent.trim()==='f' && el.offsetHeight>0 && el.offsetHeight<25){
+      var rect=el.getBoundingClientRect();
+      // Cuma hapus yang di atas layar (loading area), bukan di chat
+      if(rect.top < 150 && el.closest('div') && !el.closest('#chat') && !el.closest('input') && !el.closest('textarea')){
+        // Cek: kalau parent-nya ada icon / img, kemungkinan ini huruf liar
+        if(el.parentElement && el.parentElement.querySelector('img, svg, [class*="icon"]')) el.remove();
+      }
+    }
+  });
+}, 1000);
+})();
 </script>
 <script src="auth.js"></script>
 </body>
