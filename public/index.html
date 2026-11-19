@@ -289,6 +289,6 @@ document.getElementById('profilePopup').onclick=function(e){if(e.target.id==='pr
 function setTheme(t){if(t==='original'){document.body.removeAttribute('data-theme')}else{document.body.setAttribute('data-theme',t)}try{localStorage.setItem('fahri_theme',t)}catch(e){}document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-theme')===t)})}
 try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(savedTheme)}catch(e){}
 </script>
-<script src="auth.js?v=3"></script>
+<script src="auth.js?v=4"></script>
 </body>
 </html>
