@@ -765,6 +765,144 @@ function init2(){ if(window.__f_init1) window.__f_init1(); buildQuick(); buildMo
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init2); else init2();
 setTimeout(init2,1000); setTimeout(init2,2500);
 })();
+/* === FIX V4.1 - BAGIAN 3/3: HAPUS TTS LAMA + POPUP APP + DRAWER MUNCUL === */
+(function(){
+if(window.__fahriFix41) return; window.__fahriFix41 = true;
+
+// --- 1. HAPUS TTS LAMA (speaker di pojok atas bubble) ---
+var css=document.createElement('style');
+css.textContent=`
+  .tts-btn, .tts-button, button[class*="tts"], button[onclick*="speakText"]{ display:none !important; }
+  .f-flash-input{ width:100% !important; padding:12px !important; border-radius:12px !important; border:1px solid #333 !important; background:#222 !important; color:#fff !important; margin:10px 0 !important; box-sizing:border-box !important; }
+  .f-flash-row{ display:flex !important; gap:8px !important; }
+  .f-flash-row button{ flex:1 !important; }
+`;
+document.head.appendChild(css);
+function hapusTTS(){
+  document.querySelectorAll('.tts-btn, .tts-button, button[class*="tts"]').forEach(function(b){ b.remove(); });
+  // Cari juga tombol yang onclick-nya speakText
+  document.querySelectorAll('button').forEach(function(b){
+    var oc=b.getAttribute('onclick')||'';
+    if(oc.includes('speakText')) b.remove();
+  });
+}
+setInterval(hapusTTS, 800);
+
+// --- 2. FLASHCARDS PAKAI POPUP APP, BUKAN PROMPT CHROME ---
+function openFlashApp(){
+  // Kalau udah ada kartu, langsung buka viewer (pakai fungsi lama via klik ulang tidak bisa, jadi buat viewer sendiri)
+  var cards=JSON.parse(localStorage.getItem('fahri_flash')||'[]');
+  if(cards.length>0){
+    var idx=0;
+    function renderCard(){
+      var c=cards[idx]||{q:'-',a:'-'};
+      var m=document.getElementById('f-modal-flash2');
+      if(!m){ m=document.createElement('div'); m.id='f-modal-flash2'; m.className='f-modal'; document.body.appendChild(m); m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('open'); }); }
+      m.innerHTML='<div class="f-box"><h3 style="margin:0">🃏 Flashcards ('+(idx+1)+'/'+cards.length+')</h3><div class="f-card" id="f-card-txt2">'+c.q+'</div><button id="f-flip2">🔄 Balik Kartu</button><div style="display:flex;gap:8px"><button id="f-prev2" style="background:#333">⬅️ Sebelumnya</button><button id="f-next2" style="background:#333">Berikutnya ➡️</button></div><button id="f-add2" style="background:#22c55e">+ Tambah Kartu</button><button id="f-close2" style="background:#333">Tutup</button></div>';
+      m.classList.add('open');
+      var flipped=false;
+      document.getElementById('f-flip2').onclick=function(){ flipped=!flipped; document.getElementById('f-card-txt2').textContent=flipped?c.a:c.q; };
+      document.getElementById('f-prev2').onclick=function(){ idx=(idx-1+cards.length)%cards.length; renderCard(); };
+      document.getElementById('f-next2').onclick=function(){ idx=(idx+1)%cards.length; renderCard(); };
+      document.getElementById('f-close2').onclick=function(){ m.classList.remove('open'); };
+      document.getElementById('f-add2').onclick=function(){
+        // Popup app untuk tambah kartu, bukan prompt
+        m.innerHTML='<div class="f-box"><h3 style="margin:0">+ Tambah Kartu</h3><input class="f-flash-input" id="f-q-inp" placeholder="Pertanyaan..."><input class="f-flash-input" id="f-a-inp" placeholder="Jawaban..."><div class="f-flash-row"><button id="f-save-card" style="background:#22c55e">Simpan</button><button id="f-cancel-card" style="background:#333">Batal</button></div></div>';
+        document.getElementById('f-save-card').onclick=function(){ var q=document.getElementById('f-q-inp').value.trim(); var a=document.getElementById('f-a-inp').value.trim(); if(!q||!a) return alert('Isi pertanyaan + jawaban dulu'); cards.push({q:q,a:a}); localStorage.setItem('fahri_flash',JSON.stringify(cards)); renderCard(); };
+        document.getElementById('f-cancel-card').onclick=function(){ renderCard(); };
+      };
+    }
+    renderCard(); return;
+  }
+  // Kalau belum ada kartu, popup app untuk input tema
+  var m2=document.getElementById('f-modal-flash-tema');
+  if(!m2){ m2=document.createElement('div'); m2.id='f-modal-flash-tema'; m2.className='f-modal'; document.body.appendChild(m2); m2.addEventListener('click',function(e){ if(e.target===m2) m2.classList.remove('open'); }); }
+  m2.innerHTML='<div class="f-box"><h3 style="margin:0">🃏 Flashcards Baru</h3><p style="font-size:13px;opacity:.7">Mau belajar apa?</p><input class="f-flash-input" id="f-tema-inp" placeholder="Contoh: Inggris, Matematika, Sejarah"><div class="f-flash-row"><button id="f-tema-buat" style="background:#8b5cf6">Buat Flashcards</button><button id="f-tema-batal" style="background:#333">Batal</button></div><p style="font-size:11px;opacity:.5;margin-top:10px">Atau pilih cepat:</p><div class="f-flash-row"><button data-tema="Bahasa Inggris" style="background:#333">Inggris</button><button data-tema="Matematika" style="background:#333">Matematika</button><button data-tema="Sejarah" style="background:#333">Sejarah</button></div></div>';
+  m2.classList.add('open');
+  function buat(tema){
+    if(!tema) return; m2.classList.remove('open');
+    localStorage.setItem('fahri_flash', JSON.stringify([{q:'Contoh: Apa ibu kota Indonesia?', a:'Jakarta'},{q:'2 + 2 = ?', a:'4'}]));
+    var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea');
+    if(inp){ inp.value='Buatkan 5 flashcards untuk belajar '+tema+', format: Q: ... | A: ...'; inp.focus(); }
+    // Kasih tau pakai popup app juga, bukan alert chrome yang jelek
+    var n=document.createElement('div'); n.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:12px 18px;border-radius:99px;z-index:999999;font-size:13px;font-weight:700'; n.textContent='✅ Siap! Pencet kirim ➤ untuk buat flashcards '+tema; document.body.appendChild(n); setTimeout(function(){ n.remove(); }, 3000);
+  }
+  document.getElementById('f-tema-buat').onclick=function(){ buat(document.getElementById('f-tema-inp').value.trim()); };
+  document.getElementById('f-tema-batal').onclick=function(){ m2.classList.remove('open'); };
+  m2.querySelectorAll('[data-tema]').forEach(function(b){ b.onclick=function(){ buat(b.getAttribute('data-tema')); }; });
+}
+// Timpa tombol Flashcards lama biar pakai popup app
+setInterval(function(){
+  var btn=document.getElementById('f-q-flash');
+  if(btn && !btn.dataset.fixed){ btn.dataset.fixed='1'; btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); openFlashApp(); }; }
+}, 1000);
+
+// --- 3. FIX DRAWER GARIS 3 - PAKAI OBSERVER, JADI MUNCUL PAS DIBUKA ---
+function cobaIsiDrawer(){
+  if(document.querySelector('.f-menu-kanan')) return;
+  // Cari drawer yang lagi kebuka / ada di DOM, yang isinya ada Bersihkan Chat + Tutup
+  var all=document.querySelectorAll('div, aside');
+  var drawer=null;
+  for(var i=0;i<all.length;i++){
+    var t=all[i].textContent||'';
+    if(t.includes('Bersihkan Chat') && t.includes('Tutup') && t.length<4000){
+      // Ambil yang paling kecil (paling deket sama kontennya), bukan BODY
+      if(!drawer || all[i].textContent.length < drawer.textContent.length) drawer=all[i];
+    }
+  }
+  if(!drawer) return;
+  // Naik 1-2 level sampai ketemu container yang ada Tutup
+  var container=drawer;
+  // Kalau drawer-nya sendiri udah container, pakai itu. Kalau bukan, naik sampai ketemu yang ada tombol Tutup di dalamnya
+  for(var j=0;j<3;j++){
+    if(container.querySelector('button') && container.textContent.includes('Tutup')) break;
+    if(container.parentElement) container=container.parentElement; else break;
+  }
+  // Cari tombol Tutup di dalam container
+  var tutupBtn=null;
+  var btns=container.querySelectorAll('button');
+  for(var k=0;k<btns.length;k++){ if(btns[k].textContent.trim().includes('Tutup')){ tutupBtn=btns[k]; break; } }
+  if(!tutupBtn) return;
+
+  var menu=document.createElement('div'); menu.className='f-menu-kanan';
+  var isTrans=localStorage.getItem('fahri_auto_trans')!=='0';
+  menu.innerHTML='<div class="f-label2">PENGATURAN</div>'
+    +'<button class="f-item" data-a="profil"><span>👤</span>Profil Saya</button>'
+    +'<button class="f-item" data-a="gelap"><span>🌙</span>Mode Gelap / Terang</button>'
+    +'<button class="f-item '+(isTrans?'f-on':'')+'" data-a="trans"><span>🌐</span><span style="width:auto !important" id="f-trans-label2">Auto Translate: '+(isTrans?'ON':'OFF')+'</span></button>'
+    +'<button class="f-item" data-a="bookmark"><span>🔖</span>Bookmark / Favorit</button>'
+    +'<button class="f-item" data-a="todo"><span>✅</span>To-Do / Tugas</button>'
+    +'<button class="f-item" data-a="ingat"><span>⏰</span>Pengingat Belajar</button>'
+    +'<button class="f-item" data-a="bahasa"><span>🌐</span>Bahasa</button>'
+    +'<button class="f-item" data-a="bagikan"><span>↗️</span>Bagikan Aplikasi</button>'
+    +'<button class="f-item" data-a="bantuan"><span>❓</span>Bantuan / Cara Pakai</button>'
+    +'<button class="f-item" data-a="tentang"><span>ℹ️</span>Tentang Aplikasi</button>'
+    +'<button class="f-item" data-a="hapus"><span>🗑️</span>Hapus Semua Chat</button>';
+  // Sisipin TEPAT SEBELUM tombol Tutup, biar gak di bawah sendiri
+  if(tutupBtn.parentElement) tutupBtn.parentElement.insertBefore(menu, tutupBtn);
+  else container.appendChild(menu);
+
+  menu.addEventListener('click',function(e){
+    var b=e.target.closest('[data-a]'); if(!b) return; var a=b.getAttribute('data-a');
+    if(a==='profil' && window.__f_openProfil) window.__f_openProfil();
+    if(a==='gelap'){ document.body.classList.toggle('f-light'); localStorage.setItem('fahri_light',document.body.classList.contains('f-light')?'1':'0'); }
+    if(a==='trans'){ var on=localStorage.getItem('fahri_auto_trans')==='0'; localStorage.setItem('fahri_auto_trans',on?'1':'0'); var lab=document.getElementById('f-trans-label2'); if(lab) lab.textContent='Auto Translate: '+(on?'ON':'OFF'); b.classList.toggle('f-on',on); }
+    if(a==='bookmark'){ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); alert(arr.length?'🔖 BOOKMARK:\n\n'+arr.slice(-5).join('\n---\n'):'Belum ada bookmark. Pencet 🔖 di bawah tiap jawaban AI.'); }
+    if(a==='todo' && window.__f_openTodo) window.__f_openTodo();
+    if(a==='ingat'){ var jam=prompt('Pengingat Belajar - Jam berapa? (contoh: 19:00)'); if(jam){ localStorage.setItem('fahri_inget',jam); alert('✅ Pengingat diset jam '+jam); } }
+    if(a==='bahasa'){ var x=prompt('1 = Indonesia\n2 = English\n3 = Jawa'); if(x==='2') alert('English aktif!'); else if(x==='3') alert('Jawa aktif!'); else alert('Indonesia aktif!'); }
+    if(a==='bagikan'){ if(navigator.share) navigator.share({title:'Fahri Assistant', url:location.href}); else alert('Copy link: '+location.href); }
+    if(a==='bantuan') alert('CARA PAKAI:\n1. Ketik untuk chat\n2. 📎 Kirim foto / PDF\n3. 🎤 Ngomong jadi teks\n4. 🃏 Flashcards\n5. 📄 Template Cepat\n6. ✅ To-Do\n7. 🔖 Bookmark');
+    if(a==='tentang') alert('Fahri Assistant v1.4.0\nAsisten AI untuk belajar, kerja, dan sehari-hari.');
+    if(a==='hapus'){ if(confirm('Yakin hapus SEMUA chat?')){ var ch=document.querySelector('#chat'); if(ch) ch.innerHTML=''; } }
+  });
+  if(localStorage.getItem('fahri_light')==='1') document.body.classList.add('f-light');
+}
+// Cek tiap kali ada perubahan di halaman (pas drawer dibuka)
+var obs=new MutationObserver(function(){ cobaIsiDrawer(); hapusTTS(); });
+obs.observe(document.body, {childList:true, subtree:true});
+setInterval(cobaIsiDrawer, 1000);
+})();
 </script>
 <script src="auth.js"></script>
 </body>
