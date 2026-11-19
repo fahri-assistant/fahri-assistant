@@ -1338,50 +1338,6 @@ setInterval(function(){
 setInterval(function(){ fixInput(); buildSheet(); }, 1000);
 fixInput(); buildSheet();
 })();
-  /* === BAGIAN 12 - CUACA VERSI LAMA, CSS DOANG, NO INTERVAL === */
-<style>
-  /* Cari 2 kotak cuaca bawaan app, bikin ukuran kaya foto lama */
-  div:has(> div) { }
-  /* Kotak cuaca: yang ada tulisan Tahuna + Sholat Hari Ini, bikin 2 kotak sejajar, ukuran pas */
-  #f-cuaca-atas{ display:none !important; }
-  #f-widget-mini{ display:none !important; }
-  #f-fitur-bar{ display:none !important; }
-</style>
-<script>
-(function(){
-if(window.__fahriFix12) return; window.__fahriFix12 = true;
-/* Cuma CSS, jalan 1x, gak ada setInterval */
-var css=document.createElement('style');
-css.textContent=`
-  /* 2 kotak cuaca bawaan: yang di atas chat, di bawah login */
-  /* Kita kunci lewat posisi: anak ke-2 dari container utama yang ada tulisan Tahuna */
-  /* Ukuran pas kaya foto lama: padding 10px, radius 16px, font 12px, teks 2 baris, gak kepotong */
-  .f-ca-fix{ display:flex !important; gap:8px !important; padding:0 12px 10px !important; }
-  .f-ca-fix > div{
-    flex:1 !important; padding:10px 12px !important; border-radius:16px !important;
-    background:rgba(20,15,35,.78) !important; border:1px solid rgba(168,85,247,.30) !important;
-    color:#fff !important; font-size:12px !important; line-height:1.5 !important;
-    white-space:normal !important; overflow:visible !important; text-overflow:clip !important;
-    min-width:0 !important;
-  }
-`;
-document.head.appendChild(css);
-function fixSekali(){
-  // Cari kotak cuaca bawaan (yang ada Tahuna)
-  var els=document.querySelectorAll('div');
-  for(var i=0;i<els.length;i++){
-    if(els[i].textContent.includes('Tahuna') && els[i].textContent.includes('Sholat Hari Ini')){
-      // Ini container-nya, kasih class fix 1x aja, jangan dipindah-pindah
-      if(!els[i].classList.contains('f-ca-fix')) els[i].classList.add('f-ca-fix');
-      break;
-    }
-  }
-  // Hapus bar fitur dobel + mic dobel 1x aja
-  document.querySelectorAll('#f-fitur-bar, #f-fitur-fab, #f-ngobrol-btn, #f-ngobrol-btn2').forEach(function(e){ e.remove(); });
-}
-fixSekali();
-setTimeout(fixSekali, 1500);
-})();
 </script>
 <script src="auth.js"></script>
 </body>
