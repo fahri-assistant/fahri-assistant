@@ -69,8 +69,8 @@ if (window.Capacitor && window.Capacitor.isNativePlatform()) {
   try {
     var sb = window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
     if (sb) {
+      sb.hide().catch(function(){});
       sb.setOverlaysWebView({ overlay: true }).catch(function(){});
-      sb.setBackgroundColor({ color: '#00000000' }).catch(function(){});
     }
   } catch (_) {}
-  }
+      }
