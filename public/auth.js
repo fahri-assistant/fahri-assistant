@@ -36,32 +36,20 @@ auth.onAuthStateChanged(function(user){
 function pasang(id, provName){
   var b = document.getElementById(id);
   if(!b) return;
-  b.onclick = async function(e){
+  b.onclick = function(e){
     e.preventDefault();
-    // Di APK: coba plugin native dulu, kalau gak ada langsung Redirect (bukan Popup)
-    try {
-      var isNative = window.Capacitor && window.Capacitor.isNativePlatform();
-      if (isNative) {
-        var plugin = window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication;
-        if (plugin) {
-          var res = provName === 'google' ? await plugin.signInWithGoogle() : await plugin.signInWithGithub();
-          var idToken = res && res.credential && res.credential.idToken;
-          if (idToken) { await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken)); return; }
-        }
-      }
-    } catch(err){ console.log('Native login gagal, lanjut Redirect:', err); }
     var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
     auth.signInWithRedirect(p);
   };
-      }
+}
 function pasangSemua(){
-  pasang('btnGoogle', 'google');
-  pasang('btnGithub', 'github');
-  pasang('google-login-btn', 'google');
-  pasang('github-login-btn', 'github');
+  pasang('btn-google','google');
+  pasang('btn-github','github');
+  pasang('login-google','google');
+  pasang('login-github','github');
 }
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', pasangSemua);
 } else {
   pasangSemua();
-      }
+  }
