@@ -1,3 +1,4 @@
+alert('AUTH JALAN');
 alert('auth.js KE-LOAD!');
 const firebaseConfig = {
   apiKey: "AIzaSyC_enCjCWHSq4GTFHABA6kcCgjWeww1hks",
