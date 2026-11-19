@@ -1,4 +1,4 @@
-// auth.js - FIX TOTAL, jangan deklarasi firebaseConfig / auth lagi
+// auth.js - FIX FINAL, pake Popup biar gak pindah web
 var authObj = firebase.auth();
 
 function updateLoginUI(user){
@@ -29,19 +29,24 @@ authObj.onAuthStateChanged(function(user){
 
 function pasang(id, provName){
   var b = document.getElementById(id);
-  alert('Cek tombol ' + id + ' ketemu? ' + (b ? 'YA' : 'TIDAK'));
   if(!b) return;
   b.onclick = function(e){
     e.preventDefault();
-    alert('Tombol ' + id + ' DIPENCET, mau buka popup');
     var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
-    authObj.signInWithPopup(p).then(function(result){
-      updateLoginUI(result.user);
-    }).catch(function(e){
-      alert('Login gagal: ' + e.code + ' - ' + e.message);
-    });
+    // Kalau di HP / aplikasi Capacitor, pake Redirect. Kalau di web, pake Popup.
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      authObj.signInWithRedirect(p);
+    } else {
+      authObj.signInWithPopup(p).then(function(result){
+        updateLoginUI(result.user);
+      }).catch(function(e){
+        alert('Login gagal: ' + e.code + ' - ' + e.message);
+      });
+    }
   };
-  function pasangSemua(){
+}
+
+function pasangSemua(){
   pasang('btnGoogle','google');
   pasang('btnGithub','github');
   pasang('btn-google','google');
@@ -59,3 +64,13 @@ if(document.readyState === 'loading'){
 } else {
   pasangSemua();
 }
+
+if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+  try {
+    var sb = window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+    if (sb) {
+      sb.setOverlaysWebView({ overlay: true }).catch(function(){});
+      sb.setBackgroundColor({ color: '#00000000' }).catch(function(){});
+    }
+  } catch (_) {}
+  }
