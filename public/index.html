@@ -326,6 +326,27 @@ body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
   0%{background-position:200% 0}
   100%{background-position:-200% 0}
   }
+  /* === FITUR BARU + PREMIUM CLASS - GABUNG === */
+.ai-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ai-actions button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:inherit;font-size:12px;padding:7px 13px;border-radius:999px;cursor:pointer}
+body[data-theme="ivory"] .ai-actions button{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.15);color:#1a1a1a}
+.typing-cursor{display:inline-block;width:2px;height:14px;background:currentColor;animation:fahriBlink .7s infinite;margin-left:2px;vertical-align:-2px}
+@keyframes fahriBlink{0%,100%{opacity:1}50%{opacity:0}}
+.suggest-wrap{margin:12px 0 4px;align-self:stretch}
+.suggest-title{text-align:center;font-size:12px;opacity:.6;margin-bottom:8px}
+.suggest-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.suggest-card{padding:12px;border-radius:14px;font-size:12px;line-height:1.4;cursor:pointer;text-align:left;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15)}
+body[data-theme="ivory"] .suggest-card{background:#fff;border-color:#d8d0bc;color:#1a1a1a}
+/* === TEMA PREMIUM CLASS - KE-6 === */
+body[data-theme="premium"]{background:#0a0614 !important}
+body[data-theme="premium"] #chat{background:#0a0614 !important}
+body[data-theme="premium"] .bubble.ai{background:#1e1b4b !important;border:1px solid rgba(255,255,255,.12) !important;box-shadow:none !important}
+body[data-theme="premium"] .bubble.user{background:#2e2a7a !important;border:1px solid rgba(255,255,255,.15) !important;box-shadow:none !important}
+body[data-theme="premium"] .badge, body[data-theme="premium"] .chip{background:rgba(255,255,255,.08) !important;border:1px solid rgba(255,255,255,.15) !important;box-shadow:none !important}
+body[data-theme="premium"] .composer{background:rgba(255,255,255,.06) !important;border:1px solid rgba(255,255,255,.12) !important;box-shadow:none !important}
+body[data-theme="premium"] .ai-actions button{background:rgba(255,255,255,.08) !important}
+body[data-theme="premium"] .suggest-card{background:rgba(139,92,246,.35) !important;border:1px solid rgba(255,255,255,.15) !important;box-shadow:none !important}
+.theme-btn[data-theme="premium"] i{background:linear-gradient(135deg,#1e1b4b,#a855f7) !important}
 </style>
 </head>
 <body>
