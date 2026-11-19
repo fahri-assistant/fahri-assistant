@@ -1006,6 +1006,201 @@ document.addEventListener('click', function(e){
   }
 }, true); // capture = true, biar jalan duluan sebelum handler lama
 })();
+/* === BAGIAN 5 - RIWAYAT + NGOBROL SUARA + GAMBAR AI + CARI WEB === */
+(function(){
+if(window.__fahriV5) return; window.__fahriV5 = true;
+
+function showApp(opt){
+  if(window.__f_showAppPopup) return window.__f_showAppPopup(opt);
+  alert(opt.msg||''); return null;
+}
+function getInp(){ return window.__f_getInp ? window.__f_getInp() : document.querySelector('textarea')||document.querySelector('input[type="text"]'); }
+function getChat(){ return window.__f_getChat ? window.__f_getChat() : document.body; }
+
+// --- CSS TAMBAHAN ---
+var css=document.createElement('style');
+css.textContent=`
+  .f-sesi-item{ display:flex; gap:8px; align-items:center; padding:10px; background:#222; border-radius:10px; margin:6px 0; font-size:13px; text-align:left; }
+  .f-sesi-item span{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .f-sesi-item button{ width:32px !important; padding:6px !important; background:#ef4444 !important; }
+  .f-voice-box{ text-align:center; padding:10px 0; }
+  .f-voice-circle{ width:90px; height:90px; border-radius:50%; background:#8b5cf6; display:flex; align-items:center; justify-content:center; font-size:40px; margin:10px auto; box-shadow:0 0 25px rgba(139,92,246,.6); }
+  .f-voice-circle.listening{ animation: fPulse 1s infinite; }
+  @keyframes fPulse{ 0%{ transform:scale(1);} 50%{ transform:scale(1.12);} 100%{ transform:scale(1);} }
+  .f-gen-img{ width:100%; border-radius:14px; margin:10px 0; }
+`;
+document.head.appendChild(css);
+
+// --- 1. RIWAYAT / SESI CHAT ---
+function saveSesi(){
+  var chat=getChat(); if(!chat) return;
+  var teks=chat.innerText||''; if(teks.trim().length<20) return;
+  var list=JSON.parse(localStorage.getItem('fahri_sesi')||'[]');
+  // Jangan simpan kalau isinya sama kayak terakhir
+  if(list[0] && list[0].teks===teks.slice(0,500)) return;
+  list.unshift({waktu:new Date().toLocaleString('id-ID'), teks:teks.slice(0,500), judul:teks.slice(0,60).replace(/\n/g,' ')});
+  localStorage.setItem('fahri_sesi', JSON.stringify(list.slice(0,20)));
+}
+function openRiwayat(){
+  var list=JSON.parse(localStorage.getItem('fahri_sesi')||'[]');
+  saveSesi(); list=JSON.parse(localStorage.getItem('fahri_sesi')||'[]');
+  var html='<h3 style="margin:0">💬 Riwayat Chat</h3><p style="font-size:12px;opacity:.6">Sesi chat kamu, pencet untuk buka lagi.</p>';
+  if(list.length===0) html+='<p style="opacity:.6;font-size:13px">Belum ada riwayat. Chat dulu, nanti ke-save otomatis.</p>';
+  else html+=list.map(function(s,i){ return '<div class="f-sesi-item"><span>💬 '+s.judul+'<br><small style="opacity:.5">'+s.waktu+'</small></span><button data-open="'+i+'" style="background:#22c55e !important">Buka</button><button data-del="'+i+'">🗑️</button></div>'; }).join('');
+  html+='<button id="f-sesi-baru" style="background:#22c55e">➕ Chat Baru</button><button id="f-sesi-tutup" style="background:#333">Tutup</button>';
+  showApp({icon:'💬', title:'', msg:'', showCancel:false, okText:'Tutup'});
+  // Kita pakai popup custom karena showApp kita cuma untuk alert, jadi buat modal sendiri di sini
+  var ov=document.querySelector('.f-app-overlay'); if(ov) ov.remove();
+  var ov2=document.createElement('div'); ov2.className='f-app-overlay';
+  ov2.innerHTML='<div class="f-app-popup" style="max-width:400px !important; text-align:left !important">'+html+'</div>';
+  document.body.appendChild(ov2);
+  ov2.addEventListener('click',function(e){ if(e.target===ov2) ov2.remove(); });
+  document.getElementById('f-sesi-tutup').onclick=function(){ ov2.remove(); };
+  document.getElementById('f-sesi-baru').onclick=function(){ ov2.remove(); buatChatBaru(); };
+  ov2.querySelectorAll('[data-open]').forEach(function(b){ b.onclick=function(){ var s=list[parseInt(b.getAttribute('data-open'))]; var chat=getChat(); if(chat){ saveSesi(); chat.innerHTML='<div style="padding:10px;opacity:.6;font-size:12px">💬 Riwayat - '+s.waktu+'</div><div style="white-space:pre-line;padding:10px">'+s.teks+'</div>'; } ov2.remove(); }; });
+  ov2.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ list.splice(parseInt(b.getAttribute('data-del')),1); localStorage.setItem('fahri_sesi',JSON.stringify(list)); openRiwayat(); }; });
+}
+function buatChatBaru(){
+  saveSesi();
+  var chat=getChat(); if(chat) chat.innerHTML='';
+  var inp=getInp(); if(inp){ inp.value=''; inp.focus(); inp.placeholder='Chat baru... Tanya apa aja ke Fahri...'; }
+  var n=document.createElement('div'); n.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:12px 18px;border-radius:99px;z-index:999999;font-size:13px;font-weight:700'; n.textContent='✅ Chat baru dibuat! Riwayat lama ke-save.'; document.body.appendChild(n); setTimeout(function(){ n.remove(); }, 2500);
+}
+window.__f_openRiwayat = openRiwayat;
+window.__f_buatChatBaru = buatChatBaru;
+// Tambah tombol Chat Baru di header + Riwayat di garis 3 (via observer)
+setInterval(function(){
+  // Header: tombol Chat Baru
+  var headBtns=document.getElementById('f-head-btns');
+  if(headBtns && !document.getElementById('f-h-baru')){
+    var b=document.createElement('button'); b.id='f-h-baru'; b.className='f-head-btn'; b.title='Chat Baru'; b.textContent='➕';
+    b.onclick=buatChatBaru; headBtns.insertBefore(b, headBtns.firstChild);
+  }
+  // Garis 3: item Riwayat
+  var menu=document.querySelector('.f-menu-kanan');
+  if(menu && !menu.querySelector('[data-a="riwayat"]')){
+    var item=document.createElement('button'); item.className='f-item'; item.setAttribute('data-a','riwayat');
+    item.innerHTML='<span>💬</span>Riwayat Chat';
+    item.onclick=function(e){ e.preventDefault(); e.stopPropagation(); openRiwayat(); };
+    menu.insertBefore(item, menu.firstChild);
+  }
+}, 1000);
+// Auto-save tiap 30 detik
+setInterval(saveSesi, 30000);
+
+// --- 2. NGOBROL SUARA ---
+function openNgobrol(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup"><div class="f-voice-box"><div class="f-voice-circle" id="f-vc">🎙️</div><div style="font-weight:800;font-size:16px">Ngobrol Suara</div><div id="f-v-status" style="font-size:13px;opacity:.7;margin:8px 0">Pencet tombol mic untuk mulai ngobrol</div><div id="f-v-teks" style="font-size:13px;background:#222;padding:10px;border-radius:10px;min-height:40px;text-align:left">...</div></div><div class="f-ap-btns" style="margin-top:14px"><button class="f-ap-batal" id="f-v-tutup">Tutup</button><button class="f-ap-oke" id="f-v-mulai">🎙️ Mulai Ngobrol</button></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov){ ov.remove(); if(window.speechSynthesis) window.speechSynthesis.cancel(); } });
+  document.getElementById('f-v-tutup').onclick=function(){ ov.remove(); if(window.speechSynthesis) window.speechSynthesis.cancel(); };
+  var listening=false; var Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  document.getElementById('f-v-mulai').onclick=function(){
+    if(!Rec){ document.getElementById('f-v-status').textContent='Voice belum support, coba Chrome Android.'; return; }
+    var r=new Rec(); r.lang='id-ID'; r.interimResults=false;
+    document.getElementById('f-vc').classList.add('listening');
+    document.getElementById('f-v-status').textContent='🎧 Mendengarkan... Ngomong sekarang!';
+    r.onresult=function(e){
+      var txt=e.results[0][0].transcript;
+      document.getElementById('f-v-teks').textContent='Kamu: '+txt;
+      document.getElementById('f-v-status').textContent='AI sedang mikir...';
+      document.getElementById('f-vc').classList.remove('listening');
+      // Masukkan ke kolom chat biar AI jawab, lalu bacakan jawabannya
+      var inp=getInp(); if(inp){ inp.value=txt; }
+      setTimeout(function(){
+        document.getElementById('f-v-status').textContent='✅ Udah aku masukin ke chat, pencet kirim atau aku bacakan?';
+        // Coba bacakan respon singkat
+        if(window.speechSynthesis){
+          var u=new SpeechSynthesisUtterance('Oke, aku udah terima: '+txt+'. Coba kirim di chat ya biar aku jawab lengkap.');
+          u.lang='id-ID'; window.speechSynthesis.speak(u);
+        }
+      }, 800);
+    };
+    r.onerror=function(){ document.getElementById('f-v-status').textContent='Mic gagal, coba lagi.'; document.getElementById('f-vc').classList.remove('listening'); };
+    r.start();
+  };
+}
+// Tambah tombol Ngobrol Suara di samping kolom chat
+setInterval(function(){
+  var inp=getInp(); if(!inp) return;
+  if(document.getElementById('f-ngobrol-btn')) return;
+  var wadah=inp.parentElement; if(!wadah) return;
+  var b=document.createElement('button'); b.id='f-ngobrol-btn'; b.className='f-mini-btn'; b.textContent='🎙️'; b.type='button'; b.title='Ngobrol Suara';
+  b.onclick=openNgobrol;
+  wadah.appendChild(b);
+}, 1500);
+
+// --- 3. BUAT GAMBAR AI + EDIT FOTO ---
+function openBuatGambar(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">🎨</div><div style="font-weight:800;font-size:17px;margin:6px 0">Buat Gambar AI</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Ketik mau gambar apa, AI bikinin.</div><input class="f-ap-input" id="f-img-prompt" placeholder="Contoh: kucing astronot di bulan, lucu" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-img-batal">Batal</button><button class="f-ap-oke" id="f-img-buat">🎨 Buat Gambar</button></div><div id="f-img-hasil"></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.getElementById('f-img-batal').onclick=function(){ ov.remove(); };
+  document.getElementById('f-img-buat').onclick=function(){
+    var p=document.getElementById('f-img-prompt').value.trim(); if(!p) return;
+    document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;opacity:.7">🎨 Lagi dibikinin...</p>';
+    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=512&height=512&seed='+Math.floor(Math.random()*100000)+'&nologo=true';
+    var img=new Image(); img.onload=function(){
+      document.getElementById('f-img-hasil').innerHTML='<img src="'+url+'" class="f-gen-img"><button id="f-img-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat</button>';
+      document.getElementById('f-img-kirim').onclick=function(){ var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0'; d.innerHTML='<img src="'+url+'" style="max-width:280px;border-radius:14px"><div style="font-size:12px;opacity:.7">🎨 Gambar AI: '+p+'</div>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; } ov.remove(); };
+    };
+    img.onerror=function(){ document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Gagal bikin gambar, coba lagi / cek internet.</p>'; };
+    img.src=url;
+  };
+}
+function openEditFoto(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">✏️</div><div style="font-weight:800;font-size:17px;margin:6px 0">Edit Foto AI</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Upload foto, ketik mau diedit jadi apa.</div><input type="file" id="f-edit-file" accept="image/*" style="margin-bottom:10px;color:#fff"><input class="f-ap-input" id="f-edit-prompt" placeholder="Contoh: jadi kartun, background pantai, dll" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-edit-batal">Batal</button><button class="f-ap-oke" id="f-edit-buat">✏️ Edit Foto</button></div><div id="f-edit-hasil"></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.getElementById('f-edit-batal').onclick=function(){ ov.remove(); };
+  document.getElementById('f-edit-buat').onclick=function(){
+    var f=document.getElementById('f-edit-file').files[0]; var p=document.getElementById('f-edit-prompt').value.trim()||'edit foto ini jadi lebih bagus';
+    if(!f){ document.getElementById('f-edit-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Pilih foto dulu.</p>'; return; }
+    var r=new FileReader(); r.onload=function(){
+      var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0;text-align:right'; d.innerHTML='<img src="'+r.result+'" style="max-width:220px;border-radius:14px"><div style="font-size:12px;opacity:.7">✏️ Edit Foto: '+p+'</div>'; chat.appendChild(d); }
+      var inp=getInp(); if(inp){ inp.value='Tolong edit foto ini: '+p+' (aku sudah upload fotonya)'; inp.focus(); }
+      ov.remove();
+    }; r.readAsDataURL(f);
+  };
+}
+// Tambah ke Quick Bar
+setInterval(function(){
+  var bar=document.getElementById('f-quick-bar'); if(!bar) return;
+  if(!document.getElementById('f-q-gambar')){
+    var b1=document.createElement('button'); b1.className='f-quick'; b1.id='f-q-gambar'; b1.textContent='🎨 Buat Gambar'; b1.onclick=openBuatGambar; bar.appendChild(b1);
+    var b2=document.createElement('button'); b2.className='f-quick'; b2.id='f-q-edit'; b2.textContent='✏️ Edit Foto'; b2.onclick=openEditFoto; bar.appendChild(b2);
+    var b3=document.createElement('button'); b3.className='f-quick'; b3.id='f-q-web'; b3.textContent='🌐 Cari Web'; b3.onclick=openCariWeb; bar.appendChild(b3);
+  }
+}, 1000);
+
+// --- 5. CARI WEB REAL-TIME ---
+function openCariWeb(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">🌐</div><div style="font-weight:800;font-size:17px;margin:6px 0">Cari Web Real-time</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Cari berita / info terbaru, bukan dari data lama AI.</div><input class="f-ap-input" id="f-web-q" placeholder="Contoh: harga emas hari ini, berita Timnas" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-web-batal">Batal</button><button class="f-ap-oke" id="f-web-cari">🔍 Cari</button></div><div id="f-web-hasil" style="text-align:left;font-size:13px;line-height:1.5;margin-top:10px"></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.getElementById('f-web-batal').onclick=function(){ ov.remove(); };
+  document.getElementById('f-web-cari').onclick=function(){
+    var q=document.getElementById('f-web-q').value.trim(); if(!q) return;
+    document.getElementById('f-web-hasil').innerHTML='🔍 Lagi nyari...';
+    // Pakai Wikipedia + DuckDuckGo (gratis, tanpa API key)
+    fetch('https://id.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(d){
+      if(d.extract){
+        document.getElementById('f-web-hasil').innerHTML='<b>'+(d.title||q)+'</b><br>'+d.extract.slice(0,600)+'...<br><br><button id="f-web-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat / Tanya AI</button>';
+        document.getElementById('f-web-kirim').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] '+q+' - Info dari Wikipedia: '+d.extract.slice(0,300)+' - Jelaskan lebih lanjut & update terbaru'; inp.focus(); } ov.remove(); };
+      } else {
+        document.getElementById('f-web-hasil').innerHTML='Gak ketemu di Wikipedia. Coba tanya langsung ke AI di chat dengan kata kunci:<br><b>'+q+'</b><br><br><button id="f-web-kirim2" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Tanya AI Sekarang</button>';
+        document.getElementById('f-web-kirim2').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] Cari info terbaru tentang: '+q; inp.focus(); } ov.remove(); };
+      }
+    }).catch(function(){
+      document.getElementById('f-web-hasil').innerHTML='Koneksi gagal. Coba tanya langsung di chat:<br><b>'+q+'</b>';
+    });
+  };
+}
+})();
 </script>
 <script src="auth.js"></script>
 </body>
