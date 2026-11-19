@@ -466,6 +466,8 @@ function setTheme(t){
   // tandai tombol aktif
   document.getElementById('btnNeon').style.outline = t==='neon' ? '2px solid #a855f7' : 'none';
   document.getElementById('btnPremium').style.outline = t==='premium' ? '2px solid #e9d5ff' : 'none';
+  document.getElementById('btnNeon')?.style.outline = t==='neon' ? '2px solid #a855f7' : 'none';
+  document.getElementById('btnPremium')?.style.outline = t==='premium' ? '2px solid #e9d5ff' : 'none';
 }
 // pas buka app, load tema terakhir
 const savedTheme = localStorage.getItem('fahri-theme') || 'neon';
