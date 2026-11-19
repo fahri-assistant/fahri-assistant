@@ -1338,6 +1338,89 @@ setInterval(function(){
 setInterval(function(){ fixInput(); buildSheet(); }, 1000);
 fixInput(); buildSheet();
 })();
+/* === BAGIAN 10 FINAL - GANTI BAGIAN 9, LANGSUNG PASTE INI AJA === */
+(function(){
+if(window.__fahriFix10) return; window.__fahriFix10 = true;
+
+var css=document.createElement('style');
+css.textContent=`
+  #f-cuaca-atas{ display:flex !important; gap:8px !important; padding:0 12px 10px !important; margin:0 !important; background:transparent !important; border:none !important; box-shadow:none !important; }
+  #f-cuaca-atas span{ flex:1 !important; display:flex !important; align-items:center !important; justify-content:center !important; gap:6px !important; padding:8px 10px !important; border-radius:99px !important; background:rgba(20,15,35,.75) !important; border:1px solid rgba(168,85,247,.35) !important; color:#fff !important; font-size:11px !important; font-weight:600 !important; white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+  #f-widget-mini{ display:none !important; }
+  #f-fitur-bar{ display:flex !important; gap:6px !important; padding:0 10px 6px !important; background:transparent !important; border:none !important; box-shadow:none !important; overflow-x:auto !important; }
+  #f-fitur-bar button{ background:rgba(255,255,255,.08) !important; border:1px solid rgba(255,255,255,.12) !important; color:rgba(255,255,255,.85) !important; font-size:11px !important; font-weight:600 !important; padding:6px 11px !important; border-radius:99px !important; flex-shrink:0 !important; width:auto !important; height:auto !important; box-shadow:none !important; }
+  #f-mode-bar, #f-mode-bar2, #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2{ display:none !important; }
+  #f-ngobrol-btn, #f-ngobrol-btn2{ display:none !important; }
+  body:not(.f-ready) #f-cuaca-atas, body:not(.f-ready) #f-fitur-bar, body:not(.f-ready) #f-sheet, body:not(.f-ready) #f-fitur-fab, body:not(.f-ready) #f-widget-mini{ display:none !important; }
+`;
+document.head.appendChild(css);
+
+function getLoginRow(){
+  var els=document.querySelectorAll('div, button');
+  for(var i=0;i<els.length;i++){ if(els[i].textContent.includes('Belum login') && els[i].offsetHeight<80) return els[i].closest('div') || els[i]; }
+  var h=document.querySelectorAll('div, header');
+  for(var i=0;i<h.length;i++){ if(h[i].textContent.includes('FahriAssistant') && h[i].offsetHeight>30 && h[i].offsetHeight<180) return h[i]; }
+  return null;
+}
+function buatCuaca(){
+  var w=document.getElementById('f-cuaca-atas');
+  if(!w){
+    w=document.createElement('div'); w.id='f-cuaca-atas';
+    w.innerHTML='<span id="f-ca-cuaca">🌦️ Tahuna • Memuat...</span><span id="f-ca-sholat">🕌 Memuat...</span>';
+    var t=getLoginRow();
+    if(t && t.parentNode) t.parentNode.insertBefore(w, t.nextSibling);
+    else if(t) t.after(w);
+    else return;
+  } else {
+    var t=getLoginRow();
+    if(t && w.previousElementSibling!==t && t.parentNode) t.parentNode.insertBefore(w, t.nextSibling);
+  }
+  var cuaca=document.getElementById('f-ca-cuaca');
+  if(cuaca && cuaca.textContent.includes('Memuat')){
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){
+      var code=d.current.weather_code; var ket=code===0?'Cerah':code<=3?'Berawan':code<=67?'Hujan ringan':'Hujan';
+      cuaca.textContent='🌦️ Tahuna • '+Math.round(d.current.temperature_2m)+'° • '+ket;
+    }).catch(function(){ cuaca.textContent='🌦️ Tahuna • 30° • Berawan'; });
+  }
+  var sholat=document.getElementById('f-ca-sholat');
+  if(sholat && sholat.textContent.includes('Memuat')){
+    var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+      var t=d.data.timings; var now=new Date(); var list=[['Subuh',t.Fajr],['Dzuhur',t.Dhuhr],['Ashar',t.Asr],['Maghrib',t.Maghrib],['Isya',t.Isha]];
+      var next=null;
+      for(var i=0;i<list.length;i++){ var p=list[i][1].split(':'); var j=new Date(); j.setHours(parseInt(p[0]), parseInt(p[1]), 0, 0); if(j>now){ next={nama:list[i][0], jam:list[i][1].slice(0,5), sisa:Math.round((j-now)/60000)}; break; } }
+      if(!next) next={nama:'Subuh', jam:list[0][1].slice(0,5), sisa:0};
+      sholat.textContent='🕌 '+next.nama+' '+next.jam+' ('+next.sisa+' mnt lagi)';
+    }).catch(function(){ sholat.textContent='🕌 Maghrib 17:52'; });
+  }
+}
+function buatFiturBar(){
+  var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]'); if(!inp||!inp.parentElement) return;
+  if(document.getElementById('f-fitur-bar')) return;
+  var bar=document.createElement('div'); bar.id='f-fitur-bar';
+  bar.innerHTML='<button data-fb="flash">🃏 Flashcards</button><button data-fb="template">📄 Template</button><button data-fb="todo">✅ To-Do</button><button data-fb="pdf">📋 PDF</button><button data-fb="gambar">🎨 Gambar</button><button data-fb="edit">✏️ Edit</button><button data-fb="web">🌐 Cari Web</button><button data-fb="semua">✨ Semua Fitur</button>';
+  inp.parentElement.parentNode.insertBefore(bar, inp.parentElement);
+  bar.addEventListener('click', function(e){
+    var b=e.target.closest('[data-fb]'); if(!b) return;
+    var sheet=document.getElementById('f-sheet'); if(!sheet) return;
+    sheet.classList.add('open');
+    if(b.getAttribute('data-fb')!=='semua'){
+      setTimeout(function(){ var map={flash:'flash',template:'template',todo:'todo',pdf:'pdf',gambar:'gambar',edit:'edit',web:'web'}; var btn=sheet.querySelector('[data-f="'+map[b.getAttribute('data-fb')]+'"]'); if(btn) btn.click(); }, 100);
+    }
+  });
+}
+function fixSend(){
+  var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]'); if(!inp||!inp.parentElement) return;
+  inp.parentElement.style.cssText='display:flex !important; align-items:center !important; gap:6px !important;';
+  inp.style.cssText='flex:1 !important; min-width:0 !important;';
+  inp.parentElement.querySelectorAll('button').forEach(function(b){
+    if(b.textContent.includes('➤')||b.textContent.includes('↑')||b.textContent.includes('✈')) b.style.cssText='flex-shrink:0 !important; width:42px !important; height:42px !important; display:flex !important; align-items:center !important; justify-content:center !important;';
+  });
+  document.querySelectorAll('#f-ngobrol-btn, #f-ngobrol-btn2').forEach(function(el){ el.remove(); });
+}
+setInterval(function(){ buatCuaca(); buatFiturBar(); fixSend(); }, 800);
+buatCuaca(); buatFiturBar(); fixSend();
+})();
 </script>
 <script src="auth.js"></script>
 </body>
