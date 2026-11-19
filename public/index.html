@@ -512,6 +512,131 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
   };
   document.getElementById('sendBtn').onclick = send;
 })();
+/* === CUMA PASTE INI AJA - SEMUA FITUR JADI 1x === */
+(function(){
+if(window.__fahriAll) return; window.__fahriAll = true;
+
+var s=document.createElement('style');
+s.textContent=`
+.drawer,#drawer,aside,.sidebar{height:100dvh!important;max-height:100dvh!important;top:0!important;bottom:0!important;border-radius:0!important;display:flex!important;flex-direction:column!important}
+.f-drawer-top{padding:18px;display:flex;gap:12px;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer}
+.f-drawer-top img{width:54px;height:54px;border-radius:50%;object-fit:cover;background:#333}
+.f-drawer-menu{flex:1;overflow-y:auto;padding:10px}
+.f-item{display:flex;gap:12px;align-items:center;width:100%;padding:13px 12px;border-radius:14px;border:none;background:transparent;color:inherit;font-size:14.5px;font-weight:600;text-align:left;cursor:pointer}
+.f-item:active{background:rgba(255,255,255,.1)}
+.f-item span{font-size:19px;width:28px;text-align:center}
+.f-label{font-size:11px;letter-spacing:1px;opacity:.5;font-weight:800;padding:14px 12px 4px}
+.f-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:none;align-items:flex-end;justify-content:center}
+.f-modal.open{display:flex}
+.f-box{background:#1a1a22;width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:20px;color:#fff}
+.f-box input{width:100%;padding:12px;border-radius:12px;border:1px solid #333;background:#222;color:#fff;margin:10px 0;box-sizing:border-box}
+.f-box button{width:100%;padding:12px;border-radius:12px;border:none;background:#8b5cf6;color:#fff;font-weight:800;margin-top:8px}
+.f-search-bar{display:none;padding:10px;gap:8px;background:rgba(255,255,255,.05)}
+.f-search-bar.show{display:flex}
+.f-search-bar input{flex:1;padding:10px;border-radius:10px;border:1px solid #333;background:#222;color:#fff}
+.f-mini-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);font-size:18px;cursor:pointer;flex-shrink:0}
+.f-pin{font-size:11px;padding:4px 8px;border-radius:99px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:inherit;cursor:pointer;margin-top:6px}
+.f-vision-bar{display:flex;gap:8px;flex-wrap:wrap;padding:8px 10px;background:rgba(139,92,246,.08);border-top:1px solid rgba(139,92,246,.2)}
+.f-vision-chip{padding:8px 12px;border-radius:99px;border:1px solid #8b5cf6;background:#fff;color:#6d28d9;font-size:12.5px;font-weight:700;cursor:pointer}
+body.f-light{background:#f2f2f7!important;color:#111!important}
+body.f-light .drawer,body.f-light aside{background:#fff!important;color:#111!important}
+`;
+document.head.appendChild(s);
+
+var nama=localStorage.getItem('fahri_nama')||'Kamu';
+var foto=localStorage.getItem('fahri_foto')||'';
+var lastFoto=null;
+
+function buildDrawer(){
+  var drawer=document.querySelector('.drawer')||document.querySelector('#drawer')||document.querySelector('aside')||document.querySelector('.sidebar');
+  if(!drawer||drawer.querySelector('.f-drawer-menu')) return;
+  var img=foto?foto:'https://ui-avatars.com/api/?name='+encodeURIComponent(nama)+'&background=8b5cf6&color=fff';
+  var top=document.createElement('div'); top.className='f-drawer-top';
+  top.innerHTML='<img src="'+img+'"><div><div style="font-weight:800;font-size:17px">'+nama+'</div><div style="font-size:12px;opacity:.6">Fahri Premium • Gratis</div></div>';
+  top.onclick=openProfil; drawer.prepend(top);
+  var menu=document.createElement('div'); menu.className='f-drawer-menu';
+  menu.innerHTML=`
+    <div class="f-label">AKUN SAYA</div>
+    <button class="f-item" data-a="profil"><span>👤</span>Profil Saya</button>
+    <button class="f-item" data-a="cari"><span>🔍</span>Cari Chat</button>
+    <div class="f-label">TAMPILAN</div>
+    <button class="f-item" data-a="gelap"><span>🌙</span>Mode Gelap / Terang</button>
+    <button class="f-item" data-a="bahasa"><span>🌐</span>Bahasa</button>
+    <div class="f-label">LAINNYA</div>
+    <button class="f-item" data-a="simpan"><span>📌</span>Chat Tersimpan</button>
+    <button class="f-item" data-a="hapus"><span>🗑️</span>Hapus Semua Chat</button>
+    <button class="f-item" data-a="bagikan"><span>↗️</span>Bagikan Aplikasi</button>
+    <button class="f-item" data-a="nilai"><span>⭐</span>Nilai Aplikasi</button>
+    <button class="f-item" data-a="bantuan"><span>❓</span>Bantuan / Cara Pakai</button>
+    <button class="f-item" data-a="tentang"><span>ℹ️</span>Tentang Fahri</button>`;
+  drawer.appendChild(menu);
+  var foot=document.createElement('div'); foot.style.cssText='padding:12px;text-align:center;font-size:11px;opacity:.5;border-top:1px solid rgba(255,255,255,.08)'; foot.textContent='Fahri AI • v5.0 • Dibuat dari nol'; drawer.appendChild(foot);
+  menu.addEventListener('click',function(e){
+    var b=e.target.closest('[data-a]'); if(!b) return; var a=b.getAttribute('data-a');
+    if(a==='profil') openProfil();
+    if(a==='cari') toggleSearch();
+    if(a==='gelap'){document.body.classList.toggle('f-light'); localStorage.setItem('fahri_light',document.body.classList.contains('f-light')?'1':'0');}
+    if(a==='bahasa'){var x=prompt('Pilih bahasa:\n1 = Indonesia\n2 = English\n3 = Jawa'); if(x==='2') alert('English aktif! (Preview)'); else if(x==='3') alert('Jawa aktif! (Preview)'); else alert('Indonesia aktif!');}
+    if(a==='simpan'){var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); alert(arr.length?'📌 TERSIMPAN:\n\n'+arr.slice(-5).join('\n---\n'):'Belum ada chat disimpan. Pencet 📌 di chat untuk nyimpan.');}
+    if(a==='hapus'){if(confirm('Yakin hapus SEMUA chat?')){var ch=document.querySelector('#chat'); if(ch) ch.innerHTML=''; alert('Chat dihapus!');}}
+    if(a==='bagikan'){if(navigator.share) navigator.share({title:'Fahri AI',url:location.href}); else alert('Copy link: '+location.href);}
+    if(a==='nilai') alert('Makasih! ⭐⭐⭐⭐⭐');
+    if(a==='bantuan') alert('CARA PAKAI:\n1. Ketik untuk chat\n2. 📎 Kirim foto soal\n3. 🎤 Ngomong jadi teks\n4. 📌 Simpan chat\n5. 🔍 di garis 3 untuk cari chat');
+    if(a==='tentang') alert('Fahri AI v5.0\nDibuat dari nol oleh kamu 🔥');
+  });
+  if(localStorage.getItem('fahri_light')==='1') document.body.classList.add('f-light');
+}
+
+function openProfil(){
+  var m=document.getElementById('f-modal-profil');
+  if(!m){ m=document.createElement('div'); m.id='f-modal-profil'; m.className='f-modal';
+    m.innerHTML='<div class="f-box"><h3 style="margin:0">👤 Profil Saya</h3><input id="f-nama" placeholder="Nama kamu..."><input type="file" id="f-foto" accept="image/*"><button id="f-simpan">Simpan Profil</button><button id="f-tutup" style="background:#333">Tutup</button></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click',function(e){if(e.target===m) m.classList.remove('open');});
+    document.getElementById('f-tutup').onclick=function(){m.classList.remove('open');};
+    document.getElementById('f-simpan').onclick=function(){var n=document.getElementById('f-nama').value.trim(); if(n) localStorage.setItem('fahri_nama',n); var f=document.getElementById('f-foto').files[0]; if(f){var r=new FileReader(); r.onload=function(){localStorage.setItem('fahri_foto',r.result); location.reload();}; r.readAsDataURL(f);} else location.reload();};
+  }
+  document.getElementById('f-nama').value=localStorage.getItem('fahri_nama')||''; m.classList.add('open');
+}
+
+function toggleSearch(){
+  var bar=document.getElementById('f-search');
+  if(!bar){ bar=document.createElement('div'); bar.id='f-search'; bar.className='f-search-bar'; bar.innerHTML='<input id="f-q" placeholder="Cari chat..."><button id="f-x" class="f-mini-btn">✕</button>'; var chat=document.querySelector('#chat')||document.body; chat.parentNode.insertBefore(bar,chat); document.getElementById('f-x').onclick=function(){bar.classList.remove('show');}; document.getElementById('f-q').oninput=function(){var q=this.value.toLowerCase(); document.querySelectorAll('.bubble,.message,.msg').forEach(function(el){el.style.display=!q||el.textContent.toLowerCase().includes(q)?'':'none';});}; }
+  bar.classList.toggle('show');
+}
+
+function startVoice(){
+  var Rec=window.SpeechRecognition||window.webkitSpeechRecognition; var inp=document.querySelector('textarea')||document.querySelector('input[type="text"]');
+  if(!Rec) return alert('Voice belum support, coba Chrome Android.'); if(!inp) return;
+  var r=new Rec(); r.lang='id-ID'; r.onresult=function(e){inp.value=e.results[0][0].transcript; inp.focus();}; r.start(); alert('🎤 Ngomong sekarang...');
+}
+
+function buildInput(){
+  var inp=document.querySelector('textarea')||document.querySelector('input[type="text"]'); if(!inp||document.getElementById('f-file')) return;
+  var file=document.createElement('input'); file.type='file'; file.id='f-file'; file.accept='image/*'; file.style.display='none'; document.body.appendChild(file);
+  file.onchange=function(){
+    var f=file.files[0]; if(!f) return; var r=new FileReader();
+    r.onload=function(){ lastFoto=r.result; localStorage.setItem('fahri_last_foto',lastFoto);
+      var chat=document.querySelector('#chat')||document.body; var d=document.createElement('div'); d.style.cssText='text-align:right;margin:10px 0'; d.innerHTML='<img src="'+lastFoto+'" style="max-width:220px;border-radius:14px;display:block;margin-left:auto"><div style="font-size:12px;opacity:.7">📎 Foto siap! Pilih perintah di bawah atau ketik bebas</div>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight;
+      if(!document.getElementById('f-vision-bar')){ var bar=document.createElement('div'); bar.id='f-vision-bar'; bar.className='f-vision-bar'; bar.innerHTML=`<button class="f-vision-chip" data-cmd="Jawabin soal ini + caranya">📝 Jawab Soal</button><button class="f-vision-chip" data-cmd="Jelaskan gambar ini secara detail">🔍 Jelaskan</button><button class="f-vision-chip" data-cmd="Terjemahkan teks di foto ini">🌐 Terjemahkan</button><button class="f-vision-chip" data-cmd="Rangkum isi foto ini">📋 Rangkum</button><button class="f-vision-chip" data-cmd="Cek jawaban di foto ini, mana yang salah?">✅ Cek Jawaban</button><button class="f-vision-chip" data-cmd="Buatkan soal latihan mirip foto ini">✍️ Soal Mirip</button><button class="f-vision-chip" data-cmd="Ubah jadi catatan belajar yang rapi">📚 Jadi Catatan</button><button class="f-vision-chip" data-cmd="Buatkan caption untuk foto ini">✨ Caption</button>`; if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar,inp.parentElement); bar.addEventListener('click',function(e){var b=e.target.closest('[data-cmd]'); if(!b) return; inp.value=b.getAttribute('data-cmd'); inp.focus();}); }
+      if(inp){ inp.placeholder='Tanya apa aja soal foto ini... jawabin, jelasin, terjemahin, rangkum...'; inp.focus(); }
+    }; r.readAsDataURL(f);
+  };
+  var mic=document.createElement('button'); mic.className='f-mini-btn'; mic.textContent='🎤'; mic.type='button'; mic.onclick=startVoice;
+  var att=document.createElement('button'); att.className='f-mini-btn'; att.textContent='📎'; att.type='button'; att.onclick=function(){file.click();};
+  if(inp.parentElement){ inp.parentElement.insertBefore(att,inp); inp.parentElement.insertBefore(mic,inp.nextSibling); }
+}
+
+setInterval(function(){
+  document.querySelectorAll('.bubble,.message').forEach(function(b){
+    if(b.querySelector('.f-pin')) return; var p=document.createElement('button'); p.className='f-pin'; p.textContent='📌 Simpan';
+    p.onclick=function(){var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); arr.push(b.textContent.slice(0,200)); localStorage.setItem('fahri_simpan',JSON.stringify(arr)); p.textContent='✅ Tersimpan';}; b.appendChild(p);
+  });
+},1500);
+
+function init(){ buildDrawer(); buildInput(); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init(); setTimeout(init,900);
+})();
 </script>
 <script src="auth.js"></script>
 </body>
