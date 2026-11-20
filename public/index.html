@@ -1418,6 +1418,91 @@ function kunci(){
 setInterval(kunci, 800);
 kunci();
 })();
+/* === BAGIAN 13 - BENERIN VIDEO: HAPUS BAR LOGIN BENERAN + STOP DUPLIKAT BUBBLE === */
+(function(){
+if(window.__fahriFix13) return; window.__fahriFix13 = true;
+
+var css=document.createElement('style');
+css.textContent=`
+  /* Login row di atas - matiin total, pindah ke drawer */
+  #f-login-atas{ display:none !important; }
+  /* Bubble duplikat - yang ke-2 dst disembunyiin lewat JS, ini cadangan */
+  .f-duplikat{ display:none !important; }
+`;
+document.head.appendChild(css);
+
+function getInp(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]'); }
+
+function hapusLoginAtas(){
+  // Cari bar yang isinya Belum login + Login Google + Login Github
+  document.querySelectorAll('div').forEach(function(el){
+    var t=el.textContent || '';
+    if(t.includes('Belum login') && t.includes('Login Google') && t.includes('Login Github')){
+      // Jangan hapus drawer-nya, cuma yang di header atas (tingginya kecil, di atas)
+      // Header atas biasanya bukan drawer, posisinya di paling atas
+      if(!el.closest('#drawer') && !el.id.includes('drawer') && el.offsetHeight < 100){
+        el.id='f-login-atas';
+        el.style.display='none';
+        el.remove();
+      }
+    }
+  });
+  // Kalau masih ada tombol Log kepotong di kanan atas, hapus juga
+  document.querySelectorAll('button').forEach(function(b){
+    if(b.textContent.trim()==='Log' && !b.closest('#drawer')){
+      b.style.display='none'; b.remove();
+    }
+  });
+}
+
+function stopDuplikatBubble(){
+  // Ambil semua bubble chat
+  var bubbles = document.querySelectorAll('div');
+  var seen = {};
+  bubbles.forEach(function(b){
+    // Cuma yang keliatan kayak bubble: ada Simpan + Bacakan + Bookmark di dalamnya
+    var txt = (b.textContent||'').trim();
+    if(txt.includes('Simpan') && txt.includes('Bacakan') && txt.includes('Bookmark')){
+      // Ambil teks utama bubble-nya (tanpa tombol)
+      var kunci = txt.replace(/Simpan|Bacakan|Bookmark/g,'').trim().slice(0,80);
+      if(kunci.length < 5) return;
+      if(seen[kunci]){
+        // Ini duplikat, hapus yang ke-2 dst
+        b.classList.add('f-duplikat');
+        b.remove();
+      } else {
+        seen[kunci]=true;
+      }
+    }
+  });
+  // Bikin Gambar yang dobel di dalam 1 bubble
+  document.querySelectorAll('div').forEach(function(b){
+    var btns = b.querySelectorAll('button');
+    if(btns.length>1){
+      var s={};
+      btns.forEach(function(btn){
+        var t=btn.textContent.trim();
+        if(t.includes('Bikin Gambar')){
+          if(s[t]) btn.remove(); else s[t]=true;
+        }
+      });
+    }
+  });
+}
+
+function jagaCuacaDanFitur(){
+  // Pastiin cuaca 2 kotak tetep ada di atas, gak ketutup login
+  var w=document.getElementById('f-cuaca-atas');
+  if(w) w.style.display='flex';
+  var f=document.getElementById('f-fitur-satu');
+  if(f) f.style.display='flex';
+  // Bar lama tetep mati
+  document.querySelectorAll('#f-fitur-bar, #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2, #f-mode-bar, #f-mode-bar2, #f-fitur-fab, #f-widget-mini').forEach(function(el){ el.remove(); });
+}
+
+setInterval(function(){ hapusLoginAtas(); stopDuplikatBubble(); jagaCuacaDanFitur(); }, 700);
+hapusLoginAtas(); stopDuplikatBubble(); jagaCuacaDanFitur();
+})();
 </script>
 <script src="auth.js"></script>
 </body>
