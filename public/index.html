@@ -1428,5 +1428,91 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 setTimeout(jalan, 1500);
 })();
 </script>
+<script>
+/* === FIX CHAT KEMBAR + GAMBAR HILANG + SEND DOBEL === */
+(function(){
+if(window.__fixChatDobel) return; window.__fixChatDobel=true;
+
+/* 1. Bersihin bubble kembar yang udah terlanjur ke-render 2x */
+function bersihKembar(){
+  var chat=document.getElementById('chat'); if(!chat) return;
+  var seen={}; var bubbles=chat.querySelectorAll('.bubble');
+  bubbles.forEach(function(b){
+    // Jangan hapus bubble welcome
+    if(b.closest('#welcome')) return;
+    var key=(b.className||'')+'|'+(b.textContent||'').trim().slice(0,120);
+    if(seen[key]){ b.remove(); } else { seen[key]=1; }
+  });
+  // Bersihin history di localStorage juga, biar besok nggak ke-restore dobel lagi
+  try{
+    var h=JSON.parse(localStorage.getItem('fahri_history')||'[]');
+    var out=[], s2={};
+    h.forEach(function(m){
+      var k=(m.role||'')+'|'+(m.content||'').slice(0,120);
+      if(!s2[k]){ s2[k]=1; out.push(m); }
+    });
+    if(out.length!==h.length) localStorage.setItem('fahri_history', JSON.stringify(out));
+  }catch(e){}
+}
+
+/* 2. Gambar yang hilang: kasih tombol ulang + pesan jelas, jangan bubble kosong */
+function perbaikiGambar(){
+  var chat=document.getElementById('chat'); if(!chat) return;
+  chat.querySelectorAll('.bubble').forEach(function(b){
+    if(b.closest('#welcome')) return;
+    var tx=(b.textContent||'').trim();
+    if(tx==='Ini gambarnya:' || tx==='Ini gambarnya:🔊'){
+      if(b.querySelector('img') || b.querySelector('.f-gambar-ulang')) return;
+      b.innerHTML='Ini gambarnya:<br><span style="opacity:.7;font-size:13px">Gambarnya gagal dimuat / kehapus pas reload.</span>';
+      var btn=document.createElement('button');
+      btn.className='f-gambar-ulang'; btn.textContent='🔄 Buat Ulang Gambar';
+      btn.style.cssText='margin-top:8px;padding:10px 14px;border:none;border-radius:99px;background:#8b5cf6;color:#fff;font-weight:800;cursor:pointer';
+      btn.onclick=function(){
+        var inp=document.querySelector('input[placeholder*="Tanya"]');
+        if(inp){ inp.value='Bikin Gambar'; inp.focus(); }
+        alert('Tulis lagi gambar apa yang mau dibuat, contoh: Bikin Gambar kucing di pantai');
+      };
+      b.appendChild(btn);
+    }
+    // Kalau ada img yang gagal load, kasih teks gagal, jangan kosong
+    b.querySelectorAll('img').forEach(function(img){
+      if(img.dataset.fixed) return; img.dataset.fixed='1';
+      img.onerror=function(){ img.style.display='none'; var s=document.createElement('div'); s.textContent='⚠️ Gambar gagal dimuat, pencet Buat Ulang di atas.'; s.style.cssText='font-size:13px;opacity:.7;margin-top:8px'; b.appendChild(s); };
+    });
+  });
+}
+
+/* 3. Kunci send dobel: teks yang sama dalam 2 detik, kirim 1x aja */
+var lastSendText='', lastSendTime=0, lagiKirim=false;
+function kunciSend(){
+  var inp=document.querySelector('input[placeholder*="Tanya"]');
+  if(!inp || inp.dataset.kunciSend) return; inp.dataset.kunciSend='1';
+  inp.addEventListener('keydown', function(e){
+    if(e.key!=='Enter') return;
+    var t=inp.value.trim(); var now=Date.now();
+    if(!t) return;
+    if(lagiKirim || (t===lastSendText && now-lastSendTime<2000)){ e.preventDefault(); e.stopPropagation(); return; }
+    lastSendText=t; lastSendTime=now; lagiKirim=true;
+    setTimeout(function(){ lagiKirim=false; }, 2000);
+  }, true);
+  // Kalau tombol kirim diklik 2x cepat, yang kedua dibatalin
+  var chat=document.getElementById('chat'); if(!chat) return;
+  chat.addEventListener('click', function(e){
+    var btn=e.target.closest && e.target.closest('#sendBtn');
+    if(!btn) return;
+    var t=inp.value.trim(); var now=Date.now();
+    if(!t) return;
+    if(lagiKirim || (t===lastSendText && now-lastSendTime<2000)){ e.preventDefault(); e.stopPropagation(); return; }
+    lastSendText=t; lastSendTime=now; lagiKirim=true;
+    setTimeout(function(){ lagiKirim=false; }, 2000);
+  }, true);
+}
+
+function jalan(){ bersihKembar(); perbaikiGambar(); kunciSend(); }
+setInterval(jalan, 1500);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', jalan); else jalan();
+setTimeout(jalan, 1200); setTimeout(jalan, 3000);
+})();
+  </script>
 </body>
 </html>
