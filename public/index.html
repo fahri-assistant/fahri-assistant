@@ -1514,5 +1514,87 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 setTimeout(jalan, 1200); setTimeout(jalan, 3000);
 })();
   </script>
+<script>
+/* === FIX 3: TOOLS SELALU MUNCUL + MIC MATI TOTAL + CUACA/SHOLAT 2 KARTU === */
+(function(){
+if(window.__fix3ToolsMicCuaca) return; window.__fix3ToolsMicCuaca=true;
+
+var css=document.createElement('style');
+css.textContent=`
+/* --- CUACA / SHOLAT: 2 KARTU BERDAMPINGAN kayak foto --- */
+#authBar #f-auth-info{ display:grid !important; grid-template-columns:1fr 1fr !important; gap:8px !important; flex-direction:unset !important; }
+#authBar #f-auth-info .f-info-row{ display:block !important; padding:10px 12px !important; font-size:13px !important; line-height:1.5 !important; border-radius:14px !important; }
+#authBar #f-auth-info .f-info-row b{ display:block !important; font-size:13px !important; margin-bottom:2px !important; }
+/* --- TOOLS: PAKSA SELALU MUNCUL DI SEMUA BUBBLE AI, TERMASUK YANG PENDEK --- */
+.bubble.ai{ overflow:visible !important; padding-bottom:12px !important; }
+.bubble.ai .f-bubble-tools, .bubble.ai .ai-actions, .bubble.ai .f-tools{
+  display:flex !important; visibility:visible !important; opacity:1 !important;
+  gap:6px !important; flex-wrap:wrap !important; margin-top:10px !important;
+}
+.bubble.ai .f-bubble-tools button, .bubble.ai .ai-actions button, .bubble.ai .f-tools button{
+  display:inline-flex !important; visibility:visible !important; opacity:1 !important;
+  padding:6px 10px !important; font-size:12px !important; border-radius:99px !important;
+  border:1px solid rgba(255,255,255,.25) !important; background:rgba(0,0,0,.25) !important; color:#fff !important;
+}
+/* --- MIC DI PAPAN KETIK: MATI TOTAL, JANGAN CUMA DIHAPUS --- */
+.f-mic-hapus{ display:none !important; }
+`;
+document.head.appendChild(css);
+
+/* --- Pasang / balikin tombol Simpan-Bacakan-Bookmark ke tiap bubble AI --- */
+function pasangTools(){
+  var chat=document.getElementById('chat'); if(!chat) return;
+  chat.querySelectorAll('.bubble.ai').forEach(function(b){
+    if(b.closest('#welcome')) return;
+    if(b.querySelector('.f-tools')) return;
+    var teks=(b.textContent||'').trim();
+    if(teks.length<3 || teks.indexOf('Fahri lagi')===0) return; // masih loading, jangan dulu
+    var wrap=document.createElement('div'); wrap.className='f-tools';
+    var b1=document.createElement('button'); b1.textContent='📌 Simpan';
+    b1.onclick=function(){ try{ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr.push(teks); localStorage.setItem('fahri_bookmark', JSON.stringify(arr)); b1.textContent='✅ Tersimpan'; }catch(e){} };
+    var b2=document.createElement('button'); b2.textContent='🔊 Bacakan';
+    b2.onclick=function(){ try{ window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(teks.slice(0,600)); u.lang='id-ID'; window.speechSynthesis.speak(u); }catch(e){} };
+    var b3=document.createElement('button'); b3.textContent='🔖 Bookmark';
+    b3.onclick=function(){ try{ var arr2=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr2.push(teks); localStorage.setItem('fahri_bookmark', JSON.stringify(arr2)); b3.textContent='✅ Bookmark'; }catch(e){} };
+    wrap.appendChild(b1); wrap.appendChild(b2); wrap.appendChild(b3);
+    b.appendChild(wrap);
+  });
+}
+
+/* --- Bunuh mic begitu muncul, jangan nunggu 1 detik --- */
+function bunuhMic(node){
+  var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]');
+  if(!inp) return;
+  var wadah=inp.parentElement; if(!wadah) return;
+  wadah.querySelectorAll('button').forEach(function(btn){
+    var tx=(btn.textContent||'').trim();
+    if(tx==='🎤'||tx==='🎙️'||tx.indexOf('🎤')!==-1||tx.indexOf('🎙️')!==-1){
+      btn.classList.add('f-mic-hapus'); btn.remove();
+    }
+  });
+}
+var obs=new MutationObserver(function(){ bunuhMic(); pasangTools(); });
+obs.observe(document.body, {childList:true, subtree:true});
+
+/* --- Format ulang cuaca/sholat jadi kayak foto --- */
+function formatCuacaSholat(){
+  var w=document.getElementById('f-info-cuaca');
+  var s=document.getElementById('f-info-sholat');
+  if(w && w.dataset.foto!=='1' && w.textContent.indexOf('°C')!==-1){
+    // Ambil angka suhu + kondisi dari teks lama
+    var m=w.textContent.match(/(\d+)°C[^•]*•?\s*(.*)/);
+    if(m) w.innerHTML='<b>🌦️ Tahuna</b>'+m[1]+'°C • '+(m[2].replace('Lembab','').trim()||'Berawan');
+    w.dataset.foto='1';
+  }
+  if(s && s.dataset.foto!=='1' && s.textContent.indexOf('Subuh')!==-1){
+    var t=s.textContent.replace('🕌 Sholat','').replace('🕌','').trim();
+    s.innerHTML='<b>🕌 Sholat Hari Ini</b>'+t;
+    s.dataset.foto='1';
+  }
+}
+
+setInterval(function(){ pasangTools(); bunuhMic(); formatCuacaSholat(); }, 800);
+})();
+  </script>
 </body>
 </html>
