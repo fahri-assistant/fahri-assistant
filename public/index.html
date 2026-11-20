@@ -1589,5 +1589,66 @@ html, body{ overflow-x:hidden!important; }
   text-align:center!important; white-space:nowrap!important;
 }
 </style>
+<!-- FIX TERAKHIR - GABUNGAN FINAL, UDAH GAK ADA LAGI ABIS INI -->
+<script>
+(function(){
+  function final(){
+    // 1. Hapus widget dobel, sisain 1
+    document.querySelectorAll('#f-top-widget, #f-top-widget2, #f-widget-mini').forEach(function(e){e.remove();});
+    var bars=document.querySelectorAll('#f-cuaca-jakarta');
+    for(var i=1;i<bars.length;i++){ bars[i].remove(); }
+    // 2. Bikin cuaca + sholat kalau belum ada
+    if(!document.getElementById('f-cuaca-jakarta')){
+      var header=document.querySelector('.header')||document.querySelector('header');
+      var chat=document.getElementById('chat')||document.querySelector('main');
+      if(chat){
+        var bar=document.createElement('div'); bar.id='f-cuaca-jakarta';
+        bar.innerHTML='<div id="f-cj-cuaca">🌦️ <b>Jakarta</b><br>31°C • Hujan Ringan 🌧️</div><div id="f-cj-sholat">🕌 <b>Sholat Hari Ini</b><br>Subuh 04:20 • Dzuhur 11:24<br>Ashar 14:47 • Maghrib 17:22 • Isya 18:35</div>';
+        if(header && header.parentNode) header.parentNode.insertBefore(bar, header.nextSibling);
+        else chat.parentNode.insertBefore(bar, chat);
+      }
+    }
+    // 3. Fitur pindah ke atas papan teks, kecil aja
+    var fitur=null; var btns=document.querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){ if((btns[i].textContent||'').trim().includes('Fitur')){ fitur=btns[i]; break; } }
+    if(fitur && fitur.parentElement.id!=='f-fitur-row'){
+      var composer=fitur.closest('.composer')||fitur.parentElement;
+      var row=document.getElementById('f-fitur-row');
+      if(!row){ row=document.createElement('div'); row.id='f-fitur-row'; composer.parentNode.insertBefore(row, composer); }
+      row.appendChild(fitur);
+    }
+  }
+  final(); setInterval(final, 2000);
+})();
+</script>
+<style>
+/* CUACA + SHOLAT - ADA SHADOW UNGU KAYAK BUBBLE CHAT */
+#f-cuaca-jakarta{ display:flex!important; gap:8px!important; padding:10px 12px 2px!important; }
+#f-cj-cuaca, #f-cj-sholat{
+  flex:1!important; min-width:0!important; padding:10px 12px!important; border-radius:16px!important;
+  background:rgba(20,15,35,.85)!important; border:1px solid rgba(168,85,247,.6)!important;
+  box-shadow:0 0 22px rgba(168,85,247,.5), 0 4px 18px rgba(0,0,0,.45)!important;
+  color:#fff!important; font-size:12px!important; line-height:1.5!important; white-space:normal!important;
+}
+/* FITUR - KECIL DI KIRI, TANPA BAR HITAM PANJANG */
+#f-fitur-row, .composer-wrap, .composer-container, .bottom-bar, .input-area, .chat-input-wrap, .input-wrapper, .footer, footer{
+  background:transparent!important; border:none!important; box-shadow:none!important; outline:none!important;
+}
+#f-fitur-row{ display:flex!important; justify-content:flex-start!important; width:auto!important; padding:0 12px 8px!important; }
+#f-fitur-row button, #f-fitur-fab{
+  flex:none!important; width:auto!important; max-width:140px!important;
+  padding:8px 16px!important; border-radius:99px!important;
+  background:rgba(20,15,35,.85)!important; border:1px solid rgba(168,85,247,.6)!important;
+  box-shadow:0 0 16px rgba(168,85,247,.45)!important; color:#fff!important;
+}
+.composer, .input-box{
+  background:rgba(20,15,35,.9)!important; border:1px solid rgba(168,85,247,.4)!important;
+  box-shadow:0 0 18px rgba(168,85,247,.35)!important;
+}
+/* BUBBLE JANGAN KEPOTONG */
+html, body{ overflow-x:hidden!important; }
+.bubble, .msg, .message{ max-width:88%!important; box-sizing:border-box!important; word-break:break-word!important; }
+.bubble table{ display:block!important; width:100%!important; overflow-x:auto!important; }
+</style>
 </body>
 </html>
