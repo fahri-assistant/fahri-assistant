@@ -1596,5 +1596,82 @@ function formatCuacaSholat(){
 setInterval(function(){ pasangTools(); bunuhMic(); formatCuacaSholat(); }, 800);
 })();
   </script>
+<script>
+/* === FIX 4: BUANG TOOL DOBEL + BUANG BORDER HITAM CUACA + SHADOW UNGU BUBBLE === */
+(function(){
+if(window.__fix4Dobel) return; window.__fix4Dobel=true;
+
+var css=document.createElement('style');
+css.textContent=`
+/* --- 1. BUANG KOTAK HITAM DI BELAKANG CUACA / SHOLAT --- */
+#authBar{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+  padding:2px 10px 6px !important;
+}
+#authBar #f-auth-info .f-info-row{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+  padding:6px 2px !important;
+}
+/* --- 2. SHADOW UNGU DI SEMUA BUBBLE --- */
+.bubble{
+  box-shadow:0 0 18px rgba(168,85,247,.45), 0 4px 18px rgba(139,92,246,.35) !important;
+  border:1px solid rgba(168,85,247,.55) !important;
+}
+.bubble.user{
+  box-shadow:0 0 16px rgba(168,85,247,.55), 0 4px 14px rgba(139,92,246,.40) !important;
+}
+/* --- 3. TOOL LAMA MATIIN TOTAL, SISAIN 1 BARIS AJA --- */
+.bubble.ai .f-bubble-tools, .bubble.ai .ai-actions{ display:none !important; }
+.bubble.ai .f-tools{ display:flex !important; }
+`;
+document.head.appendChild(css);
+
+function bersihDobel(){
+  var chat=document.getElementById('chat'); if(!chat) return;
+
+  /* A. Tiap bubble AI: buang tool lama, sisain 1 baris f-tools */
+  chat.querySelectorAll('.bubble.ai').forEach(function(b){
+    if(b.closest('#welcome')) return;
+    b.querySelectorAll('.f-bubble-tools, .ai-actions').forEach(function(t){ t.remove(); });
+    var tools=b.querySelectorAll(':scope > .f-tools');
+    for(var i=1;i<tools.length;i++){ tools[i].remove(); }
+    /* B. Teks yang keulang 2x di dalam 1 bubble (kasus Manfaat Bulan) */
+    // Kalau bubble punya 2 elemen anak dengan teks yang sama persis, buang yang kedua
+    var anak=Array.from(b.children).filter(function(c){ return !c.classList.contains('f-tools') && !c.classList.contains('tts-btn'); });
+    var seen={};
+    anak.forEach(function(c){
+      var k=(c.textContent||'').trim().slice(0,80);
+      if(k && seen[k]){ c.remove(); } else if(k){ seen[k]=1; }
+    });
+  });
+
+  /* C. Bubble pertanyaan user yang kembar berurutan: sisain 1 */
+  var bubbles=Array.from(chat.querySelectorAll('.bubble'));
+  var prevKey='';
+  bubbles.forEach(function(b){
+    if(b.closest('#welcome')) return;
+    var key=(b.className||'')+'|'+(b.textContent||'').trim().slice(0,120);
+    if(key && key===prevKey){ b.remove(); return; }
+    prevKey=key;
+  });
+
+  /* D. History di localStorage juga dibersihin biar besok nggak dobel lagi */
+  try{
+    var h=JSON.parse(localStorage.getItem('fahri_history')||'[]');
+    var out=[], s={};
+    h.forEach(function(m){
+      var k=(m.role||'')+'|'+(m.content||'').slice(0,120);
+      if(!s[k]){ s[k]=1; out.push(m); }
+    });
+    if(out.length!==h.length) localStorage.setItem('fahri_history', JSON.stringify(out));
+  }catch(e){}
+}
+
+var obs=new MutationObserver(function(){ bersihDobel(); });
+obs.observe(document.body, {childList:true, subtree:true});
+setInterval(bersihDobel, 800);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bersihDobel); else bersihDobel();
+})();
+</script>
 </body>
 </html>
