@@ -1568,5 +1568,48 @@ setInterval(bersihHitam, 800);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bersihHitam); else bersihHitam();
 })();
 </script>
+<script>
+/* === FIX 6: BALIKIN PAPAN TEKS GELAP + SATUIN FITUR + INPUT JADI 1 WADAH === */
+(function(){
+if(window.__fix6Balikin) return; window.__fix6Balikin=true;
+
+var css=document.createElement('style');
+css.textContent=`
+/* Balikin wadah bawah jadi gelap lagi, tapi jadi 1 wadah pil rapi, bukan 2 balok */
+.f-composer-clean{
+  background:rgba(20,8,35,.95) !important;
+  border:2px solid rgba(192,38,211,.85) !important;
+  box-shadow:0 0 22px rgba(192,38,211,.50) !important;
+  border-radius:22px !important;
+  padding:8px 10px 10px !important;
+  margin:0 10px 8px !important;
+}
+/* Di dalam wadah gelap itu, semua anaknya transparan biar nggak ada kotak-kotak lagi */
+.f-composer-clean .f-composer-clean{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+  margin:0 !important; padding:0 !important; border-radius:0 !important;
+}
+/* Tombol Fitur: nempel di dalam wadah gelap, di atas input */
+#f-fitur-top{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+  padding:0 0 8px 2px !important; margin:0 !important;
+}
+#f-fitur-top button{
+  border:1px solid rgba(255,255,255,.25) !important;
+  background:rgba(255,255,255,.10) !important;
+  box-shadow:none !important;
+}
+/* Input-nya: transparan, biar nyatu sama wadah gelap, bukan kotak abu lagi */
+.f-composer-clean input, .f-composer-clean textarea{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+  color:#fff !important;
+}
+.f-composer-clean input::placeholder, .f-composer-clean textarea::placeholder{ color:rgba(255,255,255,.55) !important; }
+/* Yang putih di bawah itu background halaman, tutup pakai warna gelap */
+body{ background:#0d0218 !important; }
+`;
+document.head.appendChild(css);
+})();
+</script>
 </body>
 </html>
