@@ -1506,30 +1506,49 @@ setTimeout(jalan, 1500);
 })();
   </script>
 <script>
-/* === FIX 7: BALOK HITAM JADI PIL KAYAK BUBBLE - CUMA FITUR, PAPAN TEKS NGGAK DIUTAK-ATIK === */
+/* === FIX 8: HAPUS BALOK HITAM LUAR + STROKE PERSIS FOTO PATOKAN === */
 (function(){
-if(window.__fix7FiturPil) return; window.__fix7FiturPil=true;
+if(window.__fix8Final) return; window.__fix8Final=true;
 
 var css=document.createElement('style');
 css.textContent=`
-/* Wadah Fitur: jangan full lebar lagi, jadi pil ngikutin tombolnya */
-#f-fitur-top{
-  width:fit-content !important;
-  max-width:max-content !important;
-  background:rgba(20,8,35,.95) !important;
-  border:2px solid rgba(192,38,211,.95) !important;
-  border-radius:99px !important;
-  box-shadow:0 0 18px rgba(192,38,211,.60) !important;
-  padding:6px 8px !important;
-  margin:0 0 8px 2px !important;
-  display:flex !important;
+/* 1. WADAH LUAR JADI TRANSPARAN - INI YANG BIKIN BALOK HITAM */
+/* Wadah atas (login + cuaca) + wadah bawah (fitur + input) */
+#authBar, #f-auth-info, #f-top-widget, #f-top-widget2, #f-widget-mini{
+  background:transparent !important; border:none !important; box-shadow:none !important;
 }
-/* Tombol di dalamnya: transparan, biar yang keliatan pil luarnya */
+/* Wadah bawah yang hitam full lebar itu */
+#f-fitur-top, .composer-wrap, #bottomBar, #inputBar{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+}
+/* Biar glow nggak kepotong pinggir */
+#chat{ padding:18px 12px 10px !important; overflow-x:visible !important; }
+
+/* 2. STROKE + SHADOW PERSIS FOTO PATOKAN: TEBAL, CERAH, NYEBAR JAUH */
+/* Header + Bubble chat + Kartu cuaca/sholat + Tombol Tanya/Bikin Gambar + Fitur + Papan teks */
+#welcome, .bubble, #authBar #f-auth-info .f-info-row,
+#f-fitur-top button, .f-tools button{
+  border:2.5px solid #E879F9 !important;
+  box-shadow:0 0 0 1px rgba(162,28,175,.8), 0 0 25px 5px rgba(217,70,239,.85), 0 0 60px 12px rgba(168,85,247,.55) !important;
+}
+/* Bubble-nya sendiri tetap gelap, yang cerah itu border + glow-nya */
+.bubble, #authBar #f-auth-info .f-info-row{
+  background:rgba(22,8,38,.92) !important;
+  border-radius:18px !important;
+}
+/* Kartu cuaca/sholat: bentuknya tetap kayak bubble, bukan balok */
+#authBar #f-auth-info{ display:grid !important; grid-template-columns:1fr 1fr !important; gap:10px !important; }
+#authBar #f-auth-info .f-info-row{ padding:12px !important; }
+/* Pil Fitur: bentuknya pil kayak bubble, lebar ngikutin tombolnya aja */
+#f-fitur-top{ width:fit-content !important; max-width:max-content !important; padding:0 0 8px 2px !important; }
 #f-fitur-top button{
-  background:transparent !important;
-  border:none !important;
-  box-shadow:none !important;
-  padding:2px 6px !important;
+  background:rgba(22,8,38,.92) !important; border-radius:99px !important;
+  padding:7px 14px !important;
+}
+/* Papan teks: tetap 1 pil, bukan kotak */
+#inputBar input, #inputBar textarea{
+  background:rgba(22,8,38,.92) !important; border:2.5px solid #E879F9 !important; border-radius:99px !important;
+  box-shadow:0 0 25px 5px rgba(217,70,239,.70) !important;
 }
 `;
 document.head.appendChild(css);
