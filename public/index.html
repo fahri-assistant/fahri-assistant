@@ -1407,5 +1407,103 @@ setInterval(bersih, 1000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bersih); else bersih();
 })();
 </script>
+<script>
+/* === LAYOUT BERSIH: SURABAYA + FITUR PINDAH KE ATAS PAPAN TEKS === */
+(function(){
+if(window.__fahriLayoutBersih) return; window.__fahriLayoutBersih=true;
+
+var css=document.createElement('style');
+css.textContent=`
+#chat{ overflow-x:visible !important; overflow-y:auto !important; }
+.bubble{ overflow:visible !important; }
+.bubble, #authBar #f-auth-info .f-info-row{
+  border:1px solid rgba(168,85,247,.85) !important;
+  box-shadow:0 0 22px rgba(168,85,247,.50), 0 6px 22px rgba(139,92,246,.35) !important;
+  background:rgba(20,8,35,.85) !important;
+  border-radius:16px !important;
+}
+#authBar{ display:flex !important; flex-direction:column !important; gap:8px !important; padding:8px 10px !important; overflow:visible !important; box-sizing:border-box !important; background:transparent !important; border:none !important; box-shadow:none !important; }
+#authBar .status-pill{ display:none !important; }
+#authBar #f-auth-info{ display:grid !important; grid-template-columns:1fr 1fr !important; gap:8px !important; width:100% !important; }
+#authBar #f-auth-info .f-info-row{ padding:10px 12px !important; font-size:13px !important; line-height:1.5 !important; white-space:normal !important; }
+#authBar #f-auth-info .f-info-row b{ display:block !important; margin-bottom:2px !important; }
+#f-drawer-login{ padding:0 4px 10px !important; display:flex !important; flex-direction:column !important; gap:8px !important; }
+#f-drawer-login .btn{ width:100% !important; justify-content:center !important; box-sizing:border-box !important; white-space:normal !important; }
+#f-drawer-login .f-login-label{ font-size:11px !important; letter-spacing:1px !important; opacity:.55 !important; font-weight:800 !important; padding:10px 4px 2px !important; }
+#f-widget-mini, #f-top-widget, #f-top-widget2{ display:none !important; }
+.bubble.user .f-tools, .bubble.user .f-bubble-tools, .bubble.user .ai-actions{ display:none !important; }
+/* Fitur yang pindah ke atas: jadi pil kecil di atas papan teks */
+#f-fitur-top{ display:flex !important; gap:6px !important; padding:0 10px 6px !important; }
+#f-fitur-top button{ padding:6px 12px !important; font-size:12px !important; border-radius:99px !important; border:1px solid rgba(168,85,247,.7) !important; background:rgba(168,85,247,.25) !important; color:#fff !important; }
+`;
+document.head.appendChild(css);
+
+function fetchInfo(){
+  var w=document.getElementById('f-info-cuaca');
+  var s=document.getElementById('f-info-sholat');
+  // Surabaya: -7.2575, 112.7521
+  if(w) fetch('https://api.open-meteo.com/v1/forecast?latitude=-7.2575&longitude=112.7521&current=temperature_2m,weather_code,relative_humidity_2m&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
+    var kode=d.current.weather_code; var desc=kode===0?'Cerah':kode<4?'Berawan':kode<60?'Hujan Ringan':'Hujan';
+    w.innerHTML='<b>🌦️ Surabaya</b>'+Math.round(d.current.temperature_2m)+'°C • '+desc;
+  }).catch(function(){ if(w) w.innerHTML='<b>🌦️ Surabaya</b>30°C • Berawan'; });
+  if(s){ var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Surabaya&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+      var t=d.data.timings; s.innerHTML='<b>🕌 Sholat Hari Ini</b>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+    }).catch(function(){ s.innerHTML='<b>🕌 Sholat Hari Ini</b>Subuh 04:15 • Dzuhur 11:30 • Ashar 14:50 • Maghrib 17:30 • Isya 18:45'; });
+  }
+}
+
+function pindahLogin(){
+  var auth=document.getElementById('authBar'); if(!auth) return;
+  if(!document.getElementById('f-auth-info')){
+    var info=document.createElement('div'); info.id='f-auth-info';
+    info.innerHTML='<div class="f-info-row" id="f-info-cuaca">🌦️ Surabaya • Memuat...</div><div class="f-info-row" id="f-info-sholat">🕌 Memuat sholat...</div>';
+    auth.appendChild(info); fetchInfo();
+  }
+  var loginBtns=document.getElementById('loginBtns');
+  var btnLog=document.getElementById('btnLog');
+  var btnLogout=document.getElementById('btnLogout');
+  if(!loginBtns && !btnLog) return;
+  if(document.getElementById('f-drawer-login')) return;
+  var drawer=null; var all=document.querySelectorAll('div, aside');
+  for(var i=0;i<all.length;i++){ var t=all[i].textContent||''; if(t.indexOf('Bersihkan Chat')!==-1 && t.length<4000){ if(!drawer||t.length<drawer.textContent.length) drawer=all[i]; } }
+  if(!drawer) return;
+  var box=document.createElement('div'); box.id='f-drawer-login';
+  box.innerHTML='<div class="f-login-label">AKUN</div>';
+  if(loginBtns) box.appendChild(loginBtns);
+  if(btnLog) box.appendChild(btnLog);
+  if(btnLogout) box.appendChild(btnLogout);
+  var nama=document.getElementById('drawerName');
+  if(nama && nama.parentElement) nama.parentElement.appendChild(box);
+  else drawer.insertBefore(box, drawer.firstChild);
+}
+
+function pindahFitur(){
+  var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]');
+  if(!inp) return;
+  var wadah=inp.parentElement; if(!wadah) return;
+  // Cari tombol Fitur yang masih di dalam papan teks
+  var btnFitur=null;
+  wadah.querySelectorAll('button').forEach(function(b){
+    if((b.textContent||'').indexOf('Fitur')!==-1) btnFitur=b;
+  });
+  if(!btnFitur) return;
+  if(document.getElementById('f-fitur-top')) return;
+  var top=document.createElement('div'); top.id='f-fitur-top';
+  top.appendChild(btnFitur);
+  // Taruh tepat di atas wadah papan teks
+  wadah.parentElement.insertBefore(top, wadah);
+}
+
+function jalan(){
+  pindahLogin();
+  pindahFitur();
+  document.querySelectorAll('.bubble.user .f-tools, .bubble.user .f-bubble-tools, .bubble.user .ai-actions').forEach(function(t){ t.remove(); });
+}
+setInterval(jalan, 1000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', jalan); else jalan();
+setTimeout(jalan, 1500);
+})();
+  </script>
 </body>
 </html>
