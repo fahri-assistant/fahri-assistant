@@ -1340,5 +1340,50 @@ fixInput(); buildSheet();
 })();
 </script>
 <script src="auth.js"></script>
+<!-- FIX FINAL - TANPA DOWNLOAD - JAKARTA - TANPA MIC - TANPA DOBEL -->
+<script>
+(function(){
+  // 1. Ganti semua tulisan Tahuna yang masih nempel jadi Jakarta
+  function gantiTeks(){
+    document.querySelectorAll('div,span,p,b').forEach(function(el){
+      if(el.children.length===0 && el.textContent.includes('Tahuna')){
+        el.textContent = el.textContent.replaceAll('Tahuna','Jakarta');
+      }
+    });
+  }
+  // 2. Hapus mic + widget bawah dobel + authBar
+  function bersih(){
+    document.querySelectorAll('#f-widget-mini').forEach(function(e){e.remove();});
+    var ab=document.getElementById('authBar'); if(ab) ab.style.display='none';
+    document.querySelectorAll('button').forEach(function(b){
+      var t=(b.textContent||'').trim();
+      if(t==='🎤' || t==='🎙️' || t==='🎙') b.remove();
+    });
+    document.querySelectorAll('.bubble.user .f-bubble-tools').forEach(function(e){e.style.display='none';});
+    gantiTeks();
+  }
+  // 3. Paksa cuaca atas jadi Jakarta - kalau masih Tahuna, timpa
+  function paksaJakarta(){
+    var c=document.getElementById('f-cuaca');
+    if(c && c.textContent.includes('Jakarta')) return;
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2&longitude=106.84&current=temperature_2m,weather_code&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
+      var el=document.getElementById('f-cuaca'); if(el) el.innerHTML='🌦️ <b>Jakarta</b><br>'+Math.round(d.current.temperature_2m)+'°C • Berawan ⛅';
+      var el2=document.getElementById('f-wm-cuaca'); if(el2) el2.textContent='🌦️ Jakarta • '+Math.round(d.current.temperature_2m)+'°C';
+    }).catch(function(){});
+    var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0');
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+today.getFullYear()+'?city=Jakarta&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+      var t=d.data.timings; var el3=document.getElementById('f-sholat'); if(el3) el3.innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+    }).catch(function(){});
+  }
+  bersih(); paksaJakarta();
+  setInterval(function(){ bersih(); }, 1500);
+  var obs=new MutationObserver(function(){ bersih(); }); obs.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<style>
+#authBar,.authbar{display:none!important}
+#f-widget-mini{display:none!important}
+.bubble.user .f-bubble-tools{display:none!important}
+</style>
 </body>
 </html>
