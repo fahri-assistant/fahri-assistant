@@ -627,13 +627,21 @@ function buildHeader(){
   document.getElementById('f-h-export').onclick=function(){ var bubbles=document.querySelectorAll('.bubble,.message,.msg'); var teks='Fahri Assistant - Export Chat\n'+new Date().toLocaleString()+'\n\n'; bubbles.forEach(function(b){ if(b.textContent.trim()) teks+=b.textContent.trim()+'\n---\n'; }); if(bubbles.length===0) return alert('Belum ada chat untuk di-export.'); if(navigator.share){ navigator.share({title:'Export Chat Fahri Assistant', text:teks}); } else { navigator.clipboard.writeText(teks).then(function(){ alert('✅ Chat disalin! Tinggal paste ke WhatsApp.'); }); } };
 }
 function buildWidget(){
-  if(document.getElementById('f-top-widget')) return; var chat=window.__f_getChat(); if(!chat) return;
+  if(document.getElementById('f-top-widget')) return;
+  var chat=window.__f_getChat(); if(!chat) return;
   var w=document.createElement('div'); w.id='f-top-widget';
-  w.innerHTML='<div class="f-w" id="f-cuaca">🌦️ Memuat cuaca Tahuna...</div><div class="f-w" id="f-sholat">🕌 Memuat jadwal sholat...</div>';
+  w.innerHTML='<div class="f-w" id="f-cuaca">🌦️ Memuat cuaca Jakarta...</div><div class="f-w" id="f-sholat">🕌 Memuat jadwal sholat...</div>';
   chat.parentNode.insertBefore(w,chat);
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){ var temp=Math.round(d.current.temperature_2m); var kode=d.current.weather_code; var desc=kode===0?'Cerah ☀️':kode<4?'Berawan ⛅':kode<60?'Hujan Ringan 🌧️':'Hujan 🌧️'; document.getElementById('f-cuaca').innerHTML='🌦️ <b>Tahuna</b><br>'+temp+'°C • '+desc; }).catch(function(){ document.getElementById('f-cuaca').innerHTML='🌦️ <b>Tahuna</b><br>Cek cuaca di luar app'; });
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2&longitude=106.84&current=temperature_2m,weather_code&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
+    var temp=Math.round(d.current.temperature_2m); var kode=d.current.weather_code;
+    var desc=kode===0?'Cerah ☀️':kode<4?'Berawan ⛅':kode<60?'Hujan Ringan 🌧️':'Hujan 🌧️';
+    document.getElementById('f-cuaca').innerHTML='🌦️ <b>Jakarta</b><br>'+temp+'°C • '+desc;
+  }).catch(function(){ document.getElementById('f-cuaca').innerHTML='🌦️ <b>Jakarta</b><br>Cek cuaca di luar app'; });
   var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
-  fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){ var t=d.data.timings; document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5); }).catch(function(){ document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat</b><br>Subuh 04:50 • Dzuhur 11:50 • Ashar 15:10 • Maghrib 18:00 • Isya 19:10'; });
+  fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Jakarta&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+    var t=d.data.timings;
+    document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+  }).catch(function(){ document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat</b><br>Subuh 04:50 • Dzuhur 11:50 • Ashar 15:10 • Maghrib 18:00 • Isya 19:10'; });
 }
 window.__f_init1 = function(){ buildDrawer(); buildHeader(); buildWidget(); };
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.__f_init1); else window.__f_init1();
