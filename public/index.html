@@ -1506,28 +1506,28 @@ setTimeout(jalan, 1500);
 })();
   </script>
 <script>
-/* FIX STROKE + SHADOW AJA - nggak nyentuh background, bentuk, posisi */
+/* FIX STROKE HAMPIR PUTIH + PISAHIN CUACA / SHOLAT */
 (function(){
-if(window.__fixStrokeOnly) return; window.__fixStrokeOnly=true;
+if(window.__fixStrokePutih) return; window.__fixStrokePutih=true;
 var css=document.createElement('style');
 css.textContent=`
-/* Header + Bubble chat gede + Bubble login + Pil bawah - SEMUA SAMA */
-/* Cuma ganti 2 properti ini aja: border + box-shadow */
+/* 1. WADAH LUAR CUACA + SHOLAT DIBIKIN NGGAK PUNYA BORDER - biar jadi 2 bubble, bukan 1 */
+/* Ini cuma wadahnya aja, bukan bubble-nya */
+#topWidget, #f-top-widget, #f-top-widget2, #weatherWrap, .weather-sholat-wrap{
+  background:transparent !important; border:none !important; box-shadow:none !important; outline:none !important;
+}
+/* 2. STROKE HAMPIR PUTIH KAYAK FOTO INI */
 #welcome, .bubble, .msg, .message,
-#authBar, #authBar .f-info-row, #authBar button,
-#f-fitur-top button, .chip, .quick-btn, .pill,
+#authBar .f-info-row, .info-card, .weather-card, .prayer-card,
+#f-fitur-top button, .chip, .quick-btn,
 #inputBar input, #inputBar textarea{
-  border:2.5px solid #E879F9 !important;
-  box-shadow:0 0 8px rgba(240,171,252,.9), 0 0 22px rgba(217,70,239,.75), 0 0 55px rgba(168,85,247,.55) !important;
+  border:2px solid #FDF4FF !important;
+  box-shadow:0 0 6px rgba(255,255,255,.95), 0 0 18px rgba(245,208,254,.85), 0 0 45px rgba(217,70,239,.55) !important;
 }
-/* Tombol ungu (Tanya / Bikin Gambar) - bordernya lebih terang biar nyatu sama tombolnya */
-.msg.user, .bubble.user, button.user{
-  border:2.5px solid #F0ABFC !important;
-  box-shadow:0 0 8px rgba(240,171,252,.95), 0 0 25px rgba(192,38,211,.8) !important;
-}
-/* Pil kecil Simpan / Bacakan / Bookmark + Tahuna / Maghrib - glownya lebih halus biar nggak silau */
-.f-info-row button, .chip button, .pill button{
-  box-shadow:0 0 6px rgba(240,171,252,.8), 0 0 16px rgba(217,70,239,.6) !important;
+/* Tombol ungu Tanya / Bikin Gambar - bordernya juga hampir putih */
+.msg.user, .bubble.user{
+  border:2px solid #FEF9FF !important;
+  box-shadow:0 0 6px rgba(255,255,255,.95), 0 0 20px rgba(245,208,254,.9) !important;
 }
 `;
 document.head.appendChild(css);
