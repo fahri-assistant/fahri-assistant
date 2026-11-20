@@ -1340,5 +1340,49 @@ fixInput(); buildSheet();
 })();
 </script>
 <script src="auth.js"></script>
+<!-- FINAL FIX - TANPA setInterval, JANGAN DITAMBAH LAGI -->
+<style>
+  /* 1. Bar login tengah ilang permanen. Login tetep ada di drawer ☰ */
+  #authBar{ display:none !important; }
+  /* 2. Tombol Simpan/Bacakan CUMA di jawaban AI, bukan di chat kamu. Pake CSS, bukan JS, jadi gak kedip */
+  .bubble.user .f-bubble-tools, .bubble.user .ai-actions{ display:none !important; }
+  /* 3. Cuaca di atas, di bawah header */
+  #f-cuaca-final{ display:flex !important; gap:8px !important; padding:0 14px 10px !important; }
+  #f-cuaca-final .f-ca{ flex:1 !important; padding:10px 12px !important; border-radius:16px !important; background:rgba(20,15,35,.78) !important; border:1px solid rgba(168,85,247,.3) !important; color:#fff !important; font-size:12px !important; line-height:1.4 !important; }
+  #f-cuaca-final .f-ca b{ font-size:12px !important; }
+  #f-fitur-final{ display:flex !important; padding:0 14px 8px !important; }
+  #f-fitur-final button{ padding:8px 16px !important; border-radius:99px !important; font-size:12px !important; font-weight:800 !important; background:linear-gradient(135deg,#a855f7,#7c3aed) !important; color:#fff !important; border:none !important; }
+</style>
+<script>
+(function(){
+  if(window.__fahriFINAL2) return; window.__fahriFINAL2 = true;
+  function pasang(){
+    // Cuaca - tempel ke #header yang statis, BUKAN ke input yang fixed
+    var header = document.getElementById('header');
+    if(header && !document.getElementById('f-cuaca-final')){
+      var w = document.createElement('div'); w.id = 'f-cuaca-final';
+      w.innerHTML = '<div class="f-ca"><b>🌦️ Tahuna</b><br><span id="f-ca-cuaca">25°C • Berawan 🌥️</span></div><div class="f-ca"><b>🕌 Sholat Hari Ini</b><br><span id="f-ca-sholat">Subuh 04:04 • Dzuhur 11:24 • Ashar 14:47 • Maghrib 17:22 • Isya 18:35</span></div>';
+      header.parentNode.insertBefore(w, header.nextSibling);
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){
+        var el = document.getElementById('f-ca-cuaca'); if(el) el.textContent = Math.round(d.current.temperature_2m)+'°C • Berawan 🌥️';
+      }).catch(function(){});
+      var today = new Date(); var dd = String(today.getDate()).padStart(2,'0'); var mm = String(today.getMonth()+1).padStart(2,'0');
+      fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+today.getFullYear()+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+        var t = d.data.timings; var el2 = document.getElementById('f-ca-sholat'); if(el2) el2.textContent = 'Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+      }).catch(function(){});
+    }
+    // Fitur - 1x aja
+    var inp = document.getElementById('input');
+    if(inp && inp.parentElement && !document.getElementById('f-fitur-final')){
+      var f = document.createElement('div'); f.id = 'f-fitur-final';
+      f.innerHTML = '<button type="button">✨ Fitur</button>';
+      f.querySelector('button').onclick = function(){ var s=document.getElementById('f-sheet'); if(s) s.classList.add('open'); };
+      inp.parentElement.parentNode.insertBefore(f, inp.parentElement);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pasang);
+  else pasang();
+})();
+</script>
 </body>
 </html>
