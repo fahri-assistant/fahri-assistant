@@ -1324,5 +1324,88 @@ fixInput(); buildSheet();
 })();
 </script>
 <script src="auth.js"></script>
+<script>
+/* === FAHRI FINAL BERSIH - 1 PATCH PENGGANTI SEMUA PATCH LAMA === */
+(function(){
+if(window.__fahriFinalBersih) return; window.__fahriFinalBersih=true;
+var css=document.createElement('style');
+css.textContent=`
+#authBar{ background:transparent !important; border:none !important; box-shadow:none !important; padding:2px 10px 6px !important; }
+#authBar #f-auth-info{ display:grid !important; grid-template-columns:1fr 1fr !important; gap:8px !important; }
+#authBar #f-auth-info .f-info-row{ background:transparent !important; border:none !important; box-shadow:none !important; padding:6px 2px !important; font-size:13px !important; line-height:1.5 !important; }
+#authBar #f-auth-info .f-info-row b{ display:block !important; }
+.bubble{ box-shadow:0 0 18px rgba(168,85,247,.45), 0 4px 18px rgba(139,92,246,.35) !important; border:1px solid rgba(168,85,247,.55) !important; }
+.bubble.ai .f-bubble-tools, .bubble.ai .ai-actions{ display:none !important; }
+.bubble.ai .f-tools{ display:flex !important; gap:6px !important; flex-wrap:wrap !important; margin-top:10px !important; }
+.bubble.ai .f-tools button{ padding:6px 10px !important; font-size:12px !important; border-radius:99px !important; border:1px solid rgba(255,255,255,.25) !important; background:rgba(0,0,0,.25) !important; color:#fff !important; }
+.f-mic-hapus{ display:none !important; }
+`;
+document.head.appendChild(css);
+function bersih(){
+  var chat=document.getElementById('chat'); if(!chat) return;
+  chat.querySelectorAll('.bubble.ai').forEach(function(b){
+    if(b.closest('#welcome')) return;
+    b.querySelectorAll('.f-bubble-tools, .ai-actions').forEach(function(t){ t.remove(); });
+    var tools=b.querySelectorAll(':scope > .f-tools');
+    for(var i=1;i<tools.length;i++){ tools[i].remove(); }
+    var clone=b.cloneNode(true);
+    clone.querySelectorAll('.f-tools, .tts-btn, button').forEach(function(x){ x.remove(); });
+    var tx=(clone.textContent||'').trim();
+    if(tx.length>40){
+      var half=Math.floor(tx.length/2);
+      var a=tx.slice(0,half), c=tx.slice(half);
+      if(a===c){
+        var walker=document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+        var node; var sisa=half;
+        while(node=walker.nextNode()){
+          if(node.parentElement && (node.parentElement.classList.contains('f-tools') || node.parentElement.tagName==='BUTTON')) continue;
+          if(node.nodeValue.length>sisa){ node.nodeValue=node.nodeValue.slice(0,sisa); break; }
+          else { sisa-=node.nodeValue.length; }
+        }
+      }
+    }
+    if(!b.querySelector('.f-tools') && tx.length>3 && tx.indexOf('Fahri lagi')!==0){
+      var wrap=document.createElement('div'); wrap.className='f-tools';
+      var b1=document.createElement('button'); b1.textContent='📌 Simpan';
+      b1.onclick=function(){ try{ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr.push(tx); localStorage.setItem('fahri_bookmark', JSON.stringify(arr)); b1.textContent='✅ Tersimpan'; }catch(e){} };
+      var b2=document.createElement('button'); b2.textContent='🔊 Bacakan';
+      b2.onclick=function(){ try{ window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(tx.slice(0,600)); u.lang='id-ID'; window.speechSynthesis.speak(u); }catch(e){} };
+      var b3=document.createElement('button'); b3.textContent='🔖 Bookmark';
+      b3.onclick=function(){ try{ var arr2=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr2.push(tx); localStorage.setItem('fahri_bookmark', JSON.stringify(arr2)); b3.textContent='✅ Bookmark'; }catch(e){} };
+      wrap.appendChild(b1); wrap.appendChild(b2); wrap.appendChild(b3);
+      b.appendChild(wrap);
+    }
+  });
+  var bubbles=Array.from(chat.querySelectorAll('.bubble'));
+  var prev='';
+  bubbles.forEach(function(b){
+    if(b.closest('#welcome')) return;
+    var k=(b.className||'')+'|'+(b.textContent||'').trim().slice(0,120);
+    if(k && k===prev){ b.remove(); return; }
+    prev=k;
+  });
+  var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]');
+  if(inp && inp.parentElement){
+    inp.parentElement.querySelectorAll('button').forEach(function(btn){
+      var t=(btn.textContent||'').trim();
+      if(t==='🎤'||t==='🎙️'||t.indexOf('🎤')!==-1||t.indexOf('🎙️')!==-1){ btn.classList.add('f-mic-hapus'); btn.remove(); }
+    });
+  }
+  try{
+    var h=JSON.parse(localStorage.getItem('fahri_history')||'[]');
+    var out=[], s={};
+    h.forEach(function(m){
+      var kk=(m.role||'')+'|'+(m.content||'').slice(0,120);
+      if(!s[kk]){ s[kk]=1; out.push(m); }
+    });
+    if(out.length!==h.length) localStorage.setItem('fahri_history', JSON.stringify(out));
+  }catch(e){}
+}
+var obs=new MutationObserver(function(){ bersih(); });
+obs.observe(document.body, {childList:true, subtree:true});
+setInterval(bersih, 1000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bersih); else bersih();
+})();
+</script>
 </body>
 </html>
