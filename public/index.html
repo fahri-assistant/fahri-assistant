@@ -1547,5 +1547,47 @@ html, body{ overflow-x:hidden!important; }
   background:transparent!important; box-shadow:none!important; border-top:none!important;
 }
   </style>
+<!-- FIX FINAL 6 - MUNCULIN CUACA LAGI + FITUR JADI KECIL LAGI -->
+<script>
+(function(){
+  function bikinCuacaLagi(){
+    if(document.getElementById('f-cuaca-jakarta')) return;
+    var header=document.querySelector('.header')||document.querySelector('header');
+    var chat=document.getElementById('chat')||document.querySelector('.chat')||document.querySelector('main');
+    if(!chat) return;
+    var bar=document.createElement('div'); bar.id='f-cuaca-jakarta';
+    bar.style.cssText='display:flex;gap:8px;padding:10px 12px 2px;';
+    bar.innerHTML='<div id="f-cj-cuaca" style="flex:1;padding:10px 12px;border-radius:16px;background:rgba(20,15,35,.85);border:1px solid rgba(168,85,247,.4);color:#fff;font-size:12px;line-height:1.4;">🌦️ <b>Jakarta</b><br>30°C • Hujan Ringan 🌧️</div><div id="f-cj-sholat" style="flex:1;padding:10px 12px;border-radius:16px;background:rgba(20,15,35,.85);border:1px solid rgba(168,85,247,.4);color:#fff;font-size:12px;line-height:1.4;">🕌 <b>Sholat Hari Ini</b><br>Subuh 04:20 • Dzuhur 11:24 • Ashar 14:47 • Maghrib 17:22 • Isya 18:35</div>';
+    // Taruh di atas chat, di bawah header kalau ada
+    if(header && header.parentNode) header.parentNode.insertBefore(bar, header.nextSibling);
+    else chat.parentNode.insertBefore(bar, chat);
+    // Update data beneran
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2&longitude=106.84&current=temperature_2m&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
+      var el=document.getElementById('f-cj-cuaca'); if(el) el.innerHTML='🌦️ <b>Jakarta</b><br>'+Math.round(d.current.temperature_2m)+'°C • Hujan Ringan 🌧️';
+    }).catch(function(){});
+    var t=new Date(); var dd=String(t.getDate()).padStart(2,'0'); var mm=String(t.getMonth()+1).padStart(2,'0');
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+t.getFullYear()+'?city=Jakarta&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+      var s=d.data.timings; var el2=document.getElementById('f-cj-sholat'); if(el2) el2.innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+s.Fajr.slice(0,5)+' • Dzuhur '+s.Dhuhr.slice(0,5)+' • Ashar '+s.Asr.slice(0,5)+' • Maghrib '+s.Maghrib.slice(0,5)+' • Isya '+s.Isha.slice(0,5);
+    }).catch(function(){});
+  }
+  bikinCuacaLagi(); setInterval(bikinCuacaLagi, 2000);
+})();
+</script>
+<style>
+/* CUACA JANGAN KE-HIDE LAGI */
+#f-cuaca-jakarta{ display:flex!important; visibility:visible!important; opacity:1!important; }
+/* FITUR - BATALIN FULL LEBAR, BALIK JADI PILL KECIL DI KIRI */
+#f-fitur-row{
+  display:flex!important; justify-content:flex-start!important;
+  width:auto!important; padding:0 12px 8px!important;
+  background:transparent!important; border:none!important; box-shadow:none!important;
+}
+#f-fitur-row button, #f-fitur-fab{
+  flex:none!important; flex-grow:0!important; flex-shrink:0!important;
+  width:auto!important; max-width:140px!important;
+  padding:8px 16px!important; border-radius:99px!important;
+  text-align:center!important; white-space:nowrap!important;
+}
+</style>
 </body>
 </html>
