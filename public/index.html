@@ -1434,6 +1434,62 @@ fixInput(); buildSheet();
   bikinCuaca(); pindahFitur();
   setInterval(function(){ bikinCuaca(); pindahFitur(); }, 1500);
 })();
+<!-- FIX FINAL 3+4 GABUNGAN - HAPUS DOBEL + BENERIN BUBBLE + HILANGIN STRIP HITAM -->
+<script>
+(function(){
+  function bersih(){
+    // 1. HAPUS widget lama, sisain 1 aja yang baru
+    document.querySelectorAll('#f-top-widget, #f-top-widget2, #f-widget-mini').forEach(function(e){e.remove();});
+    // Kalau ada 2 bar cuaca-jakarta, hapus yang kedua dst
+    var bars=document.querySelectorAll('#f-cuaca-jakarta');
+    for(var i=1;i<bars.length;i++){ bars[i].remove(); }
+    // Hapus juga duplikat cuaca/sholat yang id-nya lama tapi masih muncul
+    var all=document.querySelectorAll('[id="f-cuaca"], [id="f-sholat"], [id="f-wm-cuaca"]');
+    all.forEach(function(e){ if(!e.closest('#f-cuaca-jakarta')) e.style.display='none'; });
+    // Samain jadi 1 data aja - Jakarta 30°C, sholat yang bener
+    var c=document.getElementById('f-cj-cuaca'); if(c) c.innerHTML='🌦️ <b>Jakarta</b><br>30°C • Hujan Ringan 🌧️';
+    var s=document.getElementById('f-cj-sholat'); if(s) s.innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh 04:20 • Dzuhur 11:24 • Ashar 14:47 • Maghrib 17:22 • Isya 18:35';
+  }
+  bersih(); setInterval(bersih, 1500);
+})();
+</script>
+<style>
+/* 2. BUBBLE JANGAN KEPOTONG */
+.bubble, .msg, .message, .chat-bubble{ max-width:92%!important; overflow:hidden!important; box-sizing:border-box!important; }
+.bubble *{ max-width:100%!important; box-sizing:border-box!important; word-wrap:break-word!important; }
+/* Tombol Simpan/Bacakan/Bookmark jangan numpuk teks */
+.f-bubble-tools, .bubble-tools, .bubble-actions{ display:flex!important; flex-wrap:wrap!important; gap:6px!important; position:static!important; margin-top:8px!important; }
+.f-bubble-tools button, .bubble-tools button{ flex:0 0 auto!important; white-space:nowrap!important; }
+/* Tombol Bikin Gambar / Edit Foto jangan keluar bubble */
+.bubble button{ position:static!important; transform:none!important; }
+/* 3. TABEL BISA DI-SCROLL, JANGAN KEPOTONG */
+.bubble table{ display:block!important; width:100%!important; overflow-x:auto!important; white-space:nowrap!important; }
+.bubble table td, .bubble table th{ padding:8px!important; font-size:12px!important; }
+/* 4. FITUR FULL DI ATAS PAPAN TEKS */
+#f-fitur-row{ display:flex!important; width:100%!important; padding:0 14px 8px!important; }
+#f-fitur-row button, #f-fitur-fab{ flex:1!important; text-align:center!important; }
+.composer{ max-width:100%!important; }
+/* 5. HILANGIN STRIP HITAM DI ATAS PAPAN TEKS */
+#f-fitur-row{
+  background:transparent!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border:none!important;
+}
+.composer-wrap, .composer-container, .bottom-bar, .input-area, .chat-input-wrap, .footer, footer{
+  background:transparent!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border-top:none!important;
+}
+#f-fitur-row button, #f-fitur-fab{
+  background:rgba(20,15,35,.85)!important;
+  border:1px solid rgba(168,85,247,.6)!important;
+}
+.composer, .input-box{
+  background:rgba(20,15,35,.9)!important;
+}
+</style>
   </script>
 </body>
 </html>
