@@ -1384,5 +1384,55 @@ fixInput(); buildSheet();
   else pasang();
 })();
 </script>
+<!-- FIX 2 - HAPUS CUACA BAWAH + GANTI KE JAKARTA + MATIIN MIC -->
+<style>
+  /* Mic di papan teks - matiin 2-2nya */
+  #voiceBtn, #micBtn, button[aria-label*="suara" i], button[title*="suara" i]{ display:none !important; }
+  /* Mic yang pake emoji 🎤 di dalam input bar */
+  button:has(> span){ }
+</style>
+<script>
+(function(){
+  // 1. Ganti Tahuna -> Jakarta di cuaca atas
+  document.querySelectorAll('#f-cuaca-final *').forEach(function(el){
+    if(el.textContent.includes('Tahuna')) el.textContent = el.textContent.replace('Tahuna','Jakarta');
+  });
+  // Update data Jakarta asli
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2&longitude=106.84&current=temperature_2m,weather_code&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
+    var el=document.getElementById('f-ca-cuaca'); if(el) el.textContent = Math.round(d.current.temperature_2m)+'°C • Berawan 🌥️';
+  }).catch(function(){});
+  var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0');
+  fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+today.getFullYear()+'?city=Jakarta&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+    var t=d.data.timings; var el2=document.getElementById('f-ca-sholat'); if(el2) el2.textContent='Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+  }).catch(function(){});
+
+  // 2. Hapus cuaca mini di bawah (sisa Bagian 8) - yang BUKAN #f-cuaca-final
+  document.querySelectorAll('div').forEach(function(el){
+    var txt = el.textContent || '';
+    if(el.id==='f-cuaca-final' || el.closest('#f-cuaca-final')) return;
+    // Yang isinya Tahuna/Jakarta + Maghrib + kecil, dan posisinya di bawah (deket input)
+    if((txt.includes('Tahuna') || txt.includes('Jakarta')) && txt.includes('Maghrib') && el.offsetHeight < 60){
+      el.remove();
+    }
+    if(txt.trim().startsWith('🌦️ Tahuna') && el.offsetHeight < 60) el.remove();
+    if(txt.trim().startsWith('🌦️ Jakarta') && el.offsetHeight < 60) el.remove();
+  });
+
+  // 3. Matiin tombol mic di papan teks - cari tombol yang isinya 🎤 / 🔊 / mic
+  document.querySelectorAll('button').forEach(function(b){
+    var t = b.textContent || '';
+    var html = b.innerHTML || '';
+    if(t.includes('🎤') || t.includes('🎙') || html.includes('mic') || b.id.toLowerCase().includes('voice') || b.id.toLowerCase().includes('mic')){
+      // Jangan hapus tombol kirim (➤) sama tombol Fitur
+      if(!t.includes('➤') && !t.includes('Fitur') && !t.includes('✨')){
+        b.remove();
+      }
+    }
+  });
+  // Mic yang di kiri input (biasanya id voiceBtn) - paksa hide
+  var v = document.getElementById('voiceBtn'); if(v) v.remove();
+  var v2 = document.getElementById('micBtn'); if(v2) v2.remove();
+})();
+</script>
 </body>
 </html>
