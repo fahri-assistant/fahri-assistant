@@ -1340,5 +1340,93 @@ fixInput(); buildSheet();
 })();
 </script>
 <script src="auth.js"></script>
+<script>
+/* === FIX FINAL: LOGIN PINDAH KE TITIK 3 + CUACA/SHOLAT 2 BARIS + HAPUS MIC COMPOSER === */
+(function(){
+if(window.__fixFinalLayout) return; window.__fixFinalLayout=true;
+
+var css=document.createElement('style');
+css.textContent=`
+/* AuthBar lama jadi tempat cuaca/sholat, 2 baris, tidak meluber */
+#authBar{ display:flex !important; flex-direction:column !important; gap:6px !important; padding:8px 10px !important; overflow:hidden !important; box-sizing:border-box !important; }
+#authBar .status-pill{ display:none !important; }
+#f-auth-info{ width:100% !important; display:flex !important; flex-direction:column !important; gap:6px !important; }
+#f-auth-info .f-info-row{ display:flex !important; align-items:center !important; gap:8px !important; width:100% !important; padding:8px 10px !important; background:rgba(255,255,255,.08) !important; border:1px solid rgba(255,255,255,.12) !important; border-radius:12px !important; font-size:13px !important; line-height:1.4 !important; box-sizing:border-box !important; white-space:normal !important; }
+#f-auth-info .f-info-row b{ white-space:nowrap !important; }
+/* Login di drawer jadi full width, tidak kepotong */
+#f-drawer-login{ padding:0 4px 10px !important; display:flex !important; flex-direction:column !important; gap:8px !important; }
+#f-drawer-login .btn{ width:100% !important; justify-content:center !important; box-sizing:border-box !important; white-space:normal !important; }
+#f-drawer-login .f-login-label{ font-size:11px !important; letter-spacing:1px !important; opacity:.55 !important; font-weight:800 !important; padding:10px 4px 2px !important; }
+/* Sembunyikan widget lama yang numpuk di bawah */
+#f-widget-mini, #f-top-widget, #f-top-widget2{ display:none !important; }
+/* Chat jangan kepotong kanan */
+#chat, .bubble, .message{ max-width:100% !important; box-sizing:border-box !important; }
+`;
+document.head.appendChild(css);
+
+function fetchInfo(){
+  var w=document.getElementById('f-info-cuaca');
+  var s=document.getElementById('f-info-sholat');
+  if(w) fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code,relative_humidity_2m&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){
+    var kode=d.current.weather_code; var desc=kode===0?'Cerah':kode<4?'Berawan':kode<60?'Hujan Ringan':'Hujan';
+    w.innerHTML='<b>🌦️ Tahuna</b> '+Math.round(d.current.temperature_2m)+'°C • '+desc+' • Lembab '+(d.current.relative_humidity_2m||'-')+'%';
+  }).catch(function(){ if(w) w.textContent='🌦️ Tahuna • Cuaca tidak tersedia'; });
+  if(s){ var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+      var t=d.data.timings; s.innerHTML='<b>🕌 Sholat</b> Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+    }).catch(function(){ s.textContent='🕌 Sholat • Subuh 04:50 • Dzuhur 11:50 • Ashar 15:10 • Maghrib 18:00 • Isya 19:10'; });
+  }
+}
+
+function pindahLogin(){
+  var auth=document.getElementById('authBar'); if(!auth) return;
+  // 1. Bikin tempat cuaca/sholat 2 baris di authBar, kalau belum ada
+  if(!document.getElementById('f-auth-info')){
+    var info=document.createElement('div'); info.id='f-auth-info';
+    info.innerHTML='<div class="f-info-row" id="f-info-cuaca">🌦️ Tahuna • Memuat cuaca...</div><div class="f-info-row" id="f-info-sholat">🕌 Memuat jadwal sholat...</div>';
+    auth.appendChild(info); fetchInfo();
+  }
+  // 2. Pindahkan tombol login ke dalam drawer (menu titik 3)
+  var loginBtns=document.getElementById('loginBtns');
+  var btnLog=document.getElementById('btnLog');
+  var btnLogout=document.getElementById('btnLogout');
+  if(!loginBtns && !btnLog) return;
+  if(document.getElementById('f-drawer-login')) return;
+  // Cari drawer: yang ada teks Bersihkan Chat
+  var drawer=null; var all=document.querySelectorAll('div, aside');
+  for(var i=0;i<all.length;i++){ var t=all[i].textContent||''; if(t.indexOf('Bersihkan Chat')!==-1 && t.length<4000){ if(!drawer||t.length<drawer.textContent.length) drawer=all[i]; } }
+  if(!drawer) return;
+  var box=document.createElement('div'); box.id='f-drawer-login';
+  box.innerHTML='<div class="f-login-label">AKUN</div>';
+  if(loginBtns) box.appendChild(loginBtns);
+  if(btnLog) box.appendChild(btnLog);
+  if(btnLogout) box.appendChild(btnLogout);
+  // Taruh di paling atas drawer, di bawah nama pengguna
+  var nama=document.getElementById('drawerName');
+  if(nama && nama.parentElement) nama.parentElement.appendChild(box);
+  else drawer.insertBefore(box, drawer.firstChild);
+}
+
+function hapusMicComposer(){
+  // Cari wadah input (yang ada placeholder Tanya)
+  var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]');
+  if(!inp) return;
+  var wadah=inp.parentElement; if(!wadah) return;
+  wadah.querySelectorAll('button').forEach(function(b){
+    var tx=(b.textContent||'').trim();
+    // Hapus SEMUA mic di papan ketik, jangan sentuh tombol Fitur / kirim / 📎
+    if(tx==='🎤'||tx==='🎙️'||tx.indexOf('🎤')!==-1||tx.indexOf('🎙️')!==-1){ b.remove(); }
+  });
+}
+
+function jalan(){
+  pindahLogin();
+  hapusMicComposer();
+}
+setInterval(jalan, 1000);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', jalan); else jalan();
+setTimeout(jalan, 1500);
+})();
+</script>
 </body>
 </html>
