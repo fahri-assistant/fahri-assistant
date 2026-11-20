@@ -1340,5 +1340,53 @@ fixInput(); buildSheet();
 })();
 </script>
 <script src="auth.js"></script>
+<!-- FIX BERSIH - SATU-SATUNYA -->
+<script>
+(function(){
+  function bersih(){
+    document.querySelectorAll('#f-top-widget, #f-top-widget2, #f-widget-mini').forEach(function(e){e.remove();});
+    var bars=document.querySelectorAll('#f-cuaca-jakarta');
+    for(var i=1;i<bars.length;i++){ bars[i].remove(); }
+    if(!document.getElementById('f-cuaca-jakarta')){
+      var header=document.querySelector('.header')||document.querySelector('header');
+      var chat=document.getElementById('chat')||document.querySelector('main');
+      if(chat){
+        var bar=document.createElement('div'); bar.id='f-cuaca-jakarta';
+        bar.innerHTML='<div id="f-cj-cuaca">Jakarta<br>Memuat...</div><div id="f-cj-sholat">Sholat Hari Ini<br>Memuat...</div>';
+        if(header && header.parentNode) header.parentNode.insertBefore(bar, header.nextSibling);
+        else chat.parentNode.insertBefore(bar, chat);
+        fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2&longitude=106.84&current=temperature_2m&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
+          var el=document.getElementById('f-cj-cuaca'); if(el) el.innerHTML='Jakarta<br>'+Math.round(d.current.temperature_2m)+'C - Hujan Ringan';
+        }).catch(function(){});
+        var tt=new Date(); var dd=String(tt.getDate()).padStart(2,'0'); var mm=String(tt.getMonth()+1).padStart(2,'0');
+        fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+tt.getFullYear()+'?city=Jakarta&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+          var s=d.data.timings; var el2=document.getElementById('f-cj-sholat');
+          if(el2) el2.innerHTML='Sholat Hari Ini<br>Subuh '+s.Fajr.slice(0,5)+' - Dzuhur '+s.Dhuhr.slice(0,5)+'<br>Ashar '+s.Asr.slice(0,5)+' - Maghrib '+s.Maghrib.slice(0,5)+' - Isya '+s.Isha.slice(0,5);
+        }).catch(function(){});
+      }
+    }
+    var fitur=null; var btns=document.querySelectorAll('button');
+    for(var i=0;i<btns.length;i++){ if((btns[i].textContent||'').trim().indexOf('Fitur')!==-1){ fitur=btns[i]; break; } }
+    if(fitur && fitur.parentElement.id!=='f-fitur-row'){
+      var composer=fitur.closest('.composer')||fitur.parentElement;
+      var row=document.getElementById('f-fitur-row');
+      if(!row){ row=document.createElement('div'); row.id='f-fitur-row'; composer.parentNode.insertBefore(row, composer); }
+      row.appendChild(fitur);
+    }
+  }
+  bersih(); setInterval(bersih, 2000);
+})();
+</script>
+<style>
+#f-cuaca-jakarta{display:flex!important;gap:8px!important;padding:10px 12px 2px!important}
+#f-cj-cuaca,#f-cj-sholat{flex:1!important;padding:10px 12px!important;border-radius:16px!important;background:rgba(20,15,35,.85)!important;border:1px solid rgba(168,85,247,.6)!important;box-shadow:0 0 22px rgba(168,85,247,.5)!important;color:#fff!important;font-size:12px!important;line-height:1.5!important}
+#f-fitur-row,.composer-wrap,.composer-container,.bottom-bar,.input-area,.chat-input-wrap{background:transparent!important;border:none!important;box-shadow:none!important}
+#f-fitur-row{display:flex!important;justify-content:flex-start!important;width:auto!important;padding:0 12px 8px!important}
+#f-fitur-row button{flex:none!important;width:auto!important;max-width:140px!important;padding:8px 16px!important;border-radius:99px!important;background:rgba(20,15,35,.85)!important;border:1px solid rgba(168,85,247,.6)!important;box-shadow:0 0 16px rgba(168,85,247,.45)!important;color:#fff!important}
+.composer,.input-box{background:rgba(20,15,35,.9)!important;border:1px solid rgba(168,85,247,.4)!important}
+html,body{overflow-x:hidden!important}
+.bubble,.msg,.message{max-width:88%!important;box-sizing:border-box!important;word-break:break-word!important}
+.bubble table{display:block!important;width:100%!important;overflow-x:auto!important}
+</style>
 </body>
 </html>
