@@ -1505,5 +1505,33 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 setTimeout(jalan, 1500);
 })();
   </script>
+<script>
+/* FIX STROKE + SHADOW AJA - nggak nyentuh background, bentuk, posisi */
+(function(){
+if(window.__fixStrokeOnly) return; window.__fixStrokeOnly=true;
+var css=document.createElement('style');
+css.textContent=`
+/* Header + Bubble chat gede + Bubble login + Pil bawah - SEMUA SAMA */
+/* Cuma ganti 2 properti ini aja: border + box-shadow */
+#welcome, .bubble, .msg, .message,
+#authBar, #authBar .f-info-row, #authBar button,
+#f-fitur-top button, .chip, .quick-btn, .pill,
+#inputBar input, #inputBar textarea{
+  border:2.5px solid #E879F9 !important;
+  box-shadow:0 0 8px rgba(240,171,252,.9), 0 0 22px rgba(217,70,239,.75), 0 0 55px rgba(168,85,247,.55) !important;
+}
+/* Tombol ungu (Tanya / Bikin Gambar) - bordernya lebih terang biar nyatu sama tombolnya */
+.msg.user, .bubble.user, button.user{
+  border:2.5px solid #F0ABFC !important;
+  box-shadow:0 0 8px rgba(240,171,252,.95), 0 0 25px rgba(192,38,211,.8) !important;
+}
+/* Pil kecil Simpan / Bacakan / Bookmark + Tahuna / Maghrib - glownya lebih halus biar nggak silau */
+.f-info-row button, .chip button, .pill button{
+  box-shadow:0 0 6px rgba(240,171,252,.8), 0 0 16px rgba(217,70,239,.6) !important;
+}
+`;
+document.head.appendChild(css);
+})();
+</script>
 </body>
 </html>
