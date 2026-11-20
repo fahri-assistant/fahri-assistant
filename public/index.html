@@ -1319,22 +1319,6 @@ function buildSheet(){
   document.getElementById('f-fix-tulisan').onclick=function(){ s.classList.remove('open'); var inp=getInp(); if(!inp||!inp.value.trim()){ if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'✍️', title:'Perbaiki Tulisan', msg:'Ketik dulu yang mau diperbaiki.', showCancel:false}); return; } var t=inp.value.trim(); t=t.replace(/\s+/g,' '); t=t.charAt(0).toUpperCase()+t.slice(1); if(!/[.!?]$/.test(t)) t+='.'; inp.value=t; };
 }
 
-// --- 4. FIX BUBBLE TOOLS: CUMA DI JAWABAN AI, BUKAN DI CHAT KAMU ---
-setInterval(function(){
-  document.querySelectorAll('.f-bubble-tools').forEach(function(tool){
-    var bubble=tool.parentElement; if(!bubble) return;
-    var txt=bubble.textContent||'';
-    // Kalau bubble ini chat kamu (kanan / ungu / isinya pendek kayak "Tanya"), hapus tools-nya
-    var style=getComputedStyle(bubble);
-    var isUser = txt.trim().startsWith('Tanya') || bubble.style.textAlign==='right' || (bubble.parentElement && bubble.parentElement.style.textAlign==='right');
-    // Cara paling aman: chat kamu itu yang ada di parent dengan align right / bubble ungu terang
-    // Kalau bubble-nya gak ada "Fahri Assistant" dan pendek, itu chat kamu
-    if(!txt.includes('Fahri Assistant') && !txt.includes('Hai! Aku') && txt.length<100 && !txt.includes('Ada yang ingin')){
-      tool.remove();
-    }
-  });
-}, 1000);
-
 setInterval(function(){ fixInput(); buildSheet(); }, 1000);
 fixInput(); buildSheet();
 })();
