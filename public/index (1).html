@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080113">
+<title>Fahri Assistant</title>
+<link rel="manifest" href="/manifest.json">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.65) 0%, rgba(147,51,234,.28) 32%, transparent 65%), linear-gradient(180deg,#150826 0%,#0b021a 48%,#070112 100%);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding-top:14px}
+#loader{position:fixed;inset:0;z-index:9999;background:#080113;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s ease}
+#loader.hide{opacity:0;pointer-events:none}
+#loader .l-logo{width:92px;height:92px;border-radius:50%;background-image:url(logo.png);background-size:cover;background-position:center}
+#loader .l-logo::after{content:"";position:absolute;inset:-17px;border-radius:50%;border:2.5px dotted rgba(233,213,255,1);animation:spinRing 9s linear infinite}
+#loader .l-text{font-size:22px;font-weight:900;letter-spacing:-.5px}
+#loader .l-sub{font-size:13px;color:#c4b5fd;font-weight:600}
+#loader .l-bar{width:140px;height:5px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
+#loader .l-bar i{display:block;height:100%;width:40%;border-radius:999px;background:linear-gradient(90deg,#a855f7,#d8b4fe);animation:loadBar 1.1s ease-in-out infinite alternate}
+@keyframes loadBar{from{transform:translateX(-20%)}to{transform:translateX(260%)}}
+.header{padding:calc(env(safe-area-inset-top) + 84px) 28px 26px;text-align:left;background:#0a0218;flex-shrink:0;border-radius:32px;margin:28px 14px 10px;border:2.2px solid rgba(216,180,254,1);box-shadow:inset 0 0 48px rgba(168,85,247,.55), inset 0 0 110px rgba(147,51,234,.30), inset 0 0 22px rgba(216,180,254,.35), 0 0 42px rgba(168,85,247,.75), 0 0 90px rgba(147,51,234,.35);transition:all .35s ease;overflow:hidden;position:relative;z-index:10;animation:headerBreath 4.5s ease-in-out infinite}
+@keyframes headerBreath{0%,100%{box-shadow:inset 0 0 48px rgba(168,85,247,.55), inset 0 0 110px rgba(147,51,234,.30), inset 0 0 22px rgba(216,180,254,.35), 0 0 32px rgba(168,85,247,.6), 0 0 70px rgba(147,51,234,.28)}50%{box-shadow:inset 0 0 56px rgba(168,85,247,.7), inset 0 0 120px rgba(147,51,234,.38), inset 0 0 28px rgba(216,180,254,.45), 0 0 48px rgba(168,85,247,.85), 0 0 105px rgba(147,51,234,.45)}}
+.header::before{content:"";position:absolute;top:0;right:0;width:180px;height:180px;pointer-events:none;opacity:.35;background-image:radial-gradient(rgba(216,180,254,.55) 1.2px, transparent 1.3px);background-size:14px 14px}
+.header.collapsed{padding:calc(env(safe-area-inset-top) + 60px) 20px 14px;border-radius:24px;margin:14px 10px 6px;animation:none}
+.header-top{display:flex;align-items:center;gap:16px;transition:all .35s ease;position:relative;z-index:1}
+.header-top > div:last-child{flex:1;min-width:0;margin-left:0;padding-left:0}
+.logo{width:82px;height:82px;flex-shrink:0;border-radius:50%;background-image:url(logo.png);background-size:cover;background-position:center;color:transparent;position:relative;overflow:visible}
+.logo::before{content:"";position:absolute;inset:-7px;border-radius:50%;background:conic-gradient(from 0deg, transparent 0 70%, rgba(233,213,255,1) 78%, #fff 82%, rgba(233,213,255,1) 86%, transparent 94%);-webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));mask:radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));animation:spinGlow 3.5s linear infinite;pointer-events:none}
+.logo::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid rgba(233,213,255,.7);box-shadow:0 0 14px rgba(192,132,252,.9);pointer-events:none}
+@keyframes spinGlow{to{transform:rotate(360deg)}}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+.header.collapsed .logo{width:50px;height:50px;font-size:26px;box-shadow:none}
+.header.collapsed .logo::after{inset:-4px}
+.header.collapsed .logo::before{inset:-5px}
+.header h1{font-size:38px;font-weight:900;letter-spacing:-.5px;line-height:.95;transition:all .35s ease;text-shadow:0 2px 12px rgba(167,139,250,.6)}
+.header.collapsed h1{font-size:22px!important;letter-spacing:-.5px;white-space:nowrap!important}
+.header.collapsed h1 br{display:none!important}
+.header .logo{box-shadow:0 10px 28px rgba(167,139,250,.55),0 0 0 3px rgba(255,255,255,.15)!important}
+.header.collapsed .logo{box-shadow:0 4px 14px rgba(167,139,250,.45)!important}
+.header.collapsed h1{font-size:22px;letter-spacing:-.5px}
+.subtitle{color:#c4b5fd!important;opacity:1!important;font-size:17px!important;font-weight:600!important;margin:8px 0 0!important;transition:all .35s ease}
+.header.collapsed .subtitle{font-size:13px!important;margin:3px 0 0!important}
+.online-status{display:flex;align-items:center;gap:7px;margin:9px 0 0;font-size:13.5px;font-weight:700;color:#4ade80;transition:all .35s ease;max-height:30px;position:relative;z-index:1}
+.online-status .online-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px rgba(74,222,128,1);animation:blinkDot 1.8s ease-in-out infinite;flex-shrink:0}
+@keyframes blinkDot{0%,100%{opacity:1}50%{opacity:.35}}
+.header.collapsed .online-status{margin:4px 0 0;font-size:11.5px}
+.greet{margin-top:24px!important;font-size:23px!important;font-weight:800!important;letter-spacing:-.5px!important;opacity:1!important;line-height:1.28;transition:all .35s ease;max-height:100px;position:relative;z-index:1}
+.greet2{font-size:23px!important;font-weight:800!important;letter-spacing:-.5px!important;opacity:1!important;margin-top:0!important;line-height:1.28;transition:all .35s ease;max-height:100px;position:relative;z-index:1}
+.header.collapsed .greet,.header.collapsed .greet2{margin-top:0!important;font-size:0!important;max-height:0!important;opacity:0!important}
+.badge-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;transition:all .35s ease;max-height:100px;position:relative;z-index:1}
+.header.collapsed .badge-row{margin-top:0;max-height:0;opacity:0}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(8,2,20,.75);border:1.5px solid rgba(168,85,247,.9);padding:11px 16px;border-radius:999px;font-size:15.5px;font-weight:700;color:#fff;box-shadow:0 0 16px rgba(168,85,247,.4)}
+.badge i{font-style:normal;font-size:17px;color:#c084fc}
+button.badge{font-family:inherit;cursor:pointer;color:#fff}
+.authbar{margin:0 14px 0;padding:8px 8px 8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#12051f;border:1.5px solid rgba(168,85,247,.7);border-radius:999px;flex-shrink:0;box-shadow:0 0 22px rgba(168,85,247,.4);position:relative;z-index:10}
+.status-pill{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:#a1a1aa}
+.dot{width:9px;height:9px;border-radius:50%;background:#f43f5e;box-shadow:0 0 10px rgba(244,63,94,1)}
+.dot.on{background:#4ade80;box-shadow:0 0 10px rgba(74,222,128,1)}
+.login-btns{display:flex;gap:7px}
+.btn{border:0;cursor:pointer;padding:9px 13px;border-radius:999px;font-size:13px;font-weight:600}
+.btn-google{background:#fff;color:#111}
+.btn-github{background:#1f1f2a;color:#fff;border:1px solid rgba(255,255,255,.22)}
+.btn-logout{background:transparent;color:#ff6b81;border:1px solid rgba(255,107,129,.5);padding:6px 10px;font-size:11px}
+.hidden{display:none!important}
+#chat{flex:1;overflow-y:auto;padding:10px 14px 12px;display:flex;flex-direction:column;gap:12px;justify-content:flex-start;overscroll-behavior:contain;position:relative;background-color:transparent;isolation:isolate}
+#chat::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.92;background-image:url("/wallpaper.png");background-size:cover;background-position:center 30%;background-repeat:no-repeat;animation:wallLive 16s ease-in-out infinite alternate}
+#chat::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 85% 18%, rgba(168,85,247,.32) 0, transparent 38%),radial-gradient(circle at 15% 82%, rgba(147,51,234,.26) 0, transparent 35%),radial-gradient(circle at 80% 85%, rgba(192,132,252,.26) 0, transparent 34%),linear-gradient(180deg, rgba(8,1,19,.22), rgba(8,1,19,.28) 50%, rgba(8,1,19,.34));animation:orbLive 5s ease-in-out infinite}
+@keyframes wallLive{0%{transform:scale(1) translateY(0);filter:brightness(1.15)}50%{transform:scale(1.06) translateY(-12px);filter:brightness(1.32)}100%{transform:scale(1.02) translateY(8px);filter:brightness(1.12)}}
+@keyframes orbLive{0%,100%{opacity:.85}50%{opacity:1}}
+.twinkle{position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:radial-gradient(rgba(255,255,255,.95) 1.2px, transparent 1.6px),radial-gradient(rgba(216,180,254,1) 1.5px, transparent 2px),radial-gradient(rgba(192,132,252,1) 1px, transparent 1.5px);background-size:120px 120px,190px 190px,90px 90px;background-position:0 0,40px 60px,80px 20px;animation:twinkle 2.8s ease-in-out infinite alternate;opacity:.75}
+@keyframes twinkle{0%{opacity:.35;transform:translateY(0)}50%{opacity:.95}100%{opacity:.45;transform:translateY(-6px)}}
+#chat>*{position:relative;z-index:1}
+.date-pill{align-self:center;background:rgba(18,5,31,.85);border:1.2px solid rgba(168,85,247,.7);color:#d8b4fe;padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:700;box-shadow:0 0 14px rgba(168,85,247,.3)}
+.welcome{display:flex;flex-direction:column;gap:14px;justify-content:flex-start;margin-top:0}
+.bubble{max-width:92%;padding:13px 15px;border-radius:18px;font-size:15px;line-height:1.65;white-space:pre-wrap;word-break:break-word;position:relative}
+.bubble.ai{background:#0a0218;border:2.5px solid #e9d5ff;align-self:flex-start;border-radius:26px;border-top-left-radius:8px;box-shadow:inset 0 0 42px rgba(168,85,247,.55), inset 0 0 90px rgba(147,51,234,.28), 0 0 34px rgba(192,132,252,.75), 0 0 60px rgba(168,85,247,.35)}
+.bubble.ai::before{display:none!important}
+.tts-btn{position:absolute;top:8px;right:10px;border:0;background:rgba(255,255,255,.12);color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px}
+.tts-btn.playing{background:#a855f7}
+body[data-theme="champagne"] .tts-btn.playing{background:#d4af6a;color:#1a1510}
+body[data-theme="ivory"] .tts-btn{background:rgba(0,0,0,.08);color:#1a1a1a}
+.welcome .bubble.ai{max-width:100%;margin:0 auto;padding:22px 22px;font-size:17.5px;width:100%;font-weight:500;line-height:1.62}
+.welcome .bubble.ai::before{display:none}
+.ai-row{display:flex;gap:15px;align-items:flex-start}
+.mini-logo{width:46px;height:46px;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:900;color:#d8b4fe;box-shadow:0 0 0 4px #8b5cf6, 0 0 0 6.5px #a855f7, 0 0 20px rgba(192,132,252,1)}
+.bubble.user{background:linear-gradient(135deg,#8b5cf6,#5a3dff);align-self:flex-end;border-bottom-right-radius:4px;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 22px rgba(139,92,246,.6)}
+.bubble b{font-weight:800}
+.bubble h3{font-size:16.5px;margin:10px 0 6px}
+.bubble hr{border:0;border-top:1px solid rgba(192,132,252,.4);margin:12px 0}
+.bubble table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+.bubble th,.bubble td{border:1px solid rgba(192,132,252,.5);padding:8px 8px;text-align:left}
+.bubble th{background:rgba(168,85,247,.3)}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:2px}
+.chip{background:rgba(18,5,31,.95);border:2px solid rgba(216,180,254,.95);color:#fff;padding:18px 15px;border-radius:17px;font-size:16.5px;font-weight:700;cursor:pointer;box-shadow:0 0 22px rgba(168,85,247,.6), inset 0 0 22px rgba(168,85,247,.25);text-align:left;display:flex;align-items:center;gap:12px;line-height:1.3;opacity:1}
+.chip i{font-style:normal;font-size:22px;color:#c084fc;flex-shrink:0}
+.composer{margin:0 14px 14px;padding:6px 6px 6px 20px;display:flex;gap:10px;background:rgba(18,5,31,.95);border-radius:999px;align-items:center;border:1.5px solid rgba(168,85,247,.7);flex-shrink:0;box-shadow:0 0 24px rgba(168,85,247,.38);padding-bottom:calc(6px + env(safe-area-inset-bottom));position:relative;z-index:10}
+.composer input{flex:1;background:transparent;border:0;color:#fff;padding:13px 4px;outline:none;font-size:16.5px;font-weight:500}
+.composer input::placeholder{color:#8b8b9e}
+.composer button{background:linear-gradient(135deg,#a855f7,#3b82f6);border:0;color:#fff;width:52px;height:52px;flex-shrink:0;border-radius:50%;font-weight:900;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(168,85,247,.8)}
+#logPanel{position:fixed;inset:0;z-index:9998;background:rgba(5,1,15,.92);display:none;flex-direction:column;padding:18px}
+#logPanel.open{display:flex}
+#logPanel .log-box{flex:1;overflow-y:auto;background:#0a0218;border:2px solid #a855f7;border-radius:18px;padding:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
+.menu-btn{position:absolute;top:calc(env(safe-area-inset-top) + 42px);right:16px;z-index:5;width:42px;height:42px;border-radius:50%;border:1.5px solid rgba(216,180,254,.9);background:rgba(8,2,20,.8);color:#fff;font-size:20px;cursor:pointer;box-shadow:0 0 14px rgba(168,85,247,.5)}
+.drawer{position:fixed;inset:0;z-index:9997;background:rgba(5,1,15,.6);display:none}
+.drawer.open{display:block}
+.drawer-box{position:absolute;top:calc(env(safe-area-inset-top) + 38px);right:12px;width:250px;background:#12051f;border:1.5px solid rgba(168,85,247,.8);border-radius:20px;padding:10px;box-shadow:0 0 30px rgba(168,85,247,.5)}
+.drawer-item{width:100%;text-align:left;background:transparent;border:0;color:#fff;padding:14px 12px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;display:flex;gap:10px;align-items:center}
+.drawer-item:active{background:rgba(168,85,247,.25)}
+.drawer-item.danger{color:#ff6b81}
+.drawer-profile{padding:12px;border-bottom:1px solid rgba(168,85,247,.3);margin-bottom:8px}
+.drawer-profile b{font-size:16px}
+.drawer-profile p{font-size:12px;color:#c4b5fd;margin-top:3px;word-break:break-all}
+.drawer-ver{padding:12px 12px 4px;text-align:center;font-size:11px;color:#8b8b9e;border-top:1px solid rgba(168,85,247,.3);margin-top:8px}
+.confirm{position:fixed;inset:0;z-index:9999;background:rgba(5,1,15,.75);display:none;align-items:center;justify-content:center;padding:20px}
+.confirm.open{display:flex}
+.confirm-box{width:100%;max-width:320px;background:#12051f;border:2px solid rgba(216,180,254,1);border-radius:22px;padding:22px;text-align:center;box-shadow:0 0 30px rgba(168,85,247,.6)}
+.confirm-box .c-icon{font-size:42px;margin-bottom:10px}
+.confirm-box b{font-size:18px}
+.confirm-box p{font-size:13.5px;color:#c4b5fd;margin:8px 0 18px;line-height:1.5}
+.confirm-row{display:flex;gap:10px}
+.confirm-btn{flex:1;padding:12px;border-radius:999px;border:0;font-weight:700;font-size:14px;cursor:pointer}
+.confirm-btn.cancel{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.confirm-btn.delete{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;box-shadow:0 0 18px rgba(168,85,247,.7)}
+.profile{position:fixed;inset:0;z-index:9999;background:rgba(5,1,15,.75);display:none;align-items:center;justify-content:center;padding:20px}
+.profile.open{display:flex}
+.profile-box{width:100%;max-width:320px;background:#12051f;border:2px solid rgba(216,180,254,1);border-radius:22px;padding:22px;text-align:center;box-shadow:0 0 30px rgba(168,85,247,.6)}
+.profile-avatar{width:72px;height:72px;margin:0 auto 12px;border-radius:50%;background:radial-gradient(circle at 50% 38%, #3b0a6d 0%, #180536 70%);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#d8b4fe;box-shadow:0 0 0 4px #8b5cf6, 0 0 0 6px #a855f7, 0 0 20px rgba(192,132,252,1)}
+.profile-box b{font-size:18px;word-break:break-word}
+.profile-box .p-email{font-size:13px;color:#c4b5fd;margin:6px 0 14px;word-break:break-all}
+.profile-row{text-align:left;background:rgba(8,2,20,.7);border:1px solid rgba(168,85,247,.4);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+.profile-row span{color:#c4b5fd;font-size:11px;display:block;margin-bottom:2px}
+.profile-btn{width:100%;padding:12px;border-radius:999px;border:0;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(135deg,#a855f7,#3b82f6);color:#fff;margin-top:8px}
+/* === PERBAIKAN 1: MATIIN TITIK ORBIT === */
+.logo::before,.logo::after,#loader .l-logo::after{display:none!important}
+.logo{position:relative}
+#loader .l-logo{position:relative}
+/* === PERBAIKAN 3: STRIP PUTIH DIHILANGIN === */
+html{background:#070112}
+body{background-color:#070112}
+.composer{margin-bottom:0}
+/* === FITUR TEMA === */
+.theme-section{padding:10px 12px 12px;border-top:1px solid rgba(168,85,247,.3);border-bottom:1px solid rgba(168,85,247,.3);margin:8px 0}
+.theme-title{font-size:12px;color:#c4b5fd;font-weight:700;letter-spacing:.5px;margin-bottom:10px}
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.theme-btn{border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;padding:10px 6px;border-radius:12px;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.theme-btn i{width:22px;height:22px;border-radius:50%;display:block;border:2px solid rgba(255,255,255,.6)}
+.theme-btn.active{border-color:#d8b4fe;background:rgba(168,85,247,.35);box-shadow:0 0 12px rgba(168,85,247,.5)}
+.theme-btn[data-theme="original"] i{background:linear-gradient(135deg,#a855f7,#150826)}
+.theme-btn[data-theme="midnight"] i{background:#0a1628}
+.theme-btn[data-theme="ivory"] i{background:#faf6ec}
+.theme-btn[data-theme="champagne"] i{background:linear-gradient(135deg,#d4af6a,#1a1510)}
+.theme-btn[data-theme="forest"] i{background:#0d241a}
+body[data-theme="midnight"]{background:linear-gradient(180deg,#0a1628 0%,#060d1a 55%,#03060e 100%)}
+body[data-theme="midnight"] .header{border-color:rgba(120,160,220,.9);box-shadow:inset 0 0 48px rgba(40,80,160,.4),0 0 30px rgba(40,80,160,.35);animation:none}
+body[data-theme="midnight"] .bubble.ai{border-color:#7aa0d4;box-shadow:inset 0 0 30px rgba(40,80,160,.35),0 0 22px rgba(40,80,160,.35);background:#0a1628}
+body[data-theme="midnight"] .bubble.user{background:linear-gradient(135deg,#1e3a6e,#16294d);border-color:rgba(160,190,240,.5);box-shadow:0 0 18px rgba(40,80,160,.5)}
+body[data-theme="midnight"] .bubble th,body[data-theme="midnight"] .bubble td{border-color:rgba(120,160,220,.5)}
+body[data-theme="midnight"] .composer{border-color:rgba(120,160,220,.7);background:#0a1628;box-shadow:0 0 18px rgba(40,80,160,.35)}
+body[data-theme="midnight"] .composer button{background:linear-gradient(135deg,#2b5aa6,#1e3a6e)}
+body[data-theme="midnight"] #chat::before{opacity:.25}
+body[data-theme="midnight"] .twinkle{opacity:.3}
+body[data-theme="ivory"]{background:linear-gradient(180deg,#faf6ec 0%,#f3ecdc 100%);color:#1a1a1a}
+body[data-theme="ivory"] .header{background:#fffdf7;border-color:#d8d0bc;box-shadow:0 0 20px rgba(0,0,0,.08);animation:none}
+body[data-theme="ivory"] .header h1{color:#1a1a1a}
+body[data-theme="ivory"] .subtitle{color:#7c6bb5!important}
+body[data-theme="ivory"] .bubble.ai{background:#ffffff;border-color:#d8d0bc;box-shadow:0 0 14px rgba(0,0,0,.07);color:#1a1a1a}
+body[data-theme="ivory"] .bubble.user{background:linear-gradient(135deg,#c4b5fd,#a78bfa);border-color:rgba(255,255,255,.6);color:#fff}
+body[data-theme="ivory"] .bubble th,body[data-theme="ivory"] .bubble td{border-color:#d8d0bc}
+body[data-theme="ivory"] .bubble th{background:rgba(196,181,253,.25)}
+body[data-theme="ivory"] .composer{background:#ffffff;border-color:#d8d0bc;box-shadow:0 0 14px rgba(0,0,0,.07)}
+body[data-theme="ivory"] .composer input{color:#1a1a1a}
+body[data-theme="ivory"] .composer input::placeholder{color:#9a9a9a}
+body[data-theme="ivory"] #chat::before{opacity:.12}
+body[data-theme="ivory"] #chat::after{display:none}
+body[data-theme="ivory"] .twinkle{display:none}
+body[data-theme="ivory"] .drawer-box{background:#fffdf7;border-color:#d8d0bc}
+body[data-theme="ivory"] .drawer-item{color:#1a1a1a}
+body[data-theme="champagne"]{background:linear-gradient(180deg,#1a1510 0%,#0f0c08 60%,#080604 100%)}
+body[data-theme="champagne"] .header{border-color:rgba(212,175,106,.95);box-shadow:inset 0 0 40px rgba(212,175,106,.25),0 0 30px rgba(212,175,106,.35);animation:none}
+body[data-theme="champagne"] .bubble.ai{border-color:rgba(212,175,106,.9);box-shadow:inset 0 0 30px rgba(212,175,106,.18),0 0 22px rgba(212,175,106,.3);background:#1a1510}
+body[data-theme="champagne"] .bubble.user{background:linear-gradient(135deg,#e8c87a,#d4af6a);border-color:rgba(255,240,200,.7);color:#1a1510;box-shadow:0 0 20px rgba(212,175,106,.55)}
+body[data-theme="champagne"] .bubble th,body[data-theme="champagne"] .bubble td{border-color:rgba(212,175,106,.55)}
+body[data-theme="champagne"] .bubble th{background:rgba(212,175,106,.22)}
+body[data-theme="champagne"] .composer{border-color:rgba(212,175,106,.85);background:#1a1510;box-shadow:0 0 20px rgba(212,175,106,.3)}
+body[data-theme="champagne"] .composer button{background:linear-gradient(135deg,#e8c87a,#b8934a);color:#1a1510;box-shadow:0 0 18px rgba(212,175,106,.6)}
+body[data-theme="champagne"] #chat::before{opacity:.18}
+body[data-theme="champagne"] #chat::after{background:radial-gradient(circle at 85% 18%, rgba(212,175,106,.22) 0, transparent 38%),linear-gradient(180deg, rgba(26,21,16,.15), rgba(26,21,16,.25))}
+body[data-theme="champagne"] .twinkle{opacity:.25}
+body[data-theme="forest"]{background:linear-gradient(180deg,#0d241a 0%,#081a12 60%,#040e08 100%)}
+body[data-theme="forest"] .header{border-color:rgba(140,190,160,.9);box-shadow:inset 0 0 40px rgba(60,120,85,.35),0 0 28px rgba(60,120,85,.35);animation:none}
+body[data-theme="forest"] .bubble.ai{border-color:rgba(140,190,160,.9);box-shadow:inset 0 0 30px rgba(60,120,85,.3),0 0 20px rgba(60,120,85,.3);background:#0d241a}
+body[data-theme="forest"] .bubble.user{background:linear-gradient(135deg,#4a7a5e,#2f5240);border-color:rgba(180,220,195,.5);box-shadow:0 0 18px rgba(60,120,85,.5)}
+body[data-theme="forest"] .bubble th,body[data-theme="forest"] .bubble td{border-color:rgba(140,190,160,.5)}
+body[data-theme="forest"] .composer{border-color:rgba(140,190,160,.7);background:#0d241a}
+body[data-theme="forest"] .composer button{background:linear-gradient(135deg,#4a7a5e,#2f5240)}
+body[data-theme="forest"] #chat::before{opacity:.18}
+.bubble{position:relative!important}
+.bubble.ai{padding-top:34px!important}
+.tts-btn{position:absolute!important;top:8px!important;right:10px!important;z-index:5!important}
+body[data-theme="original"] .bubble.ai{background:#14052b!important}
+body[data-theme="midnight"] .bubble.ai{background:#122a4d!important;color:#eaf2ff!important}
+body[data-theme="ivory"] .bubble.ai{background:#fffdf7!important;color:#1a1a1a!important;border-color:#d8d0bc!important}
+body[data-theme="champagne"] .bubble.ai{background:#2a2114!important;color:#ffeec2!important;border-color:#d4af6a!important}
+body[data-theme="forest"] .bubble.ai{background:#123324!important;color:#d8ffe8!important;border-color:#8cbea0!important}
+body[data-theme="ivory"] .bubble.user{background:linear-gradient(135deg,#c4b5fd,#a78bfa)!important}
+body[data-theme="ivory"]{background:#f5f0e6!important}body[data-theme="ivory"] #chat{background:#f5f0e6!important}body[data-theme="forest"]{background:#071a12!important}body[data-theme="forest"] #chat{background:#071a12!important}body[data-theme="midnight"]{background:#020a1a!important}body[data-theme="midnight"] #chat{background:#020a1a!important}body[data-theme="champagne"]{background:#1a1408!important}body[data-theme="champagne"] #chat{background:#1a1408!important}
+  /* === FIX FINAL: HEADER GEDE + FULLSCREEN - PASTE 1X AJA === */
+body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
+.header{padding:calc(env(safe-area-inset-top) + 30px) 22px 26px !important;margin-top:8px !important}
+.header-top{gap:18px !important}
+.logo{width:96px !important;height:96px !important}
+.header h1{font-size:46px !important;line-height:.95 !important}
+.subtitle{font-size:19px !important}
+.online-status{font-size:15.5px !important}
+.online-status .online-dot{width:10px !important;height:10px !important}
+.greet{font-size:27px !important}
+.greet2{font-size:27px !important}
+.badge{padding:13px 18px !important;font-size:17px !important}
+.badge i{font-size:20px !important}
+.menu-btn{top:calc(env(safe-area-inset-top) + 30px) !important;width:50px !important;height:50px !important;font-size:24px !important}
+/* Biar pas udah ke-scroll / collapsed tetep gede, gak kekecilan */
+.header.collapsed h1{font-size:28px !important}
+.header.collapsed .logo{width:60px !important;height:60px !important}
+.header.collapsed .subtitle{font-size:15px !important}
+  /* === ICON BIAR GAK POLOS & GAK GELAP - PASTE 1X AJA === */
+.logo{
+  filter:brightness(1.35) saturate(1.5) contrast(1.1) !important;
+  box-shadow:0 0 0 3px rgba(255,255,255,.9), 0 0 28px rgba(192,132,252,1), 0 0 55px rgba(168,85,247,.9) !important;
+  border:2px solid rgba(255,255,255,.85) !important;
+}
+.mini-logo{
+  filter:brightness(1.35) saturate(1.4) !important;
+  box-shadow:0 0 0 3px #fff, 0 0 0 6px #a855f7, 0 0 22px rgba(192,132,252,1) !important;
+  color:#fff !important;
+  font-size:28px !important;
+  text-shadow:0 0 10px rgba(255,255,255,.9) !important;
+}
+.badge i, .chip i{
+  font-size:22px !important;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.8)) brightness(1.3) !important;
+  background:rgba(255,255,255,.15) !important;
+  width:32px !important;height:32px !important;
+  display:inline-flex !important;align-items:center !important;justify-content:center !important;
+  border-radius:50% !important;
+  }
+  /* === SUPER SMOOTH - PASTE 1X AJA === */
+/* 1. Matin animasi bayangan yang bikin berat */
+.header{animation:none !important;will-change:transform, padding !important}
+.header::before{animation:none !important}
+.twinkle{animation:none !important;opacity:.35 !important}
+.logo::before{animation:none !important}
+#chat::before,#chat::after{animation:none !important}
+
+/* 2. Semua transisi jadi halus, pake GPU */
+.header,.header-top,.logo,.header h1,.subtitle,.online-status,.greet,.greet2,.badge-row,.badge,.menu-btn,.bubble,.composer,.drawer-box{
+  transition:all .45s cubic-bezier(.22,1,.36,1) !important;
+  will-change:transform !important;
+  backface-visibility:hidden !important;
+  -webkit-backface-visibility:hidden !important;
+}
+
+/* 3. Scroll chat jadi licin, gak patah-patah */
+#chat{
+  scroll-behavior:smooth !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+  transform:translateZ(0) !important;
+  will-change:scroll-position !important;
+}
+#chat > *{transform:translateZ(0) !important}
+
+/* 4. Header mengecilnya pake transform, bukan padding doang */
+.header.collapsed{transform:translateZ(0) scale(.995) !important}
+/* === FIX HEADER MENGECIL BIAR GAK NUMPUK - PASTE 1X AJA === */
+.header.collapsed{padding:calc(env(safe-area-inset-top) + 10px) 16px 12px !important;overflow:hidden !important}
+.header.collapsed .header-top{gap:12px !important;align-items:center !important}
+.header.collapsed .logo{width:48px !important;height:48px !important;flex-shrink:0 !important}
+.header.collapsed h1{font-size:24px !important;line-height:1 !important;white-space:nowrap !important}
+.header.collapsed h1 br{display:none !important}
+.header.collapsed .subtitle{font-size:12px !important;margin-top:2px !important;white-space:nowrap !important}
+.header.collapsed .online-status{font-size:11px !important;margin-top:2px !important}
+.header.collapsed .greet,.header.collapsed .greet2,.header.collapsed .badge-row{
+  font-size:0 !important;margin:0 !important;padding:0 !important;
+  max-height:0 !important;opacity:0 !important;visibility:hidden !important;overflow:hidden !important;
+}
+.header.collapsed .menu-btn{top:calc(env(safe-area-inset-top) + 14px) !important;width:40px !important;height:40px !important;font-size:19px !important}
+/* === MICRO INTERACTION LITE - RAM 2GB AMAN - PASTE 1X AJA === */
+
+/* 1. BUTTON ANIMATION - Tombol mengecil dikit pas ditekan */
+.badge, .chip, .menu-btn, #sendBtn, .composer button, .drawer-box button{
+  transition:transform .15s ease, opacity .15s ease !important;
+  will-change:transform !important;
+}
+.badge:active, .chip:active, .menu-btn:active, #sendBtn:active, .composer button:active{
+  transform:scale(.92) !important;
+  opacity:.85 !important;
+}
+.badge:hover, .chip:hover{
+  transform:translateY(-2px) scale(1.02) !important;
+}
+
+/* 2. CARD HOVER - Bubble chat / kartu terangkat halus */
+.bubble{
+  transition:transform .25s cubic-bezier(.22,1,.36,1) !important;
+}
+.bubble:hover{
+  transform:translateY(-2px) !important;
+}
+
+/* 3. SKELETON SHIMMER - Ganti Loading... jadi kilau */
+.thinking{
+  background:linear-gradient(90deg, #2a0a4a 25%, #4c1d95 50%, #2a0a4a 75%) !important;
+  background-size:200% 100% !important;
+  animation:shimmerLite 1.2s infinite linear !important;
+  border-radius:12px !important;
+  width:140px !important;height:16px !important;
+  display:inline-block !important;
+}
+.thinking span{display:none !important}
+@keyframes shimmerLite{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+  }
+  /* === FITUR BARU + PREMIUM CLASS - GABUNG === */
+.ai-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ai-actions button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:inherit;font-size:12px;padding:7px 13px;border-radius:999px;cursor:pointer}
+body[data-theme="ivory"] .ai-actions button{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.15);color:#1a1a1a}
+.typing-cursor{display:inline-block;width:2px;height:14px;background:currentColor;animation:fahriBlink .7s infinite;margin-left:2px;vertical-align:-2px}
+@keyframes fahriBlink{0%,100%{opacity:1}50%{opacity:0}}
+.suggest-wrap{margin:12px 0 4px;align-self:stretch}
+.suggest-title{text-align:center;font-size:12px;opacity:.6;margin-bottom:8px}
+.suggest-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.suggest-card{padding:12px;border-radius:14px;font-size:12px;line-height:1.4;cursor:pointer;text-align:left;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15)}
+body[data-theme="ivory"] .suggest-card{background:#fff;border-color:#d8d0bc;color:#1a1a1a}
+/* === TEMA PREMIUM CLASS - KE-6 === */
+body[data-theme="premium"]{background:#0a0614 !important}
+body[data-theme="premium"] #chat{background:#0a0614 !important}
+body[data-theme="premium"] .bubble.ai{background:#1e1b4b !important;border:1px solid rgba(255,255,255,.12) !important;box-shadow:none !important}
+body[data-theme="premium"] .bubble.user{background:#2e2a7a !important;border:1px solid rgba(255,255,255,.15) !important;box-shadow:none !important}
+body[data-theme="premium"] .badge, body[data-theme="premium"] .chip{background:rgba(255,255,255,.08) !important;border:1px solid rgba(255,255,255,.15) !important;box-shadow:none !important}
+body[data-theme="premium"] .composer{background:rgba(255,255,255,.06) !important;border:1px solid rgba(255,255,255,.12) !important;box-shadow:none !important}
+body[data-theme="premium"] .ai-actions button{background:rgba(255,255,255,.08) !important}
+body[data-theme="premium"] .suggest-card{background:rgba(139,92,246,.35) !important;border:1px solid rgba(255,255,255,.15) !important;box-shadow:none !important}
+.theme-btn[data-theme="premium"] i{background:linear-gradient(135deg,#1e1b4b,#a855f7) !important}
+</style>
+</head>
+<body>
+<div id="loader"><div class="l-logo">F</div><div class="l-text">Fahri Assistant</div><div class="l-sub">AI cerdas buatan FahriAI</div><div class="l-bar"><i></i></div></div>
+<div class="header" id="header">
+<button class="menu-btn" id="btnMenu">☰</button>
+<div class="header-top"><div class="logo">F</div><div><h1>Fahri<br>Assistant</h1><p class="subtitle">AI cerdas buatan FahriAI</p><div class="online-status"><span class="online-dot"></span><span>Online - Siap Membantu</span></div></div></div>
+<p class="greet" id="greetText">Selamat siang, Mau aku bantu apa</p><p class="greet2">hari ini?</p>
+<div class="badge-row"><button class="badge" onclick="quick('Tanya')"><i>💬</i> Chat</button><button class="badge" onclick="quick('Bikin Gambar')"><i>🖼️</i> Gambar</button><button class="badge" onclick="quick('Edit Foto')"><i>✏️</i> Edit Foto</button></div>
+</div>
+<div class="authbar" id="authBar"><div class="status-pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Belum login</span></div><div class="login-btns" id="loginBtns"><button class="btn btn-google" id="btnGoogle">G Login Google</button><button class="btn btn-github" id="btnGithub">◉ Login Github</button></div><button class="btn btn-logout" id="btnLog" style="color:#d8b4fe;border-color:#a855f7">Log</button><button class="btn btn-logout hidden" id="btnLogout">Logout</button></div>
+<div id="chat"><div class="twinkle"></div><div class="date-pill" id="datePill">Hari ini</div><div class="welcome" id="welcome"><div class="bubble ai"><div class="ai-row"><div class="mini-logo">F</div><span>Halo! Aku Fahri Assistant buatan FahriAI. Mau tanya apa atau mau dibuatin gambar? Coba ketik buatkan gambar kucing di pantai.</span><button class="tts-btn" onclick="speakText(this,this.parentElement.textContent)">🔊</button></div></div><div class="chips"><button class="chip" onclick="quick('Tanya')"><i>💡</i>Tanya</button><button class="chip" onclick="quick('Bikin Gambar')"><i>✨</i>Bikin Gambar</button><button class="chip" onclick="quick('Gambar Kucing')"><i>🐱</i>Gambar Kucing</button><button class="chip" onclick="quick('Siapa kamu?')"><i>👤</i>Siapa kamu?</button></div></div></div>
+<div class="composer"><input id="input" placeholder="Tanya apa aja ke Fahri..." autocomplete="off"><button id="sendBtn">➤</button></div>
+<div class="drawer" id="drawer"><div class="drawer-box"><div class="drawer-profile"><b id="drawerName">Pengguna</b><p id="drawerEmail">Belum login</p></div><button class="drawer-item" id="btnClearChat">🧹 Bersihkan Chat</button><button class="drawer-item" id="btnProfile">👤 Profil Pengguna</button><div class="theme-section"><div class="theme-title">🎨 TEMA</div><div class="theme-grid"><button class="theme-btn active" data-theme="original" onclick="setTheme('original')"><i></i>Fahri Original</button><button class="theme-btn" data-theme="midnight" onclick="setTheme('midnight')"><i></i>Midnight</button><button class="theme-btn" data-theme="ivory" onclick="setTheme('ivory')"><i></i>Ivory Clean</button><button class="theme-btn" data-theme="champagne" onclick="setTheme('champagne')"><i></i>Champagne</button><button class="theme-btn" data-theme="forest" onclick="setTheme('forest')"><i></i>Forest Calm</button></div></div><button class="drawer-item" id="btnCloseDrawer">✖ Tutup</button><div class="drawer-ver">Fahri Assistant v1.3.0<br>buatan FahriAI</div></div></div>
+<div class="confirm" id="confirmClear"><div class="confirm-box"><div class="c-icon">🧹</div><b>Hapus Semua Chat?</b><p>Semua riwayat chat akan dihapus. Ini tidak bisa dibatalkan.</p><div class="confirm-row"><button class="confirm-btn cancel" id="btnCancelClear">Batal</button><button class="confirm-btn delete" id="btnYesClear">Ya, Hapus</button></div></div></div>
+<div class="profile" id="profilePopup"><div class="profile-box"><div class="profile-avatar" id="profileAvatar">F</div><b id="profileName">Pengguna</b><p class="p-email" id="profileEmail">Belum login</p><div class="profile-row"><span>Login dengan</span><b id="profileProvider" style="font-size:14px">-</b></div><div class="profile-row"><span>Status</span><b id="profileStatus" style="font-size:14px">Belum login</b></div><button class="profile-btn" id="btnCloseProfile">Tutup</button></div></div>
+<div id="logPanel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:18px">Log Chat</b><button id="btnCloseLog" style="background:#a855f7;border:0;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700">Tutup</button></div><div class="log-box" id="logBox">Belum ada log</div><button id="btnClearLog" style="margin-top:12px;background:transparent;border:1px solid #ff6b81;color:#ff6b81;padding:10px;border-radius:999px">Hapus Semua Log</button></div>
+<script>
+const firebaseConfig={apiKey:"AIzaSyC_enCjCWHSq4GTFHABA6kcCgjWeww1hks",authDomain:"fahri-assistant.firebaseapp.com",projectId:"fahri-assistant"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const chatEl=document.getElementById('chat');
+const inputEl=document.getElementById('input');
+const headerEl=document.getElementById('header');
+const welcomeEl=document.getElementById('welcome');
+window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loader').classList.add('hide')},900)});
+setTimeout(()=>{document.getElementById('loader').classList.add('hide')},2500);
+try{const d=new Date();const hari=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];const bln=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][d.getMonth()];document.getElementById('datePill').textContent='Hari ini - '+hari+', '+d.getDate()+' '+bln;}catch(e){}
+function updateGreeting(){const jam=new Date().getHours();let sapa='Selamat malam,';let icon='🌙';if(jam>=4&&jam<11){sapa='Selamat pagi,';icon='☀️'}else if(jam>=11&&jam<15){sapa='Selamat siang,';icon='🌤️'}else if(jam>=15&&jam<18){sapa='Selamat sore,';icon='🌇'}const el=document.getElementById('greetText');if(el)el.textContent=icon+' '+sapa+' Mau aku bantu apa';}
+updateGreeting();setInterval(updateGreeting,60000);
+let history=[];try{history=JSON.parse(localStorage.getItem('fahri_history')||'[]')}catch(e){history=[]}
+function saveHistory(){try{localStorage.setItem('fahri_history',JSON.stringify(history))}catch(e){}}
+function saveLog(role,text){try{const logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');logs.push({role,text,time:new Date().toISOString()});localStorage.setItem('fahri_log',JSON.stringify(logs.slice(-200)))}catch(e){}}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderMarkdown(t){let text=esc(t);const lines=text.split('\n');let out='',i=0;while(i<lines.length){if(lines[i].includes('|')&&lines[i+1]&&lines[i+1].includes('---')){const headers=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';i+=2;while(i<lines.length&&lines[i].includes('|')){const cells=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';i++}out+='</table>';continue}out+=lines[i]+'\n';i++}text=out;text=text.replace(/^###\s*(.+)$/gm,'<h3>$1</h3>');text=text.replace(/^---$/gm,'<hr>');text=text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');return text.replace(/\n/g,'<br>')}
+/* === TTS 2: FUNGSI NGOMONG === */
+let currentUtter=null;
+async function speakText(btn, rawText){
+  try{
+    const text = (rawText || "").toString().replace(/[*#_`]/g,"").trim();
+    if(!text) return;
+    // Kalau lagi ngomong, berhentiin dulu
+    if(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech){
+      try{ await window.Capacitor.Plugins.TextToSpeech.stop(); }catch(e){}
+      await window.Capacitor.Plugins.TextToSpeech.speak({ text: text, lang: 'id-ID', rate: 1.0, pitch: 1.0, volume: 1.0 });
+      return;
+    }
+    // Kalau di web / Chrome, pake cara lama
+    if(window.speechSynthesis.speaking){ window.speechSynthesis.cancel(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID'; u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+    window.speechSynthesis.speak(u);
+  }catch(e){ console.log("TTS error", e); }
+  }
+/* === TTS 3: addBubble UDAH ADA TOMBOL 🔊 === */
+function addBubble(text,who,isHtml){const d=document.createElement('div');d.className='bubble '+who;if(isHtml)d.innerHTML=text;else d.textContent=text;if(who==='ai'){const b=document.createElement('button');b.className='tts-btn';b.textContent='🔊';b.onclick=function(){speakText(b,text)};d.appendChild(b)}if(welcomeEl)welcomeEl.style.display='none';chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;return d}
+history.forEach(m=>{if(m.role==='user')addBubble(m.content,'user');else addBubble(renderMarkdown(m.content),'ai',true)});
+if(history.length>0&&welcomeEl)welcomeEl.style.display='none';
+function quick(t){inputEl.value=t;send()}
+async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'user');inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const low=t.toLowerCase();if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=512&height=512&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading=addBubble('Fahri lagi mikir...','ai');try{const r=await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});const d=await r.json();const reply=d.reply||'Maaf, coba lagi ya.';loading.innerHTML=renderMarkdown(reply);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,reply)};loading.appendChild(bb);history.push({role:'assistant',content:reply});saveHistory();saveLog('assistant',reply)}catch(e){loading.textContent='Maaf, server lagi sibuk, coba lagi ya.'}}
+document.getElementById('sendBtn').onclick=send;
+inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
+chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
+function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
+document.getElementById('btnLog').onclick=openLog;
+document.getElementById('btnCloseLog').onclick=function(){document.getElementById('logPanel').classList.remove('open')};
+document.getElementById('btnClearLog').onclick=function(){localStorage.removeItem('fahri_log');document.getElementById('logBox').textContent='Log sudah dihapus'};
+document.getElementById('btnMenu').onclick=function(e){e.stopPropagation();document.getElementById('drawer').classList.add('open');try{var u=auth.currentUser;document.getElementById('drawerName').textContent=u?(u.displayName||'Pengguna'):'Pengguna';document.getElementById('drawerEmail').textContent=u?(u.email||'Login dengan Google / Github'):'Belum login';}catch(e){}};
+document.getElementById('drawer').onclick=function(e){if(e.target.id==='drawer')document.getElementById('drawer').classList.remove('open')};
+document.getElementById('btnCloseDrawer').onclick=function(){document.getElementById('drawer').classList.remove('open')};
+document.getElementById('btnClearChat').onclick=function(){document.getElementById('drawer').classList.remove('open');document.getElementById('confirmClear').classList.add('open')};
+document.getElementById('btnCancelClear').onclick=function(){document.getElementById('confirmClear').classList.remove('open')};
+document.getElementById('confirmClear').onclick=function(e){if(e.target.id==='confirmClear')document.getElementById('confirmClear').classList.remove('open')};
+document.getElementById('btnYesClear').onclick=function(){history=[];localStorage.removeItem('fahri_history');var bubbles=chatEl.querySelectorAll('.bubble');bubbles.forEach(function(b){if(!b.closest('#welcome'))b.remove()});if(welcomeEl)welcomeEl.style.display='flex';document.getElementById('confirmClear').classList.remove('open')};
+document.getElementById('btnProfile').onclick=function(){document.getElementById('drawer').classList.remove('open');try{var u=auth.currentUser;if(!u){document.getElementById('profileAvatar').textContent='?';document.getElementById('profileName').textContent='Belum Login';document.getElementById('profileEmail').textContent='Login dulu lewat tombol Google / Github di atas.';document.getElementById('profileProvider').textContent='-';document.getElementById('profileStatus').textContent='Belum login';}else{var nm=u.displayName||'Pengguna';document.getElementById('profileAvatar').textContent=nm.charAt(0).toUpperCase();document.getElementById('profileName').textContent=nm;document.getElementById('profileEmail').textContent=u.email||'-';document.getElementById('profileProvider').textContent=u.providerData[0]?u.providerData[0].providerId:'-';document.getElementById('profileStatus').textContent='Login - Aktif';}}catch(e){document.getElementById('profileName').textContent='Belum Login';document.getElementById('profileEmail').textContent='Belum login';}document.getElementById('profilePopup').classList.add('open')};
+document.getElementById('btnCloseProfile').onclick=function(){document.getElementById('profilePopup').classList.remove('open')};
+document.getElementById('profilePopup').onclick=function(e){if(e.target.id==='profilePopup')document.getElementById('profilePopup').classList.remove('open')};
+function setTheme(t){if(t==='original'){document.body.removeAttribute('data-theme')}else{document.body.setAttribute('data-theme',t)}try{localStorage.setItem('fahri_theme',t)}catch(e){}document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-theme')===t)})}
+try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(savedTheme)}catch(e){}
+/* === FITUR BARU v3 + TOMBOL PREMIUM OTOMATIS === */
+(function(){
+  if(window.__fahriFiturV2) return; window.__fahriFiturV2 = true;
+
+  // --- 1. BUAT TOMBOL PREMIUM OTOMATIS, GAK USAH CARI FOREST CALM ---
+  function buatTombolPremium(){
+    var grid = document.querySelector('.theme-grid');
+    if(!grid) return;
+    if(grid.querySelector('[data-theme="premium"]')) return;
+    var b = document.createElement('button');
+    b.className = 'theme-btn';
+    b.setAttribute('data-theme','premium');
+    b.innerHTML = '<i></i>✨ Premium Class';
+    b.onclick = function(){ setTheme('premium'); };
+    grid.appendChild(b);
+  }
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', buatTombolPremium); }
+  else { buatTombolPremium(); }
+
+  // --- 2. FITUR COPY / ULANG / SARAN / KETIK ---
+  var lastUserText = '';
+  function addCopyBtn(bubble, getText){
+    if(!bubble || bubble.querySelector('.ai-actions')) return;
+    var wrap = document.createElement('div'); wrap.className = 'ai-actions';
+    var b1 = document.createElement('button'); b1.textContent = '📋 Copy';
+    b1.onclick = function(){ try{ navigator.clipboard.writeText(getText()); b1.textContent='✅ Tersalin!'; setTimeout(function(){ b1.textContent='📋 Copy'; },1500); }catch(e){} };
+    var b2 = document.createElement('button'); b2.textContent = '🔄 Buat Ulang';
+    b2.onclick = function(){ if(!lastUserText) return; bubble.remove(); var s = document.querySelector('.suggest-wrap'); if(s) s.remove(); inputEl.value = lastUserText; send(); };
+    wrap.appendChild(b1); wrap.appendChild(b2); bubble.appendChild(wrap);
+  }
+  function addSuggest(afterEl){
+    var old = document.querySelector('.suggest-wrap'); if(old) old.remove();
+    var wrap = document.createElement('div'); wrap.className = 'suggest-wrap';
+    var title = document.createElement('div'); title.className = 'suggest-title'; title.textContent = 'Saran pertanyaan:';
+    var grid = document.createElement('div'); grid.className = 'suggest-grid';
+    ['✨ Jelaskan lebih lanjut','🔍 Kasih contohnya','❓ Apa langkah selanjutnya?'].forEach(function(t){
+      var c = document.createElement('div'); c.className = 'suggest-card'; c.textContent = t;
+      c.onclick = function(){ inputEl.value = t.replace(/✨|🔍|❓/g,'').trim(); inputEl.focus(); };
+      grid.appendChild(c);
+    });
+    wrap.appendChild(title); wrap.appendChild(grid); afterEl.after(wrap);
+  }
+  function typeInto(bubble, html, plain, onDone){
+    var temp = document.createElement('div'); temp.innerHTML = html;
+    var text = temp.textContent || plain || '';
+    bubble.innerHTML = ''; var span = document.createElement('span');
+    var cur = document.createElement('span'); cur.className = 'typing-cursor';
+    bubble.appendChild(span); bubble.appendChild(cur);
+    var i = 0;
+    var iv = setInterval(function(){
+      if(i < text.length){ span.textContent += text[i]; i++; chatEl.scrollTop = chatEl.scrollHeight; }
+      else { clearInterval(iv); cur.remove(); bubble.innerHTML = html; onDone && onDone(); }
+    }, 8);
+  }
+  window.send = async function(){
+    var t = inputEl.value.trim(); if(!t) return;
+    lastUserText = t;
+    addBubble(t,'user'); inputEl.value='';
+    history.push({role:'user',content:t}); saveHistory(); saveLog('user',t);
+    var low = t.toLowerCase();
+    if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){
+      var loading = addBubble('Fahri lagi gambar...','ai');
+      var prompt = encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);
+      var img = document.createElement('img'); img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=512&height=512&seed='+Date.now();
+      img.style.width='100%'; img.style.borderRadius='12px'; img.style.marginTop='8px';
+      loading.innerHTML='Ini gambarnya:'; loading.appendChild(img);
+      var bb=document.createElement('button'); bb.className='tts-btn'; bb.textContent='🔊';
+      bb.onclick=function(){ speakText(bb,'Ini gambarnya') }; loading.appendChild(bb);
+      history.push({role:'assistant',content:'Ini gambarnya:'}); saveHistory(); return;
+    }
+    var loading2 = addBubble('Fahri lagi mikir...','ai');
+    try{
+      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});
+      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.';
+      var html = renderMarkdown(reply);
+      typeInto(loading2, html, reply, function(){
+        var b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊';
+        b.onclick=function(){ speakText(b,reply) }; loading2.appendChild(b);
+        addCopyBtn(loading2, function(){ return reply; });
+        addSuggest(loading2);
+      });
+      history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
+    }catch(e){ loading2.textContent='Maaf, server lagi sibuk, coba lagi ya.'; }
+  };
+  document.getElementById('sendBtn').onclick = send;
+})();
+/* === BERSIHIN SISA PASTE LAMA - PASTE SEBELUM V4 === */
+(function(){
+  // Hapus semua flag lama biar gak dobel
+  window.__fahriBersihFinal = true;
+  window.__fahriFixV2 = true;
+  window.__fahriV3 = true;
+  window.__fahriV31 = true;
+  window.__fahriV32 = true;
+  // Hapus semua menu / bar lama yang nyasar
+  document.querySelectorAll('.f-menu-kanan, #f-mode-bar, #f-head-btns, #f-top-widget, #f-quick-bar, .f-bubble-tools').forEach(function(e){ e.remove(); });
+})();
+/* === FINAL V4 - BAGIAN 1/2 === */
+(function(){
+if(window.__fahriV4_1) return; window.__fahriV4_1 = true;
+document.querySelectorAll('.f-menu-kanan').forEach(function(m){ m.remove(); });
+document.querySelectorAll('#f-head-btns, #f-top-widget').forEach(function(e){ e.remove(); });
+
+window.__f_getDrawer = function(){
+  var all=document.querySelectorAll('div, aside');
+  for(var i=0;i<all.length;i++){
+    if((all[i].textContent||'').includes('Bersihkan Chat') && all[i].textContent.length<2500){
+      var p=all[i]; for(var j=0;j<4;j++){ if(p.parentElement) p=p.parentElement; }
+      if(p.tagName==='BODY') p=all[i]; return p;
+    }
+  } return null;
+};
+window.__f_getInp = function(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]')||document.querySelector('textarea')||document.querySelector('input[type="text"]'); };
+window.__f_getChat = function(){ return document.querySelector('#chat')||document.querySelector('[class*="chat"]'); };
+window.__f_bicara = function(t){ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t.slice(0,600)); u.lang='id-ID'; window.speechSynthesis.speak(u); };
+window.__f_isTrans = function(){ return localStorage.getItem('fahri_auto_trans')!=='0'; };
+window.__f_saveArr = function(k,v){ var a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(v); localStorage.setItem(k,JSON.stringify(a)); };
+
+var css=document.createElement('style');
+css.textContent=`
+  .f-menu-kanan{ padding:0 16px 12px !important; display:block !important; }
+  .f-menu-kanan .f-label2{ font-size:11px; letter-spacing:1px; opacity:.5; font-weight:800; padding:14px 4px 6px; }
+  .f-menu-kanan .f-item{ display:flex !important; gap:12px !important; align-items:center !important; width:100% !important; padding:12px 4px !important; border:none !important; background:transparent !important; color:inherit !important; font-size:15px !important; font-weight:600 !important; text-align:left !important; cursor:pointer !important; }
+  .f-menu-kanan .f-item span{ font-size:18px !important; width:28px !important; text-align:center !important; }
+  .f-menu-kanan .f-on{ color:#22c55e !important; }
+  .f-mini-btn{ width:42px !important; height:42px !important; min-width:42px !important; border-radius:50% !important; border:none !important; background:rgba(255,255,255,.15) !important; font-size:19px !important; cursor:pointer !important; color:inherit !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+  .f-head-btn{ width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,.12); font-size:16px; cursor:pointer; color:inherit; display:flex; align-items:center; justify-content:center; }
+  .f-bubble-tools{ display:flex !important; gap:6px !important; margin-top:8px !important; padding-top:6px !important; border-top:1px solid rgba(255,255,255,.08) !important; align-items:center !important; flex-wrap:wrap !important; }
+  .f-pin, .f-speak, .f-mark{ font-size:11px !important; padding:5px 9px !important; border-radius:99px !important; border:1px solid rgba(255,255,255,.18) !important; background:rgba(255,255,255,.07) !important; color:inherit !important; cursor:pointer !important; line-height:1 !important; white-space:nowrap !important; width:auto !important; height:auto !important; display:inline-flex !important; align-items:center !important; gap:4px !important; }
+  .f-search-bar{ display:none; padding:10px; gap:8px; }
+  .f-search-bar.show{ display:flex; }
+  .f-search-bar input{ flex:1; padding:10px; border-radius:10px; border:1px solid #333; background:#222; color:#fff; }
+  .f-vision-bar{ display:flex; gap:8px; flex-wrap:wrap; padding:8px 10px; background:rgba(139,92,246,.08); border-top:1px solid rgba(139,92,246,.2); }
+  .f-vision-chip{ padding:8px 12px; border-radius:99px; border:1px solid #8b5cf6; background:#fff; color:#6d28d9; font-size:12.5px; font-weight:700; cursor:pointer; }
+  #f-mode-bar{ display:flex; gap:6px; align-items:center; padding:8px 10px; flex-wrap:wrap; }
+  .f-mode{ padding:7px 12px; border-radius:99px; border:1px solid #444; background:transparent; color:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+  .f-mode.on{ background:#8b5cf6; border-color:#8b5cf6; color:#fff; }
+  .f-fix{ padding:7px 12px; border-radius:99px; border:1px solid #22c55e; background:rgba(34,197,94,.12); color:#22c55e; font-size:12px; font-weight:700; cursor:pointer; margin-left:auto; }
+  #f-top-widget{ display:flex; gap:8px; padding:10px; flex-wrap:wrap; }
+  .f-w{ flex:1; min-width:140px; padding:10px 12px; border-radius:14px; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.25); font-size:12px; line-height:1.5; }
+  #f-quick-bar{ display:flex; gap:6px; padding:0 10px 8px; flex-wrap:wrap; }
+  .f-quick{ padding:8px 12px; border-radius:99px; border:1px solid #444; background:rgba(255,255,255,.06); color:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+  .f-modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:99999; display:none; align-items:flex-end; justify-content:center; }
+  .f-modal.open{ display:flex; }
+  .f-box{ background:#1a1a22; width:100%; max-width:480px; border-radius:22px 22px 0 0; padding:20px; color:#fff; max-height:85vh; overflow-y:auto; }
+  .f-box input{ width:100%; padding:12px; border-radius:12px; border:1px solid #333; background:#222; color:#fff; margin:10px 0; box-sizing:border-box; }
+  .f-box button{ width:100%; padding:12px; border-radius:12px; border:none; background:#8b5cf6; color:#fff; font-weight:800; margin-top:8px; }
+  .f-todo-item{ display:flex; gap:8px; align-items:center; padding:10px; background:#222; border-radius:10px; margin:6px 0; font-size:14px; }
+  .f-todo-item.done{ opacity:.5; text-decoration:line-through; }
+  .f-card{ background:#222; border-radius:14px; padding:16px; margin:10px 0; text-align:center; font-size:16px; min-height:90px; display:flex; align-items:center; justify-content:center; }
+  body.f-light{ background:#f2f2f7 !important; color:#111 !important; }
+`;
+document.head.appendChild(css);
+
+function buildDrawer(){
+  var drawer=window.__f_getDrawer(); if(!drawer) return; if(drawer.querySelector('.f-menu-kanan')) return; if(!(drawer.textContent||'').includes('Bersihkan Chat')) return;
+  var menu=document.createElement('div'); menu.className='f-menu-kanan';
+  var autoLabel=window.__f_isTrans()?'Auto Translate: ON':'Auto Translate: OFF';
+  menu.innerHTML='<div class="f-label2">PENGATURAN</div>'
+    +'<button class="f-item" data-a="profil"><span>👤</span>Profil Saya</button>'
+    +'<button class="f-item" data-a="gelap"><span>🌙</span>Mode Gelap / Terang</button>'
+    +'<button class="f-item '+(window.__f_isTrans()?'f-on':'')+'" data-a="trans"><span>🌐</span><span style="width:auto !important" id="f-trans-label">'+autoLabel+'</span></button>'
+    +'<button class="f-item" data-a="bookmark"><span>🔖</span>Bookmark / Favorit</button>'
+    +'<button class="f-item" data-a="todo"><span>✅</span>To-Do / Tugas</button>'
+    +'<button class="f-item" data-a="ingat"><span>⏰</span>Pengingat Belajar</button>'
+    +'<button class="f-item" data-a="bahasa"><span>🌐</span>Bahasa</button>'
+    +'<button class="f-item" data-a="bagikan"><span>↗️</span>Bagikan Aplikasi</button>'
+    +'<button class="f-item" data-a="bantuan"><span>❓</span>Bantuan / Cara Pakai</button>'
+    +'<button class="f-item" data-a="tentang"><span>ℹ️</span>Tentang Aplikasi</button>'
+    +'<button class="f-item" data-a="hapus"><span>🗑️</span>Hapus Semua Chat</button>';
+  var tutup=Array.from(drawer.querySelectorAll('button, div')).find(function(el){ return el.textContent.trim()==='✕ Tutup'||el.textContent.trim()==='Tutup'; });
+  if(tutup&&tutup.parentElement) tutup.parentElement.parentElement.insertBefore(menu,tutup.parentElement); else drawer.appendChild(menu);
+  menu.addEventListener('click',function(e){
+    var b=e.target.closest('[data-a]'); if(!b) return; var a=b.getAttribute('data-a');
+    if(a==='profil' && window.__f_openProfil) window.__f_openProfil();
+    if(a==='gelap'){ document.body.classList.toggle('f-light'); localStorage.setItem('fahri_light',document.body.classList.contains('f-light')?'1':'0'); }
+    if(a==='trans'){ var on=!window.__f_isTrans(); localStorage.setItem('fahri_auto_trans',on?'1':'0'); var lab=document.getElementById('f-trans-label'); if(lab) lab.textContent='Auto Translate: '+(on?'ON':'OFF'); b.classList.toggle('f-on',on); alert(on?'✅ Auto Translate ON':'Auto Translate OFF'); }
+    if(a==='bookmark'){ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); alert(arr.length?'🔖 BOOKMARK:\n\n'+arr.slice(-5).join('\n---\n'):'Belum ada bookmark. Pencet 🔖 di bawah tiap jawaban AI.'); }
+    if(a==='todo' && window.__f_openTodo) window.__f_openTodo();
+    if(a==='ingat'){ var jam=prompt('Pengingat Belajar\nMau diingetin jam berapa? (contoh: 19:00)'); if(jam){ localStorage.setItem('fahri_inget',jam); alert('✅ Pengingat diset jam '+jam); } }
+    if(a==='bahasa'){ var x=prompt('1 = Indonesia\n2 = English\n3 = Jawa'); if(x==='2') alert('English aktif!'); else if(x==='3') alert('Jawa aktif!'); else alert('Indonesia aktif!'); }
+    if(a==='bagikan'){ if(navigator.share) navigator.share({title:'Fahri Assistant', url:location.href}); else alert('Copy link: '+location.href); }
+    if(a==='bantuan') alert('CARA PAKAI:\n1. Ketik untuk chat\n2. 📎 Kirim foto / PDF untuk dirangkum\n3. 🎤 Ngomong jadi teks\n4. 🃏 Flashcards buat hafalan\n5. 📄 Template Cepat buat surat / caption\n6. ✅ To-Do buat tugas\n7. 🔖 Bookmark jawaban bagus\n8. 🌐 Auto Translate di garis 3');
+    if(a==='tentang') alert('Fahri Assistant v1.4.0\n\nAsisten AI untuk belajar, kerja, dan sehari-hari.\nFlashcards, Rangkum PDF, Template, To-Do, Cuaca & Jadwal Sholat, Bookmark, Auto Translate.\n\nDibuat untuk umum.');
+    if(a==='hapus'){ if(confirm('Yakin hapus SEMUA chat?')){ var ch=window.__f_getChat(); if(ch) ch.innerHTML=''; } }
+  });
+  if(localStorage.getItem('fahri_light')==='1') document.body.classList.add('f-light');
+}
+function buildHeader(){
+  if(document.getElementById('f-head-btns')) return;
+  var heads=document.querySelectorAll('header, div'); var head=null;
+  for(var i=0;i<heads.length;i++){ var t=heads[i].textContent||''; if(t.includes('Fahri Assistant')||t.includes('Fahri AI')){ if(t.length<300){ head=heads[i]; break; } } }
+  if(!head) head=document.querySelector('header')||document.body;
+  var wrap=document.createElement('div'); wrap.id='f-head-btns'; wrap.style.cssText='display:flex;gap:8px;align-items:center;margin-left:auto';
+  wrap.innerHTML='<button class="f-head-btn" id="f-h-cari" title="Cari Chat">🔍</button><button class="f-head-btn" id="f-h-simpan" title="Chat Tersimpan">📌</button><button class="f-head-btn" id="f-h-export" title="Export Chat">📤</button>';
+  head.appendChild(wrap); head.style.display='flex'; head.style.alignItems='center';
+  document.getElementById('f-h-cari').onclick=function(){ var bar=document.getElementById('f-search'); if(!bar){ bar=document.createElement('div'); bar.id='f-search'; bar.className='f-search-bar'; bar.innerHTML='<input id="f-q" placeholder="Cari chat..."><button id="f-x" class="f-mini-btn">✕</button>'; var chat=window.__f_getChat()||document.body; chat.parentNode.insertBefore(bar,chat); document.getElementById('f-x').onclick=function(){bar.classList.remove('show');}; document.getElementById('f-q').oninput=function(){var q=this.value.toLowerCase(); document.querySelectorAll('.bubble,.message,.msg').forEach(function(el){el.style.display=!q||el.textContent.toLowerCase().includes(q)?'':'none';});}; } bar.classList.toggle('show'); };
+  document.getElementById('f-h-simpan').onclick=function(){ var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); alert(arr.length?'📌 TERSIMPAN:\n\n'+arr.slice(-5).join('\n---\n'):'Belum ada chat disimpan.'); };
+  document.getElementById('f-h-export').onclick=function(){ var bubbles=document.querySelectorAll('.bubble,.message,.msg'); var teks='Fahri Assistant - Export Chat\n'+new Date().toLocaleString()+'\n\n'; bubbles.forEach(function(b){ if(b.textContent.trim()) teks+=b.textContent.trim()+'\n---\n'; }); if(bubbles.length===0) return alert('Belum ada chat untuk di-export.'); if(navigator.share){ navigator.share({title:'Export Chat Fahri Assistant', text:teks}); } else { navigator.clipboard.writeText(teks).then(function(){ alert('✅ Chat disalin! Tinggal paste ke WhatsApp.'); }); } };
+}
+function buildWidget(){
+  if(document.getElementById('f-top-widget')) return; var chat=window.__f_getChat(); if(!chat) return;
+  var w=document.createElement('div'); w.id='f-top-widget';
+  w.innerHTML='<div class="f-w" id="f-cuaca">🌦️ Memuat cuaca Tahuna...</div><div class="f-w" id="f-sholat">🕌 Memuat jadwal sholat...</div>';
+  chat.parentNode.insertBefore(w,chat);
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){ var temp=Math.round(d.current.temperature_2m); var kode=d.current.weather_code; var desc=kode===0?'Cerah ☀️':kode<4?'Berawan ⛅':kode<60?'Hujan Ringan 🌧️':'Hujan 🌧️'; document.getElementById('f-cuaca').innerHTML='🌦️ <b>Tahuna</b><br>'+temp+'°C • '+desc; }).catch(function(){ document.getElementById('f-cuaca').innerHTML='🌦️ <b>Tahuna</b><br>Cek cuaca di luar app'; });
+  var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+  fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){ var t=d.data.timings; document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5); }).catch(function(){ document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat</b><br>Subuh 04:50 • Dzuhur 11:50 • Ashar 15:10 • Maghrib 18:00 • Isya 19:10'; });
+}
+window.__f_init1 = function(){ buildDrawer(); buildHeader(); buildWidget(); };
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.__f_init1); else window.__f_init1();
+setTimeout(window.__f_init1,1000); setTimeout(window.__f_init1,2500);
+})();
+/* === FINAL V4 - BAGIAN 2/2 === */
+(function(){
+if(window.__fahriV4_2) return; window.__fahriV4_2 = true;
+document.querySelectorAll('#f-mode-bar, #f-quick-bar').forEach(function(e){ e.remove(); });
+function getInp(){ return window.__f_getInp ? window.__f_getInp() : document.querySelector('textarea')||document.querySelector('input[type="text"]'); }
+function getChat(){ return window.__f_getChat ? window.__f_getChat() : document.body; }
+function showModal(id, html){
+  var m=document.getElementById(id); if(!m){ m=document.createElement('div'); m.id=id; m.className='f-modal'; document.body.appendChild(m); m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('open'); }); }
+  m.innerHTML='<div class="f-box">'+html+'</div>'; m.classList.add('open');
+  var t=Array.from(document.querySelectorAll('button')).find(function(b){ return b.textContent.trim().includes('Tutup'); }); if(t) t.click();
+  return m;
+}
+window.__f_openProfil = function(){
+  showModal('f-modal-profil','<h3 style="margin:0">👤 Profil Saya</h3><p style="font-size:12px;opacity:.6">Nama ini tampil di akun kamu, bukan nama aplikasi.</p><input id="f-nama" placeholder="Nama kamu..."><input type="file" id="f-foto" accept="image/*"><button id="f-simpan">Simpan Profil</button><button style="background:#333" id="f-p-tutup">Tutup</button>');
+  var m=document.getElementById('f-modal-profil'); document.getElementById('f-nama').value=localStorage.getItem('fahri_nama')||'';
+  document.getElementById('f-p-tutup').onclick=function(){ m.classList.remove('open'); };
+  document.getElementById('f-simpan').onclick=function(){ var n=document.getElementById('f-nama').value.trim(); if(n) localStorage.setItem('fahri_nama',n); var f=document.getElementById('f-foto').files[0]; if(f){ var r=new FileReader(); r.onload=function(){ localStorage.setItem('fahri_foto',r.result); location.reload(); }; r.readAsDataURL(f); } else location.reload(); };
+};
+window.__f_openTodo = function(){
+  var todos=JSON.parse(localStorage.getItem('fahri_todo')||'[]');
+  function renderTodo(){
+    var list=todos.map(function(t,i){ return '<div class="f-todo-item '+(t.done?'done':'')+'"><input type="checkbox" '+(t.done?'checked':'')+' data-i="'+i+'"><span style="flex:1">'+t.text+'</span><button data-del="'+i+'" style="width:32px;background:#ef4444;padding:6px">🗑️</button></div>'; }).join('')||'<p style="opacity:.6;font-size:13px">Belum ada tugas. Tambah di bawah.</p>';
+    showModal('f-modal-todo','<h3 style="margin:0">✅ To-Do / Tugas</h3>'+list+'<input id="f-todo-inp" placeholder="Tugas baru... (contoh: Kerjakan PR Matematika)"><button id="f-todo-add" style="background:#22c55e">+ Tambah Tugas</button><button style="background:#333" id="f-todo-tutup">Tutup</button>');
+    var m=document.getElementById('f-modal-todo');
+    m.querySelectorAll('[data-i]').forEach(function(c){ c.onchange=function(){ todos[parseInt(c.getAttribute('data-i'))].done=c.checked; localStorage.setItem('fahri_todo',JSON.stringify(todos)); renderTodo(); }; });
+    m.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ todos.splice(parseInt(b.getAttribute('data-del')),1); localStorage.setItem('fahri_todo',JSON.stringify(todos)); renderTodo(); }; });
+    document.getElementById('f-todo-add').onclick=function(){ var v=document.getElementById('f-todo-inp').value.trim(); if(!v) return; todos.push({text:v,done:false}); localStorage.setItem('fahri_todo',JSON.stringify(todos)); renderTodo(); };
+    document.getElementById('f-todo-tutup').onclick=function(){ m.classList.remove('open'); };
+  } renderTodo();
+};
+function openFlash(){
+  var cards=JSON.parse(localStorage.getItem('fahri_flash')||'[]');
+  if(cards.length===0){
+    var tema=prompt('Flashcards buat belajar apa? (contoh: Inggris, Matematika, Sejarah)');
+    if(!tema) return;
+    var inp=getInp(); if(inp){ inp.value='Buatkan 5 flashcards untuk belajar '+tema+', format: Q: ... | A: ...'; inp.focus(); }
+    alert('✅ Aku siap bikinin flashcards. Pencet kirim, nanti jawabannya bisa disimpan jadi kartu.');
+    localStorage.setItem('fahri_flash', JSON.stringify([{q:'Contoh: Apa ibu kota Indonesia?', a:'Jakarta'},{q:'2 + 2 = ?', a:'4'}]));
+    cards=JSON.parse(localStorage.getItem('fahri_flash')||'[]');
+  }
+  var idx=0; function render(){
+    var c=cards[idx]||{q:'-',a:'-'};
+    showModal('f-modal-flash','<h3 style="margin:0">🃏 Flashcards ('+(idx+1)+'/'+cards.length+')</h3><div class="f-card" id="f-card-txt">'+c.q+'</div><button id="f-flip">🔄 Balik Kartu</button><div style="display:flex;gap:8px"><button id="f-prev" style="background:#333">⬅️ Sebelumnya</button><button id="f-next" style="background:#333">Berikutnya ➡️</button></div><button id="f-flash-tambah" style="background:#22c55e">+ Tambah Kartu</button><button id="f-flash-tutup" style="background:#333">Tutup</button>');
+    var flipped=false;
+    document.getElementById('f-flip').onclick=function(){ flipped=!flipped; document.getElementById('f-card-txt').textContent=flipped?c.a:c.q; };
+    document.getElementById('f-prev').onclick=function(){ idx=(idx-1+cards.length)%cards.length; render(); };
+    document.getElementById('f-next').onclick=function(){ idx=(idx+1)%cards.length; render(); };
+    document.getElementById('f-flash-tutup').onclick=function(){ document.getElementById('f-modal-flash').classList.remove('open'); };
+    document.getElementById('f-flash-tambah').onclick=function(){ var q=prompt('Pertanyaan:'); var a=prompt('Jawaban:'); if(q&&a){ cards.push({q:q,a:a}); localStorage.setItem('fahri_flash',JSON.stringify(cards)); render(); } };
+  } render();
+}
+function openTemplate(){
+  showModal('f-modal-template','<h3 style="margin:0">📄 Template Cepat</h3><p style="font-size:12px;opacity:.6">Pilih 1, langsung keisi di kolom chat, tinggal kirim.</p><button data-t="Buatkan surat lamaran kerja yang formal dan sopan">💼 Surat Lamaran Kerja</button><button data-t="Buatkan CV yang menarik untuk fresh graduate">📄 CV / Daftar Riwayat Hidup</button><button data-t="Buatkan caption Instagram yang menarik dan pakai hashtag untuk foto liburan">📸 Caption Instagram</button><button data-t="Buatkan script TikTok 30 detik yang hook-nya kuat tentang belajar">🎵 Script TikTok</button><button data-t="Buatkan email formal untuk izin tidak masuk kerja karena sakit">📧 Email Izin Sakit</button><button data-t="Buatkan surat izin sekolah yang sopan">🏫 Surat Izin Sekolah</button><button style="background:#333" id="f-t-tutup">Tutup</button>');
+  var m=document.getElementById('f-modal-template');
+  m.querySelectorAll('[data-t]').forEach(function(b){ b.onclick=function(){ var inp=getInp(); if(inp){ inp.value=b.getAttribute('data-t'); inp.focus(); } m.classList.remove('open'); }; });
+  document.getElementById('f-t-tutup').onclick=function(){ m.classList.remove('open'); };
+}
+function buildQuick(){
+  if(document.getElementById('f-quick-bar')) return; var inp=getInp(); if(!inp) return;
+  var bar=document.createElement('div'); bar.id='f-quick-bar';
+  bar.innerHTML='<button class="f-quick" id="f-q-flash">🃏 Flashcards</button><button class="f-quick" id="f-q-template">📄 Template Cepat</button><button class="f-quick" id="f-q-todo">✅ To-Do / Tugas</button><button class="f-quick" id="f-q-pdf">📋 Rangkum PDF</button>';
+  if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar,inp.parentElement);
+  document.getElementById('f-q-flash').onclick=openFlash;
+  document.getElementById('f-q-template').onclick=openTemplate;
+  document.getElementById('f-q-todo').onclick=window.__f_openTodo;
+  document.getElementById('f-q-pdf').onclick=function(){ var f=document.getElementById('f-file'); if(f) f.click(); else alert('Pencet 📎 dulu, pilih PDF / foto dokumen.'); };
+}
+function getModePrefix(){ var m=localStorage.getItem('fahri_mode')||'belajar'; var base=(m==='cepat'?'[Jawab singkat, padat, langsung ke inti] ':'[Jawab sebagai tutor, jelaskan step-by-step, pakai contoh] '); if(window.__f_isTrans && window.__f_isTrans()) base+='[Auto Translate: Jika user pakai Inggris, jawab Indonesia + terjemahan Inggris.] '; return base; }
+function buildModeBar(){
+  if(document.getElementById('f-mode-bar')) return; var inp=getInp(); if(!inp) return;
+  var bar=document.createElement('div'); bar.id='f-mode-bar'; var mode=localStorage.getItem('fahri_mode')||'belajar';
+  bar.innerHTML='<button class="f-mode '+(mode==='belajar'?'on':'')+'" data-m="belajar">🧠 Mode Belajar</button><button class="f-mode '+(mode==='cepat'?'on':'')+'" data-m="cepat">⚡ Mode Cepat</button><button class="f-fix" id="f-fix-btn">✍️ Perbaiki Tulisan</button>';
+  if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar,inp.parentElement);
+  bar.addEventListener('click',function(e){ var b=e.target.closest('[data-m]'); if(b){ localStorage.setItem('fahri_mode',b.getAttribute('data-m')); bar.querySelectorAll('.f-mode').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); } });
+  document.getElementById('f-fix-btn').onclick=function(){
+    var inp2=getInp(); if(!inp2||!inp2.value.trim()) return alert('Ketik dulu yang mau diperbaiki.');
+    var t=inp2.value.trim(); t=t.replace(/\s+/g,' ').replace(/\s+([,.!?])/g,'$1').replace(/([,.!?])([A-Za-z])/g,'$1 $2');
+    t=t.replace(/\bgw\b/gi,'saya').replace(/\bga\b/gi,'tidak').replace(/\bgk\b/gi,'tidak').replace(/\bknp\b/gi,'kenapa').replace(/\bbgt\b/gi,'banget').replace(/\bdgn\b/gi,'dengan').replace(/\byng\b/gi,'yang').replace(/\btdk\b/gi,'tidak').replace(/\bsdh\b/gi,'sudah').replace(/\bblm\b/gi,'belum');
+    t=t.charAt(0).toUpperCase()+t.slice(1); if(!/[.!?]$/.test(t)) t+='.';
+    inp2.value=t; inp2.focus(); alert('✅ Tulisan diperbaiki!\n\n'+t);
+  };
+}
+function startVoice(){ var Rec=window.SpeechRecognition||window.webkitSpeechRecognition; var inp=getInp(); if(!Rec) return alert('Voice belum support, coba Chrome Android.'); if(!inp) return; var r=new Rec(); r.lang='id-ID'; r.onresult=function(e){ inp.value=e.results[0][0].transcript; inp.focus(); }; r.start(); alert('🎤 Ngomong sekarang...'); }
+function buildChat(){
+  if(document.getElementById('f-file')) return; var inp=getInp(); if(!inp) return;
+  var file=document.createElement('input'); file.type='file'; file.id='f-file'; file.accept='image/*,.pdf,.doc,.docx,.txt'; file.style.display='none'; document.body.appendChild(file);
+  file.onchange=function(){
+    var f=file.files[0]; if(!f) return;
+    var isPdf=f.name.toLowerCase().endsWith('.pdf')||f.type.includes('pdf')||f.type.includes('document')||f.type.includes('text');
+    if(isPdf){
+      var chat=getChat(); var d=document.createElement('div'); d.style.cssText='text-align:right;margin:10px 0'; d.innerHTML='<div style="display:inline-block;background:#8b5cf6;color:#fff;padding:10px 14px;border-radius:14px;font-size:13px">📄 '+f.name+'<br><span style="font-size:11px;opacity:.8">Dokumen siap dirangkum!</span></div>'; chat.appendChild(d);
+      if(!document.getElementById('f-vision-bar')){ var bar=document.createElement('div'); bar.id='f-vision-bar'; bar.className='f-vision-bar'; bar.innerHTML='<button class="f-vision-chip" data-cmd="Rangkum dokumen ini secara lengkap + poin pentingnya">📋 Rangkum Dokumen Ini</button><button class="f-vision-chip" data-cmd="Jelaskan isi dokumen ini dengan bahasa sederhana">🔍 Jelaskan Dokumen</button><button class="f-vision-chip" data-cmd="Buatkan 5 soal dari dokumen ini">✍️ Buat Soal Dari Dokumen</button><button class="f-vision-chip" data-cmd="Terjemahkan dokumen ini">🌐 Terjemahkan</button>'; if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar,inp.parentElement); bar.addEventListener('click',function(e){var b=e.target.closest('[data-cmd]'); if(!b) return; inp.value=getModePrefix()+b.getAttribute('data-cmd')+' (File: '+f.name+')'; inp.focus();}); }
+      inp.value=getModePrefix()+'Tolong rangkum dokumen '+f.name+' ini'; inp.focus(); return;
+    }
+    var r=new FileReader();
+    r.onload=function(){
+      var chat2=getChat(); var d2=document.createElement('div'); d2.style.cssText='text-align:right;margin:10px 0'; d2.innerHTML='<img src="'+r.result+'" style="max-width:220px;border-radius:14px;display:block;margin-left:auto"><div style="font-size:12px;opacity:.7">📎 Foto siap!</div>'; chat2.appendChild(d2); chat2.scrollTop=chat2.scrollHeight;
+      if(!document.getElementById('f-vision-bar')){ var bar2=document.createElement('div'); bar2.id='f-vision-bar'; bar2.className='f-vision-bar'; bar2.innerHTML='<button class="f-vision-chip" data-cmd="Jawabin soal ini + caranya">📝 Jawab Soal</button><button class="f-vision-chip" data-cmd="Jelaskan gambar ini secara detail">🔍 Jelaskan</button><button class="f-vision-chip" data-cmd="Terjemahkan teks di foto ini">🌐 Terjemahkan</button><button class="f-vision-chip" data-cmd="Rangkum isi foto ini">📋 Rangkum</button><button class="f-vision-chip" data-cmd="Cek jawaban di foto ini, mana yang salah?">✅ Cek Jawaban</button><button class="f-vision-chip" data-cmd="Buatkan soal latihan mirip foto ini">✍️ Soal Mirip</button>'; if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar2,inp.parentElement); bar2.addEventListener('click',function(e){var b=e.target.closest('[data-cmd]'); if(!b) return; inp.value=getModePrefix()+b.getAttribute('data-cmd'); inp.focus();}); }
+      inp.focus();
+    }; r.readAsDataURL(f);
+  };
+  var wadah=inp.parentElement; for(var i=0;i<3;i++){ if(wadah&&wadah.querySelector('button')) break; if(wadah&&wadah.parentElement) wadah=wadah.parentElement; }
+  if(!wadah) wadah=inp.parentElement;
+  var mic=document.createElement('button'); mic.className='f-mini-btn'; mic.textContent='🎤'; mic.type='button'; mic.onclick=startVoice;
+  var att=document.createElement('button'); att.className='f-mini-btn'; att.textContent='📎'; att.type='button'; att.onclick=function(){file.click();};
+  wadah.insertBefore(att,inp); var kirim=wadah.querySelector('button'); if(kirim&&kirim!==att&&kirim!==mic) wadah.insertBefore(mic,kirim); else wadah.appendChild(mic);
+  wadah.style.display='flex'; wadah.style.alignItems='center'; wadah.style.gap='8px';
+}
+setInterval(function(){
+  document.querySelectorAll('.bubble,.message').forEach(function(b){
+    if(b.querySelector('.f-bubble-tools')) return;
+    if(b.querySelector('img') && b.textContent.trim().length < 10) return;
+    var tools=document.createElement('div'); tools.className='f-bubble-tools';
+    var p=document.createElement('button'); p.className='f-pin'; p.textContent='📌 Simpan';
+    p.onclick=function(){ window.__f_saveArr('fahri_simpan', b.textContent.slice(0,200)); p.textContent='✅ Tersimpan'; };
+    var s=document.createElement('button'); s.className='f-speak'; s.textContent='🔊 Bacakan';
+    s.onclick=function(){ var txt=b.textContent.replace('📌 Simpan','').replace('🔊 Bacakan','').replace('🔖 Bookmark','').replace('✅ Tersimpan','').trim(); if(txt) window.__f_bicara(txt); };
+    var mk=document.createElement('button'); mk.className='f-mark'; mk.textContent='🔖 Bookmark';
+    mk.onclick=function(){ window.__f_saveArr('fahri_bookmark', b.textContent.slice(0,300)); mk.textContent='✅ Di-bookmark'; };
+    tools.appendChild(p); tools.appendChild(s); tools.appendChild(mk); b.appendChild(tools);
+  });
+},1500);
+function init2(){ if(window.__f_init1) window.__f_init1(); buildQuick(); buildModeBar(); buildChat(); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init2); else init2();
+setTimeout(init2,1000); setTimeout(init2,2500);
+})();
+/* === FIX V4.1 - BAGIAN 3/3: HAPUS TTS LAMA + POPUP APP + DRAWER MUNCUL === */
+(function(){
+if(window.__fahriFix41) return; window.__fahriFix41 = true;
+
+// --- 1. HAPUS TTS LAMA (speaker di pojok atas bubble) ---
+var css=document.createElement('style');
+css.textContent=`
+  .tts-btn, .tts-button, button[class*="tts"], button[onclick*="speakText"]{ display:none !important; }
+  .f-flash-input{ width:100% !important; padding:12px !important; border-radius:12px !important; border:1px solid #333 !important; background:#222 !important; color:#fff !important; margin:10px 0 !important; box-sizing:border-box !important; }
+  .f-flash-row{ display:flex !important; gap:8px !important; }
+  .f-flash-row button{ flex:1 !important; }
+`;
+document.head.appendChild(css);
+function hapusTTS(){
+  document.querySelectorAll('.tts-btn, .tts-button, button[class*="tts"]').forEach(function(b){ b.remove(); });
+  // Cari juga tombol yang onclick-nya speakText
+  document.querySelectorAll('button').forEach(function(b){
+    var oc=b.getAttribute('onclick')||'';
+    if(oc.includes('speakText')) b.remove();
+  });
+}
+setInterval(hapusTTS, 800);
+
+// --- 2. FLASHCARDS PAKAI POPUP APP, BUKAN PROMPT CHROME ---
+function openFlashApp(){
+  // Kalau udah ada kartu, langsung buka viewer (pakai fungsi lama via klik ulang tidak bisa, jadi buat viewer sendiri)
+  var cards=JSON.parse(localStorage.getItem('fahri_flash')||'[]');
+  if(cards.length>0){
+    var idx=0;
+    function renderCard(){
+      var c=cards[idx]||{q:'-',a:'-'};
+      var m=document.getElementById('f-modal-flash2');
+      if(!m){ m=document.createElement('div'); m.id='f-modal-flash2'; m.className='f-modal'; document.body.appendChild(m); m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('open'); }); }
+      m.innerHTML='<div class="f-box"><h3 style="margin:0">🃏 Flashcards ('+(idx+1)+'/'+cards.length+')</h3><div class="f-card" id="f-card-txt2">'+c.q+'</div><button id="f-flip2">🔄 Balik Kartu</button><div style="display:flex;gap:8px"><button id="f-prev2" style="background:#333">⬅️ Sebelumnya</button><button id="f-next2" style="background:#333">Berikutnya ➡️</button></div><button id="f-add2" style="background:#22c55e">+ Tambah Kartu</button><button id="f-close2" style="background:#333">Tutup</button></div>';
+      m.classList.add('open');
+      var flipped=false;
+      document.getElementById('f-flip2').onclick=function(){ flipped=!flipped; document.getElementById('f-card-txt2').textContent=flipped?c.a:c.q; };
+      document.getElementById('f-prev2').onclick=function(){ idx=(idx-1+cards.length)%cards.length; renderCard(); };
+      document.getElementById('f-next2').onclick=function(){ idx=(idx+1)%cards.length; renderCard(); };
+      document.getElementById('f-close2').onclick=function(){ m.classList.remove('open'); };
+      document.getElementById('f-add2').onclick=function(){
+        // Popup app untuk tambah kartu, bukan prompt
+        m.innerHTML='<div class="f-box"><h3 style="margin:0">+ Tambah Kartu</h3><input class="f-flash-input" id="f-q-inp" placeholder="Pertanyaan..."><input class="f-flash-input" id="f-a-inp" placeholder="Jawaban..."><div class="f-flash-row"><button id="f-save-card" style="background:#22c55e">Simpan</button><button id="f-cancel-card" style="background:#333">Batal</button></div></div>';
+        document.getElementById('f-save-card').onclick=function(){ var q=document.getElementById('f-q-inp').value.trim(); var a=document.getElementById('f-a-inp').value.trim(); if(!q||!a) return alert('Isi pertanyaan + jawaban dulu'); cards.push({q:q,a:a}); localStorage.setItem('fahri_flash',JSON.stringify(cards)); renderCard(); };
+        document.getElementById('f-cancel-card').onclick=function(){ renderCard(); };
+      };
+    }
+    renderCard(); return;
+  }
+  // Kalau belum ada kartu, popup app untuk input tema
+  var m2=document.getElementById('f-modal-flash-tema');
+  if(!m2){ m2=document.createElement('div'); m2.id='f-modal-flash-tema'; m2.className='f-modal'; document.body.appendChild(m2); m2.addEventListener('click',function(e){ if(e.target===m2) m2.classList.remove('open'); }); }
+  m2.innerHTML='<div class="f-box"><h3 style="margin:0">🃏 Flashcards Baru</h3><p style="font-size:13px;opacity:.7">Mau belajar apa?</p><input class="f-flash-input" id="f-tema-inp" placeholder="Contoh: Inggris, Matematika, Sejarah"><div class="f-flash-row"><button id="f-tema-buat" style="background:#8b5cf6">Buat Flashcards</button><button id="f-tema-batal" style="background:#333">Batal</button></div><p style="font-size:11px;opacity:.5;margin-top:10px">Atau pilih cepat:</p><div class="f-flash-row"><button data-tema="Bahasa Inggris" style="background:#333">Inggris</button><button data-tema="Matematika" style="background:#333">Matematika</button><button data-tema="Sejarah" style="background:#333">Sejarah</button></div></div>';
+  m2.classList.add('open');
+  function buat(tema){
+    if(!tema) return; m2.classList.remove('open');
+    localStorage.setItem('fahri_flash', JSON.stringify([{q:'Contoh: Apa ibu kota Indonesia?', a:'Jakarta'},{q:'2 + 2 = ?', a:'4'}]));
+    var inp=document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea');
+    if(inp){ inp.value='Buatkan 5 flashcards untuk belajar '+tema+', format: Q: ... | A: ...'; inp.focus(); }
+    // Kasih tau pakai popup app juga, bukan alert chrome yang jelek
+    var n=document.createElement('div'); n.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:12px 18px;border-radius:99px;z-index:999999;font-size:13px;font-weight:700'; n.textContent='✅ Siap! Pencet kirim ➤ untuk buat flashcards '+tema; document.body.appendChild(n); setTimeout(function(){ n.remove(); }, 3000);
+  }
+  document.getElementById('f-tema-buat').onclick=function(){ buat(document.getElementById('f-tema-inp').value.trim()); };
+  document.getElementById('f-tema-batal').onclick=function(){ m2.classList.remove('open'); };
+  m2.querySelectorAll('[data-tema]').forEach(function(b){ b.onclick=function(){ buat(b.getAttribute('data-tema')); }; });
+}
+// Timpa tombol Flashcards lama biar pakai popup app
+setInterval(function(){
+  var btn=document.getElementById('f-q-flash');
+  if(btn && !btn.dataset.fixed){ btn.dataset.fixed='1'; btn.onclick=function(e){ e.preventDefault(); e.stopPropagation(); openFlashApp(); }; }
+}, 1000);
+
+// --- 3. FIX DRAWER GARIS 3 - PAKAI OBSERVER, JADI MUNCUL PAS DIBUKA ---
+function cobaIsiDrawer(){
+  if(document.querySelector('.f-menu-kanan')) return;
+  // Cari drawer yang lagi kebuka / ada di DOM, yang isinya ada Bersihkan Chat + Tutup
+  var all=document.querySelectorAll('div, aside');
+  var drawer=null;
+  for(var i=0;i<all.length;i++){
+    var t=all[i].textContent||'';
+    if(t.includes('Bersihkan Chat') && t.includes('Tutup') && t.length<4000){
+      // Ambil yang paling kecil (paling deket sama kontennya), bukan BODY
+      if(!drawer || all[i].textContent.length < drawer.textContent.length) drawer=all[i];
+    }
+  }
+  if(!drawer) return;
+  // Naik 1-2 level sampai ketemu container yang ada Tutup
+  var container=drawer;
+  // Kalau drawer-nya sendiri udah container, pakai itu. Kalau bukan, naik sampai ketemu yang ada tombol Tutup di dalamnya
+  for(var j=0;j<3;j++){
+    if(container.querySelector('button') && container.textContent.includes('Tutup')) break;
+    if(container.parentElement) container=container.parentElement; else break;
+  }
+  // Cari tombol Tutup di dalam container
+  var tutupBtn=null;
+  var btns=container.querySelectorAll('button');
+  for(var k=0;k<btns.length;k++){ if(btns[k].textContent.trim().includes('Tutup')){ tutupBtn=btns[k]; break; } }
+  if(!tutupBtn) return;
+
+  var menu=document.createElement('div'); menu.className='f-menu-kanan';
+  var isTrans=localStorage.getItem('fahri_auto_trans')!=='0';
+  menu.innerHTML='<div class="f-label2">PENGATURAN</div>'
+    +'<button class="f-item" data-a="profil"><span>👤</span>Profil Saya</button>'
+    +'<button class="f-item" data-a="gelap"><span>🌙</span>Mode Gelap / Terang</button>'
+    +'<button class="f-item '+(isTrans?'f-on':'')+'" data-a="trans"><span>🌐</span><span style="width:auto !important" id="f-trans-label2">Auto Translate: '+(isTrans?'ON':'OFF')+'</span></button>'
+    +'<button class="f-item" data-a="bookmark"><span>🔖</span>Bookmark / Favorit</button>'
+    +'<button class="f-item" data-a="todo"><span>✅</span>To-Do / Tugas</button>'
+    +'<button class="f-item" data-a="ingat"><span>⏰</span>Pengingat Belajar</button>'
+    +'<button class="f-item" data-a="bahasa"><span>🌐</span>Bahasa</button>'
+    +'<button class="f-item" data-a="bagikan"><span>↗️</span>Bagikan Aplikasi</button>'
+    +'<button class="f-item" data-a="bantuan"><span>❓</span>Bantuan / Cara Pakai</button>'
+    +'<button class="f-item" data-a="tentang"><span>ℹ️</span>Tentang Aplikasi</button>'
+    +'<button class="f-item" data-a="hapus"><span>🗑️</span>Hapus Semua Chat</button>';
+  // Sisipin TEPAT SEBELUM tombol Tutup, biar gak di bawah sendiri
+  if(tutupBtn.parentElement) tutupBtn.parentElement.insertBefore(menu, tutupBtn);
+  else container.appendChild(menu);
+
+  menu.addEventListener('click',function(e){
+    var b=e.target.closest('[data-a]'); if(!b) return; var a=b.getAttribute('data-a');
+    if(a==='profil' && window.__f_openProfil) window.__f_openProfil();
+    if(a==='gelap'){ document.body.classList.toggle('f-light'); localStorage.setItem('fahri_light',document.body.classList.contains('f-light')?'1':'0'); }
+    if(a==='trans'){ var on=localStorage.getItem('fahri_auto_trans')==='0'; localStorage.setItem('fahri_auto_trans',on?'1':'0'); var lab=document.getElementById('f-trans-label2'); if(lab) lab.textContent='Auto Translate: '+(on?'ON':'OFF'); b.classList.toggle('f-on',on); }
+    if(a==='bookmark'){ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); alert(arr.length?'🔖 BOOKMARK:\n\n'+arr.slice(-5).join('\n---\n'):'Belum ada bookmark. Pencet 🔖 di bawah tiap jawaban AI.'); }
+    if(a==='todo' && window.__f_openTodo) window.__f_openTodo();
+    if(a==='ingat'){ var jam=prompt('Pengingat Belajar - Jam berapa? (contoh: 19:00)'); if(jam){ localStorage.setItem('fahri_inget',jam); alert('✅ Pengingat diset jam '+jam); } }
+    if(a==='bahasa'){ var x=prompt('1 = Indonesia\n2 = English\n3 = Jawa'); if(x==='2') alert('English aktif!'); else if(x==='3') alert('Jawa aktif!'); else alert('Indonesia aktif!'); }
+    if(a==='bagikan'){ if(navigator.share) navigator.share({title:'Fahri Assistant', url:location.href}); else alert('Copy link: '+location.href); }
+    if(a==='bantuan') alert('CARA PAKAI:\n1. Ketik untuk chat\n2. 📎 Kirim foto / PDF\n3. 🎤 Ngomong jadi teks\n4. 🃏 Flashcards\n5. 📄 Template Cepat\n6. ✅ To-Do\n7. 🔖 Bookmark');
+    if(a==='tentang') alert('Fahri Assistant v1.4.0\nAsisten AI untuk belajar, kerja, dan sehari-hari.');
+    if(a==='hapus'){ if(confirm('Yakin hapus SEMUA chat?')){ var ch=document.querySelector('#chat'); if(ch) ch.innerHTML=''; } }
+  });
+  if(localStorage.getItem('fahri_light')==='1') document.body.classList.add('f-light');
+}
+// Cek tiap kali ada perubahan di halaman (pas drawer dibuka)
+var obs=new MutationObserver(function(){ cobaIsiDrawer(); hapusTTS(); });
+obs.observe(document.body, {childList:true, subtree:true});
+setInterval(cobaIsiDrawer, 1000);
+})();
+/* === FIX V4.2 - BAGIAN 4/4: POPUP APP + HAPUS DOBEL === */
+(function(){
+if(window.__fahriFix42) return; window.__fahriFix42 = true;
+
+// --- CSS POPUP APP KAYAK "HAPUS SEMUA CHAT?" YANG LAMA ---
+var css=document.createElement('style');
+css.textContent=`
+  .f-app-overlay{ position:fixed !important; inset:0 !important; background:rgba(0,0,0,.65) !important; z-index:999999 !important; display:flex !important; align-items:center !important; justify-content:center !important; padding:20px !important; }
+  .f-app-popup{ background:#1a1a22 !important; color:#fff !important; width:100% !important; max-width:340px !important; border-radius:22px !important; padding:24px 20px 20px !important; text-align:center !important; border:1.5px solid #a855f7 !important; box-shadow:0 0 30px rgba(168,85,247,.45) !important; }
+  .f-app-popup .f-ap-icon{ font-size:36px !important; margin-bottom:10px !important; }
+  .f-app-popup .f-ap-title{ font-size:18px !important; font-weight:800 !important; margin:0 0 8px !important; }
+  .f-app-popup .f-ap-msg{ font-size:13.5px !important; line-height:1.5 !important; opacity:.85 !important; margin:0 0 18px !important; white-space:pre-line !important; text-align:center !important; }
+  .f-app-popup .f-ap-input{ width:100% !important; padding:12px !important; border-radius:12px !important; border:1px solid #444 !important; background:#222 !important; color:#fff !important; box-sizing:border-box !important; margin-bottom:14px !important; }
+  .f-app-popup .f-ap-btns{ display:flex !important; gap:10px !important; }
+  .f-app-popup .f-ap-btns button{ flex:1 !important; padding:11px !important; border-radius:99px !important; border:none !important; font-weight:800 !important; font-size:14px !important; cursor:pointer !important; }
+  .f-ap-batal{ background:#3a3a44 !important; color:#fff !important; }
+  .f-ap-oke{ background:#d946ef !important; color:#fff !important; }
+  .f-ap-opt{ width:100% !important; padding:11px !important; border-radius:12px !important; border:1px solid #333 !important; background:#222 !important; color:#fff !important; margin-bottom:8px !important; font-weight:600 !important; }
+`;
+document.head.appendChild(css);
+
+function showAppPopup(opt){
+  // opt: {icon, title, msg, inputPlaceholder, showInput, showCancel, okText, cancelText, onOk(value), onCancel}
+  var old=document.querySelector('.f-app-overlay'); if(old) old.remove();
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup"><div class="f-ap-icon">'+(opt.icon||'ℹ️')+'</div><div class="f-ap-title">'+(opt.title||'Info')+'</div><div class="f-ap-msg">'+(opt.msg||'')+'</div>'+(opt.showInput?'<input class="f-ap-input" placeholder="'+(opt.inputPlaceholder||'')+'">':'')+(opt.extraHtml||'')+'<div class="f-ap-btns">'+(opt.showCancel?'<button class="f-ap-batal">'+(opt.cancelText||'Batal')+'</button>':'')+'<button class="f-ap-oke">'+(opt.okText||'Oke')+'</button></div></div>';
+  document.body.appendChild(ov);
+  var inp=ov.querySelector('.f-ap-input'); if(inp) setTimeout(function(){ inp.focus(); }, 100);
+  ov.addEventListener('click',function(e){ if(e.target===ov){ ov.remove(); if(opt.onCancel) opt.onCancel(); } });
+  ov.querySelector('.f-ap-oke').onclick=function(){ var v=inp?inp.value:''; ov.remove(); if(opt.onOk) opt.onOk(v); };
+  var b=ov.querySelector('.f-ap-batal'); if(b) b.onclick=function(){ ov.remove(); if(opt.onCancel) opt.onCancel(); };
+  return ov;
+}
+window.__f_showAppPopup = showAppPopup;
+
+// --- GANTI SEMUA ALERT CHROME JADI POPUP APP ---
+window.alert = function(msg){
+  var t=String(msg||''); var icon='ℹ️'; var title='Info';
+  if(t.includes('✅')){ icon='✅'; title='Berhasil'; }
+  else if(t.includes('BOOKMARK')){ icon='🔖'; title='Bookmark / Favorit'; }
+  else if(t.includes('TERSIMPAN')){ icon='📌'; title='Chat Tersimpan'; }
+  else if(t.includes('CARA PAKAI')){ icon='❓'; title='Bantuan / Cara Pakai'; }
+  else if(t.includes('Fahri Assistant v')){ icon='ℹ️'; title='Tentang Aplikasi'; }
+  else if(t.includes('Chat disalin')||t.includes('disalin')){ icon='📤'; title='Export Chat'; }
+  else if(t.includes('Tulisan diperbaiki')){ icon='✍️'; title='Perbaiki Tulisan'; }
+  else if(t.includes('Pengingat')){ icon='⏰'; title='Pengingat Belajar'; }
+  showAppPopup({icon:icon, title:title, msg:t, showCancel:false, okText:'Oke'});
+};
+// Ganti confirm Chrome juga, biar gak pernah muncul lagi
+window.confirm = function(msg){
+  showAppPopup({icon:'⚠️', title:'Konfirmasi', msg:String(msg||''), showCancel:true, okText:'Ya', cancelText:'Batal'});
+  return false; // Biar kode lama gak langsung jalan, nunggu user pencet Ya di popup app (khusus hapus sudah di-handle di bawah)
+};
+
+// --- HAPUS DOBEL: PROFIL SAYA + HAPUS SEMUA CHAT ---
+function hapusDobel(){
+  document.querySelectorAll('.f-menu-kanan [data-a="profil"], .f-menu-kanan [data-a="hapus"]').forEach(function(b){ b.remove(); });
+  // Kalau ada tombol Profil Saya / Hapus Semua Chat di menu kita yang lain, hapus juga
+  document.querySelectorAll('.f-menu-kanan .f-item').forEach(function(b){
+    var tx=b.textContent||'';
+    if(tx.includes('Profil Saya') || tx.includes('Hapus Semua Chat')) b.remove();
+  });
+}
+setInterval(hapusDobel, 800);
+
+// --- GANTI PROMPT CHROME (BAHASA, PENGINGAT, DLL) JADI POPUP APP ---
+// Kita tangkap klik di menu garis 3 SEBELUM handler lama jalan
+document.addEventListener('click', function(e){
+  var b=e.target.closest('.f-menu-kanan [data-a]');
+  if(!b) return;
+  var a=b.getAttribute('data-a');
+  // Yang kita ambil alih: bahasa, ingat, bookmark, bantuan, tentang, bagikan
+  if(a==='bahasa'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'🌐', title:'Bahasa', msg:'Pilih bahasa:', showCancel:true, okText:'Tutup', cancelText:'Batal',
+      extraHtml:'<button class="f-ap-opt" data-lang="Indonesia">🇮🇩 Indonesia</button><button class="f-ap-opt" data-lang="English">🇺🇸 English</button><button class="f-ap-opt" data-lang="Jawa">Jawa</button>',
+      onOk:function(){}});
+    var ov=document.querySelector('.f-app-overlay');
+    ov.querySelectorAll('[data-lang]').forEach(function(btn){ btn.onclick=function(){ var lang=btn.getAttribute('data-lang'); ov.remove(); showAppPopup({icon:'🌐', title:'Bahasa', msg:lang+' aktif!', showCancel:false}); }; });
+  }
+  if(a==='ingat'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'⏰', title:'Pengingat Belajar', msg:'Mau diingetin jam berapa?', showInput:true, inputPlaceholder:'Contoh: 19:00', showCancel:true, okText:'Simpan', cancelText:'Batal', onOk:function(v){ if(v){ localStorage.setItem('fahri_inget',v); showAppPopup({icon:'✅', title:'Berhasil', msg:'Pengingat diset jam '+v, showCancel:false}); } }});
+  }
+  if(a==='bookmark'){
+    e.preventDefault(); e.stopPropagation();
+    var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]');
+    showAppPopup({icon:'🔖', title:'Bookmark / Favorit', msg:arr.length?arr.slice(-3).join('\n---\n'):'Belum ada bookmark.\nPencet 🔖 di bawah tiap jawaban AI.', showCancel:false});
+  }
+  if(a==='bantuan'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'❓', title:'Bantuan / Cara Pakai', msg:'1. Ketik untuk chat\n2. 📎 Kirim foto / PDF\n3. 🎤 Ngomong jadi teks\n4. 🃏 Flashcards\n5. 📄 Template Cepat\n6. ✅ To-Do\n7. 🔖 Bookmark jawaban bagus', showCancel:false});
+  }
+  if(a==='tentang'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'ℹ️', title:'Tentang Aplikasi', msg:'Fahri Assistant v1.4.0\n\nAsisten AI untuk belajar, kerja, dan sehari-hari.\nFlashcards, Rangkum PDF, Template, To-Do, Cuaca & Jadwal Sholat, Bookmark, Auto Translate.', showCancel:false});
+  }
+  if(a==='bagikan'){
+    e.preventDefault(); e.stopPropagation();
+    showAppPopup({icon:'↗️', title:'Bagikan Aplikasi', msg:'Bagikan Fahri Assistant ke teman kamu!', showCancel:true, okText:'Bagikan', cancelText:'Batal', onOk:function(){ if(navigator.share) navigator.share({title:'Fahri Assistant', url:location.href}); else { navigator.clipboard.writeText(location.href); showAppPopup({icon:'✅', title:'Berhasil', msg:'Link disalin!', showCancel:false}); } }});
+  }
+}, true); // capture = true, biar jalan duluan sebelum handler lama
+})();
+/* === BAGIAN 5 - RIWAYAT + NGOBROL SUARA + GAMBAR AI + CARI WEB === */
+(function(){
+if(window.__fahriV5) return; window.__fahriV5 = true;
+
+function showApp(opt){
+  if(window.__f_showAppPopup) return window.__f_showAppPopup(opt);
+  alert(opt.msg||''); return null;
+}
+function getInp(){ return window.__f_getInp ? window.__f_getInp() : document.querySelector('textarea')||document.querySelector('input[type="text"]'); }
+function getChat(){ return window.__f_getChat ? window.__f_getChat() : document.body; }
+
+// --- CSS TAMBAHAN ---
+var css=document.createElement('style');
+css.textContent=`
+  .f-sesi-item{ display:flex; gap:8px; align-items:center; padding:10px; background:#222; border-radius:10px; margin:6px 0; font-size:13px; text-align:left; }
+  .f-sesi-item span{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .f-sesi-item button{ width:32px !important; padding:6px !important; background:#ef4444 !important; }
+  .f-voice-box{ text-align:center; padding:10px 0; }
+  .f-voice-circle{ width:90px; height:90px; border-radius:50%; background:#8b5cf6; display:flex; align-items:center; justify-content:center; font-size:40px; margin:10px auto; box-shadow:0 0 25px rgba(139,92,246,.6); }
+  .f-voice-circle.listening{ animation: fPulse 1s infinite; }
+  @keyframes fPulse{ 0%{ transform:scale(1);} 50%{ transform:scale(1.12);} 100%{ transform:scale(1);} }
+  .f-gen-img{ width:100%; border-radius:14px; margin:10px 0; }
+`;
+document.head.appendChild(css);
+
+// --- 1. RIWAYAT / SESI CHAT ---
+function saveSesi(){
+  var chat=getChat(); if(!chat) return;
+  var teks=chat.innerText||''; if(teks.trim().length<20) return;
+  var list=JSON.parse(localStorage.getItem('fahri_sesi')||'[]');
+  // Jangan simpan kalau isinya sama kayak terakhir
+  if(list[0] && list[0].teks===teks.slice(0,500)) return;
+  list.unshift({waktu:new Date().toLocaleString('id-ID'), teks:teks.slice(0,500), judul:teks.slice(0,60).replace(/\n/g,' ')});
+  localStorage.setItem('fahri_sesi', JSON.stringify(list.slice(0,20)));
+}
+function openRiwayat(){
+  var list=JSON.parse(localStorage.getItem('fahri_sesi')||'[]');
+  saveSesi(); list=JSON.parse(localStorage.getItem('fahri_sesi')||'[]');
+  var html='<h3 style="margin:0">💬 Riwayat Chat</h3><p style="font-size:12px;opacity:.6">Sesi chat kamu, pencet untuk buka lagi.</p>';
+  if(list.length===0) html+='<p style="opacity:.6;font-size:13px">Belum ada riwayat. Chat dulu, nanti ke-save otomatis.</p>';
+  else html+=list.map(function(s,i){ return '<div class="f-sesi-item"><span>💬 '+s.judul+'<br><small style="opacity:.5">'+s.waktu+'</small></span><button data-open="'+i+'" style="background:#22c55e !important">Buka</button><button data-del="'+i+'">🗑️</button></div>'; }).join('');
+  html+='<button id="f-sesi-baru" style="background:#22c55e">➕ Chat Baru</button><button id="f-sesi-tutup" style="background:#333">Tutup</button>';
+  showApp({icon:'💬', title:'', msg:'', showCancel:false, okText:'Tutup'});
+  // Kita pakai popup custom karena showApp kita cuma untuk alert, jadi buat modal sendiri di sini
+  var ov=document.querySelector('.f-app-overlay'); if(ov) ov.remove();
+  var ov2=document.createElement('div'); ov2.className='f-app-overlay';
+  ov2.innerHTML='<div class="f-app-popup" style="max-width:400px !important; text-align:left !important">'+html+'</div>';
+  document.body.appendChild(ov2);
+  ov2.addEventListener('click',function(e){ if(e.target===ov2) ov2.remove(); });
+  document.getElementById('f-sesi-tutup').onclick=function(){ ov2.remove(); };
+  document.getElementById('f-sesi-baru').onclick=function(){ ov2.remove(); buatChatBaru(); };
+  ov2.querySelectorAll('[data-open]').forEach(function(b){ b.onclick=function(){ var s=list[parseInt(b.getAttribute('data-open'))]; var chat=getChat(); if(chat){ saveSesi(); chat.innerHTML='<div style="padding:10px;opacity:.6;font-size:12px">💬 Riwayat - '+s.waktu+'</div><div style="white-space:pre-line;padding:10px">'+s.teks+'</div>'; } ov2.remove(); }; });
+  ov2.querySelectorAll('[data-del]').forEach(function(b){ b.onclick=function(){ list.splice(parseInt(b.getAttribute('data-del')),1); localStorage.setItem('fahri_sesi',JSON.stringify(list)); openRiwayat(); }; });
+}
+function buatChatBaru(){
+  saveSesi();
+  var chat=getChat(); if(chat) chat.innerHTML='';
+  var inp=getInp(); if(inp){ inp.value=''; inp.focus(); inp.placeholder='Chat baru... Tanya apa aja ke Fahri...'; }
+  var n=document.createElement('div'); n.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#22c55e;color:#fff;padding:12px 18px;border-radius:99px;z-index:999999;font-size:13px;font-weight:700'; n.textContent='✅ Chat baru dibuat! Riwayat lama ke-save.'; document.body.appendChild(n); setTimeout(function(){ n.remove(); }, 2500);
+}
+window.__f_openRiwayat = openRiwayat;
+window.__f_buatChatBaru = buatChatBaru;
+// Tambah tombol Chat Baru di header + Riwayat di garis 3 (via observer)
+setInterval(function(){
+  // Header: tombol Chat Baru
+  var headBtns=document.getElementById('f-head-btns');
+  if(headBtns && !document.getElementById('f-h-baru')){
+    var b=document.createElement('button'); b.id='f-h-baru'; b.className='f-head-btn'; b.title='Chat Baru'; b.textContent='➕';
+    b.onclick=buatChatBaru; headBtns.insertBefore(b, headBtns.firstChild);
+  }
+  // Garis 3: item Riwayat
+  var menu=document.querySelector('.f-menu-kanan');
+  if(menu && !menu.querySelector('[data-a="riwayat"]')){
+    var item=document.createElement('button'); item.className='f-item'; item.setAttribute('data-a','riwayat');
+    item.innerHTML='<span>💬</span>Riwayat Chat';
+    item.onclick=function(e){ e.preventDefault(); e.stopPropagation(); openRiwayat(); };
+    menu.insertBefore(item, menu.firstChild);
+  }
+}, 1000);
+// Auto-save tiap 30 detik
+setInterval(saveSesi, 30000);
+
+// --- 2. NGOBROL SUARA ---
+function openNgobrol(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup"><div class="f-voice-box"><div class="f-voice-circle" id="f-vc">🎙️</div><div style="font-weight:800;font-size:16px">Ngobrol Suara</div><div id="f-v-status" style="font-size:13px;opacity:.7;margin:8px 0">Pencet tombol mic untuk mulai ngobrol</div><div id="f-v-teks" style="font-size:13px;background:#222;padding:10px;border-radius:10px;min-height:40px;text-align:left">...</div></div><div class="f-ap-btns" style="margin-top:14px"><button class="f-ap-batal" id="f-v-tutup">Tutup</button><button class="f-ap-oke" id="f-v-mulai">🎙️ Mulai Ngobrol</button></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov){ ov.remove(); if(window.speechSynthesis) window.speechSynthesis.cancel(); } });
+  document.getElementById('f-v-tutup').onclick=function(){ ov.remove(); if(window.speechSynthesis) window.speechSynthesis.cancel(); };
+  var listening=false; var Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  document.getElementById('f-v-mulai').onclick=function(){
+    if(!Rec){ document.getElementById('f-v-status').textContent='Voice belum support, coba Chrome Android.'; return; }
+    var r=new Rec(); r.lang='id-ID'; r.interimResults=false;
+    document.getElementById('f-vc').classList.add('listening');
+    document.getElementById('f-v-status').textContent='🎧 Mendengarkan... Ngomong sekarang!';
+    r.onresult=function(e){
+      var txt=e.results[0][0].transcript;
+      document.getElementById('f-v-teks').textContent='Kamu: '+txt;
+      document.getElementById('f-v-status').textContent='AI sedang mikir...';
+      document.getElementById('f-vc').classList.remove('listening');
+      // Masukkan ke kolom chat biar AI jawab, lalu bacakan jawabannya
+      var inp=getInp(); if(inp){ inp.value=txt; }
+      setTimeout(function(){
+        document.getElementById('f-v-status').textContent='✅ Udah aku masukin ke chat, pencet kirim atau aku bacakan?';
+        // Coba bacakan respon singkat
+        if(window.speechSynthesis){
+          var u=new SpeechSynthesisUtterance('Oke, aku udah terima: '+txt+'. Coba kirim di chat ya biar aku jawab lengkap.');
+          u.lang='id-ID'; window.speechSynthesis.speak(u);
+        }
+      }, 800);
+    };
+    r.onerror=function(){ document.getElementById('f-v-status').textContent='Mic gagal, coba lagi.'; document.getElementById('f-vc').classList.remove('listening'); };
+    r.start();
+  };
+}
+// Tambah tombol Ngobrol Suara di samping kolom chat
+setInterval(function(){
+  var inp=getInp(); if(!inp) return;
+  if(document.getElementById('f-ngobrol-btn')) return;
+  var wadah=inp.parentElement; if(!wadah) return;
+  var b=document.createElement('button'); b.id='f-ngobrol-btn'; b.className='f-mini-btn'; b.textContent='🎙️'; b.type='button'; b.title='Ngobrol Suara';
+  b.onclick=openNgobrol;
+  wadah.appendChild(b);
+}, 1500);
+
+// --- 3. BUAT GAMBAR AI + EDIT FOTO ---
+function openBuatGambar(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">🎨</div><div style="font-weight:800;font-size:17px;margin:6px 0">Buat Gambar AI</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Ketik mau gambar apa, AI bikinin.</div><input class="f-ap-input" id="f-img-prompt" placeholder="Contoh: kucing astronot di bulan, lucu" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-img-batal">Batal</button><button class="f-ap-oke" id="f-img-buat">🎨 Buat Gambar</button></div><div id="f-img-hasil"></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.getElementById('f-img-batal').onclick=function(){ ov.remove(); };
+  document.getElementById('f-img-buat').onclick=function(){
+    var p=document.getElementById('f-img-prompt').value.trim(); if(!p) return;
+    document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;opacity:.7">🎨 Lagi dibikinin...</p>';
+    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=512&height=512&seed='+Math.floor(Math.random()*100000)+'&nologo=true';
+    var img=new Image(); img.onload=function(){
+      document.getElementById('f-img-hasil').innerHTML='<img src="'+url+'" class="f-gen-img"><button id="f-img-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat</button>';
+      document.getElementById('f-img-kirim').onclick=function(){ var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0'; d.innerHTML='<img src="'+url+'" style="max-width:280px;border-radius:14px"><div style="font-size:12px;opacity:.7">🎨 Gambar AI: '+p+'</div>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; } ov.remove(); };
+    };
+    img.onerror=function(){ document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Gagal bikin gambar, coba lagi / cek internet.</p>'; };
+    img.src=url;
+  };
+}
+function openEditFoto(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">✏️</div><div style="font-weight:800;font-size:17px;margin:6px 0">Edit Foto AI</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Upload foto, ketik mau diedit jadi apa.</div><input type="file" id="f-edit-file" accept="image/*" style="margin-bottom:10px;color:#fff"><input class="f-ap-input" id="f-edit-prompt" placeholder="Contoh: jadi kartun, background pantai, dll" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-edit-batal">Batal</button><button class="f-ap-oke" id="f-edit-buat">✏️ Edit Foto</button></div><div id="f-edit-hasil"></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.getElementById('f-edit-batal').onclick=function(){ ov.remove(); };
+  document.getElementById('f-edit-buat').onclick=function(){
+    var f=document.getElementById('f-edit-file').files[0]; var p=document.getElementById('f-edit-prompt').value.trim()||'edit foto ini jadi lebih bagus';
+    if(!f){ document.getElementById('f-edit-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Pilih foto dulu.</p>'; return; }
+    var r=new FileReader(); r.onload=function(){
+      var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0;text-align:right'; d.innerHTML='<img src="'+r.result+'" style="max-width:220px;border-radius:14px"><div style="font-size:12px;opacity:.7">✏️ Edit Foto: '+p+'</div>'; chat.appendChild(d); }
+      var inp=getInp(); if(inp){ inp.value='Tolong edit foto ini: '+p+' (aku sudah upload fotonya)'; inp.focus(); }
+      ov.remove();
+    }; r.readAsDataURL(f);
+  };
+}
+// Tambah ke Quick Bar
+setInterval(function(){
+  var bar=document.getElementById('f-quick-bar'); if(!bar) return;
+  if(!document.getElementById('f-q-gambar')){
+    var b1=document.createElement('button'); b1.className='f-quick'; b1.id='f-q-gambar'; b1.textContent='🎨 Buat Gambar'; b1.onclick=openBuatGambar; bar.appendChild(b1);
+    var b2=document.createElement('button'); b2.className='f-quick'; b2.id='f-q-edit'; b2.textContent='✏️ Edit Foto'; b2.onclick=openEditFoto; bar.appendChild(b2);
+    var b3=document.createElement('button'); b3.className='f-quick'; b3.id='f-q-web'; b3.textContent='🌐 Cari Web'; b3.onclick=openCariWeb; bar.appendChild(b3);
+  }
+}, 1000);
+
+// --- 5. CARI WEB REAL-TIME ---
+function openCariWeb(){
+  var ov=document.createElement('div'); ov.className='f-app-overlay';
+  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">🌐</div><div style="font-weight:800;font-size:17px;margin:6px 0">Cari Web Real-time</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Cari berita / info terbaru, bukan dari data lama AI.</div><input class="f-ap-input" id="f-web-q" placeholder="Contoh: harga emas hari ini, berita Timnas" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-web-batal">Batal</button><button class="f-ap-oke" id="f-web-cari">🔍 Cari</button></div><div id="f-web-hasil" style="text-align:left;font-size:13px;line-height:1.5;margin-top:10px"></div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.getElementById('f-web-batal').onclick=function(){ ov.remove(); };
+  document.getElementById('f-web-cari').onclick=function(){
+    var q=document.getElementById('f-web-q').value.trim(); if(!q) return;
+    document.getElementById('f-web-hasil').innerHTML='🔍 Lagi nyari...';
+    // Pakai Wikipedia + DuckDuckGo (gratis, tanpa API key)
+    fetch('https://id.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(d){
+      if(d.extract){
+        document.getElementById('f-web-hasil').innerHTML='<b>'+(d.title||q)+'</b><br>'+d.extract.slice(0,600)+'...<br><br><button id="f-web-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat / Tanya AI</button>';
+        document.getElementById('f-web-kirim').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] '+q+' - Info dari Wikipedia: '+d.extract.slice(0,300)+' - Jelaskan lebih lanjut & update terbaru'; inp.focus(); } ov.remove(); };
+      } else {
+        document.getElementById('f-web-hasil').innerHTML='Gak ketemu di Wikipedia. Coba tanya langsung ke AI di chat dengan kata kunci:<br><b>'+q+'</b><br><br><button id="f-web-kirim2" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Tanya AI Sekarang</button>';
+        document.getElementById('f-web-kirim2').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] Cari info terbaru tentang: '+q; inp.focus(); } ov.remove(); };
+      }
+    }).catch(function(){
+      document.getElementById('f-web-hasil').innerHTML='Koneksi gagal. Coba tanya langsung di chat:<br><b>'+q+'</b>';
+    });
+  };
+}
+})();
+/* === BAGIAN 8 - FIX: SEND + 1 TOMBOL FITUR + LOADING + BUBBLE === */
+(function(){
+if(window.__fahriFix8) return; window.__fahriFix8 = true;
+
+// --- 1. SEMBUNYIIN SEMUA BAR HITAM LAMA, GANTI 1 TOMBOL ---
+var css=document.createElement('style');
+css.textContent=`
+  /* Sembunyiin semua bar lama yang numpuk */
+  #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2, #f-mode-bar, #f-mode-bar2, #f-head-btns, #f-head-btns2{ display:none !important; }
+  /* Widget cuaca/sholat jadi 1 baris kecil transparan, bukan kotak hitam */
+  #f-widget-mini{ display:flex; gap:8px; padding:6px 10px; font-size:11px; opacity:.85; }
+  #f-widget-mini span{ background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.3); padding:6px 10px; border-radius:99px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:48%; }
+  /* Perbaiki wadah input: input fleksibel, tombol gak kegencet */
+  .f-input-fix{ display:flex !important; align-items:center !important; gap:6px !important; }
+  .f-input-fix input, .f-input-fix textarea{ flex:1 !important; min-width:0 !important; }
+  .f-input-fix button{ flex-shrink:0 !important; width:42px !important; height:42px !important; min-width:42px !important; }
+  /* Tombol Fitur melayang */
+  #f-fitur-fab{ display:flex !important; align-items:center !important; gap:6px !important; padding:8px 14px !important; border-radius:99px !important; border:1px solid rgba(168,85,247,.5) !important; background:rgba(139,92,246,.2) !important; color:#fff !important; font-size:12px !important; font-weight:700 !important; cursor:pointer !important; white-space:nowrap !important; width:auto !important; height:auto !important; }
+  /* Bottom sheet fitur */
+  #f-sheet{ position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:999998; display:none; align-items:flex-end; justify-content:center; }
+  #f-sheet.open{ display:flex; }
+  #f-sheet-box{ background:#1a1a22; width:100%; max-width:480px; border-radius:22px 22px 0 0; padding:18px; color:#fff; border:1px solid #a855f7; box-shadow:0 0 30px rgba(168,85,247,.4); max-height:75vh; overflow-y:auto; }
+  .f-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin:12px 0; }
+  .f-grid button{ background:#222; border:1px solid #333; border-radius:14px; padding:12px 4px; color:#fff; font-size:11px; font-weight:600; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .f-grid button span{ font-size:22px; }
+  .f-sheet-row{ display:flex; gap:8px; margin:10px 0; }
+  .f-sheet-row button{ flex:1; padding:11px; border-radius:99px; border:none; font-weight:800; font-size:13px; cursor:pointer; }
+  /* Loading: sembunyiin semua UI kita sampai siap */
+  body:not(.f-ready) #f-widget-mini, body:not(.f-ready) #f-fitur-fab, body:not(.f-ready) .f-bubble-tools{ display:none !important; }
+`;
+document.head.appendChild(css);
+
+// Loading: baru kasih .f-ready setelah 2.5 detik + splash ilang
+setTimeout(function(){ document.body.classList.add('f-ready'); }, 2500);
+setInterval(function(){
+  // Kalau masih ada overlay fullscreen logo F, jangan ready dulu
+  var splash=document.querySelector('[class*="splash"], [class*="loading"], [id*="splash"], [id*="loading"]');
+  if(splash && splash.offsetHeight>window.innerHeight*0.8) document.body.classList.remove('f-ready');
+}, 800);
+
+function getInp(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]')||document.querySelector('textarea')||document.querySelector('input[type="text"]'); }
+function getChat(){ return window.__f_getChat ? window.__f_getChat() : document.body; }
+
+// --- 2. FIX TOMBOL SEND: RAPIIH WADAH INPUT ---
+function fixInput(){
+  var inp=getInp(); if(!inp) return;
+  var wadah=inp.parentElement; if(!wadah) return;
+  wadah.classList.add('f-input-fix');
+  // Hapus mic dobel: kalau ada 2 mic, hapus 1 yang dari kita (yang kedua)
+  var mics=wadah.querySelectorAll('button');
+  var micCount=0;
+  mics.forEach(function(b){
+    if(b.textContent.includes('🎤')||b.textContent.includes('🎙️')){
+      micCount++;
+      // Simpan 1 aja (yang pertama), sisanya hapus kalau ada 3+
+      if(micCount>2) b.remove();
+    }
+  });
+  // Kalau tombol Fitur belum ada, tambahin di depan input
+  if(!document.getElementById('f-fitur-fab')){
+    var fab=document.createElement('button'); fab.id='f-fitur-fab'; fab.type='button'; fab.textContent='✨ Fitur';
+    fab.onclick=function(){ document.getElementById('f-sheet').classList.add('open'); };
+    wadah.insertBefore(fab, inp);
+  }
+  // Widget mini cuaca/sholat - taruh di atas wadah, 1 baris aja
+  if(!document.getElementById('f-widget-mini')){
+    var wm=document.createElement('div'); wm.id='f-widget-mini';
+    wm.innerHTML='<span id="f-wm-cuaca">🌦️ Tahuna • Memuat...</span><span id="f-wm-sholat">🕌 Sholat • Memuat...</span>';
+    wadah.parentNode.insertBefore(wm, wadah);
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.6&longitude=125.48&current=temperature_2m,weather_code&timezone=Asia%2FMakassar').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('f-wm-cuaca'); if(el) el.textContent='🌦️ Tahuna • '+Math.round(d.current.temperature_2m)+'°C • '+(d.current.weather_code===0?'Cerah':'Berawan'); }).catch(function(){});
+    var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('f-wm-sholat'); if(el){ var t=d.data.timings; el.textContent='🕌 Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5); } }).catch(function(){});
+  }
+}
+
+// --- 3. BOTTOM SHEET FITUR (ganti 3 bar hitam) ---
+function buildSheet(){
+  if(document.getElementById('f-sheet')) return;
+  var s=document.createElement('div'); s.id='f-sheet';
+  s.innerHTML='<div id="f-sheet-box"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">✨ Semua Fitur</h3><button id="f-sheet-x" style="width:32px;height:32px;border-radius:50%;border:none;background:#333;color:#fff">✕</button></div><p style="font-size:12px;opacity:.6;margin:6px 0 0">Pencet 1 fitur, langsung jalan.</p><div class="f-grid">'
+    +'<button data-f="flash"><span>🃏</span>Flashcards</button>'
+    +'<button data-f="template"><span>📄</span>Template</button>'
+    +'<button data-f="todo"><span>✅</span>To-Do</button>'
+    +'<button data-f="pdf"><span>📋</span>Rangkum PDF</button>'
+    +'<button data-f="gambar"><span>🎨</span>Buat Gambar</button>'
+    +'<button data-f="edit"><span>✏️</span>Edit Foto</button>'
+    +'<button data-f="web"><span>🌐</span>Cari Web</button>'
+    +'<button data-f="ngobrol"><span>🎙️</span>Ngobrol Suara</button>'
+    +'<button data-f="cari"><span>🔍</span>Cari Chat</button>'
+    +'<button data-f="simpan"><span>📌</span>Tersimpan</button>'
+    +'<button data-f="export"><span>📤</span>Export</button>'
+    +'<button data-f="baru"><span>➕</span>Chat Baru</button>'
+    +'</div><div style="font-size:12px;font-weight:800;opacity:.6;margin:10px 0 6px">MODE</div><div class="f-sheet-row"><button id="f-mode-belajar" style="background:#8b5cf6;color:#fff">🧠 Mode Belajar</button><button id="f-mode-cepat" style="background:#333;color:#fff">⚡ Mode Cepat</button></div><button id="f-fix-tulisan" style="width:100%;padding:11px;border-radius:99px;border:1px solid #22c55e;background:rgba(34,197,94,.12);color:#22c55e;font-weight:800">✍️ Perbaiki Tulisan</button></div>';
+  document.body.appendChild(s);
+  s.addEventListener('click',function(e){ if(e.target===s) s.classList.remove('open'); });
+  document.getElementById('f-sheet-x').onclick=function(){ s.classList.remove('open'); };
+  s.addEventListener('click',function(e){
+    var b=e.target.closest('[data-f]'); if(!b) return; var f=b.getAttribute('data-f'); s.classList.remove('open');
+    if(f==='flash'){ var o=document.getElementById('f-q-flash')||document.getElementById('f-q2-flash'); if(o) o.click(); }
+    if(f==='template'){ var o2=document.getElementById('f-q-template')||document.getElementById('f-q2-template'); if(o2) o2.click(); }
+    if(f==='todo'){ if(window.__f_openTodo) window.__f_openTodo(); }
+    if(f==='pdf'){ var ff=document.getElementById('f-file'); if(ff) ff.click(); }
+    if(f==='gambar'){ var o3=document.getElementById('f-q-gambar')||document.getElementById('f-q2-gambar'); if(o3) o3.click(); }
+    if(f==='edit'){ var o4=document.getElementById('f-q-edit')||document.getElementById('f-q2-edit'); if(o4) o4.click(); }
+    if(f==='web'){ var o5=document.getElementById('f-q-web')||document.getElementById('f-q2-web'); if(o5) o5.click(); }
+    if(f==='ngobrol'){ var o6=document.getElementById('f-ngobrol-btn')||document.getElementById('f-ngobrol-btn2'); if(o6) o6.click(); }
+    if(f==='cari'){ var o7=document.getElementById('f-h-cari')||document.getElementById('f-h2-cari'); if(o7) o7.click(); }
+    if(f==='simpan'){ var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'📌', title:'Chat Tersimpan', msg:arr.length?arr.slice(-5).join('\n---\n'):'Belum ada chat disimpan.', showCancel:false}); }
+    if(f==='export'){ var o8=document.getElementById('f-h-export')||document.getElementById('f-h2-export'); if(o8) o8.click(); }
+    if(f==='baru'){ if(window.__f_buatChatBaru) window.__f_buatChatBaru(); }
+  });
+  function refreshMode(){ var m=localStorage.getItem('fahri_mode')||'belajar'; document.getElementById('f-mode-belajar').style.background=m==='belajar'?'#8b5cf6':'#333'; document.getElementById('f-mode-cepat').style.background=m==='cepat'?'#8b5cf6':'#333'; }
+  refreshMode();
+  document.getElementById('f-mode-belajar').onclick=function(){ localStorage.setItem('fahri_mode','belajar'); refreshMode(); s.classList.remove('open'); };
+  document.getElementById('f-mode-cepat').onclick=function(){ localStorage.setItem('fahri_mode','cepat'); refreshMode(); s.classList.remove('open'); };
+  document.getElementById('f-fix-tulisan').onclick=function(){ s.classList.remove('open'); var inp=getInp(); if(!inp||!inp.value.trim()){ if(window.__f_showAppPopup) window.__f_showAppPopup({icon:'✍️', title:'Perbaiki Tulisan', msg:'Ketik dulu yang mau diperbaiki.', showCancel:false}); return; } var t=inp.value.trim(); t=t.replace(/\s+/g,' '); t=t.charAt(0).toUpperCase()+t.slice(1); if(!/[.!?]$/.test(t)) t+='.'; inp.value=t; };
+}
+
+// --- 4. FIX BUBBLE TOOLS: CUMA DI JAWABAN AI, BUKAN DI CHAT KAMU ---
+setInterval(function(){
+  document.querySelectorAll('.f-bubble-tools').forEach(function(tool){
+    var bubble=tool.parentElement; if(!bubble) return;
+    var txt=bubble.textContent||'';
+    // Kalau bubble ini chat kamu (kanan / ungu / isinya pendek kayak "Tanya"), hapus tools-nya
+    var style=getComputedStyle(bubble);
+    var isUser = txt.trim().startsWith('Tanya') || bubble.style.textAlign==='right' || (bubble.parentElement && bubble.parentElement.style.textAlign==='right');
+    // Cara paling aman: chat kamu itu yang ada di parent dengan align right / bubble ungu terang
+    // Kalau bubble-nya gak ada "Fahri Assistant" dan pendek, itu chat kamu
+    if(!txt.includes('Fahri Assistant') && !txt.includes('Hai! Aku') && txt.length<100 && !txt.includes('Ada yang ingin')){
+      tool.remove();
+    }
+  });
+}, 1000);
+
+setInterval(function(){ fixInput(); buildSheet(); }, 1000);
+fixInput(); buildSheet();
+})();
+</script>
+<script src="auth.js"></script>
+</body>
+</html>
