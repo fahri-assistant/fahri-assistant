@@ -1505,5 +1505,35 @@ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded'
 setTimeout(jalan, 1500);
 })();
   </script>
+<script>
+/* === FIX 7: BALOK HITAM JADI PIL KAYAK BUBBLE - CUMA FITUR, PAPAN TEKS NGGAK DIUTAK-ATIK === */
+(function(){
+if(window.__fix7FiturPil) return; window.__fix7FiturPil=true;
+
+var css=document.createElement('style');
+css.textContent=`
+/* Wadah Fitur: jangan full lebar lagi, jadi pil ngikutin tombolnya */
+#f-fitur-top{
+  width:fit-content !important;
+  max-width:max-content !important;
+  background:rgba(20,8,35,.95) !important;
+  border:2px solid rgba(192,38,211,.95) !important;
+  border-radius:99px !important;
+  box-shadow:0 0 18px rgba(192,38,211,.60) !important;
+  padding:6px 8px !important;
+  margin:0 0 8px 2px !important;
+  display:flex !important;
+}
+/* Tombol di dalamnya: transparan, biar yang keliatan pil luarnya */
+#f-fitur-top button{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:2px 6px !important;
+}
+`;
+document.head.appendChild(css);
+})();
+</script>
 </body>
 </html>
