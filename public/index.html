@@ -1338,6 +1338,86 @@ setInterval(function(){
 setInterval(function(){ fixInput(); buildSheet(); }, 1000);
 fixInput(); buildSheet();
 })();
+/* === BAGIAN 12 - KUNCI BAGIAN 11, BIAR GAK KE-RESET SAMA KODE LAMA === */
+(function(){
+if(window.__fahriFix12) return; window.__fahriFix12 = true;
+
+var css=document.createElement('style');
+css.textContent=`
+  /* Kunci: bar lama tetep mati, gak boleh muncul lagi */
+  #f-fitur-bar, #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2,
+  #f-mode-bar, #f-mode-bar2, #f-widget-mini, #f-fitur-fab{ display:none !important; }
+
+  /* Kunci: 1 tombol Fitur tetep di atas input */
+  #f-fitur-satu{ display:flex !important; margin:0 12px 8px !important; }
+  #f-fitur-satu button{
+    display:flex !important; align-items:center !important; gap:6px !important;
+    padding:8px 16px !important; border-radius:99px !important; font-size:12px !important; font-weight:800 !important;
+    background:linear-gradient(135deg,#a855f7,#7c3aed) !important; color:#fff !important; border:none !important;
+  }
+
+  /* Kunci: cuaca 2 kotak versi lama tetep di atas */
+  #f-cuaca-atas{ display:flex !important; gap:8px !important; padding:0 12px 10px !important; }
+  #f-cuaca-atas .f-ca-box{
+    flex:1 !important; padding:10px 12px !important; border-radius:16px !important;
+    background:rgba(20,15,35,.78) !important; border:1px solid rgba(168,85,247,.3) !important; color:#fff !important;
+  }
+`;
+document.head.appendChild(css);
+
+function getLoginRow(){
+  var els=document.querySelectorAll('div, button');
+  for(var i=0;i<els.length;i++){ if(els[i].textContent.includes('Belum login') && els[i].offsetHeight<80) return els[i].closest('div') || els[i]; }
+  return null;
+}
+function getInp(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]'); }
+
+function kunci(){
+  // 1. Bar lama hapus total dari DOM, bukan cuma hide
+  document.querySelectorAll('#f-fitur-bar, #f-top-widget, #f-top-widget2, #f-quick-bar, #f-quick-bar2, #f-mode-bar, #f-mode-bar2, #f-fitur-fab, #f-widget-mini, #f-ngobrol-btn, #f-ngobrol-btn2').forEach(function(el){ el.remove(); });
+
+  // 2. Cuaca 2 kotak harus tetep nempel di bawah login row
+  var w=document.getElementById('f-cuaca-atas');
+  var t=getLoginRow();
+  if(w && t && t.parentNode && w.previousElementSibling!==t){
+    t.parentNode.insertBefore(w, t.nextSibling);
+  }
+
+  // 3. 1 tombol Fitur harus tetep 1, gak boleh dobel
+  var fits=document.querySelectorAll('#f-fitur-satu');
+  if(fits.length>1){ for(var i=1;i<fits.length;i++) fits[i].remove(); }
+  var inp=getInp();
+  if(inp && inp.parentElement && document.getElementById('f-fitur-satu')){
+    var satu=document.getElementById('f-fitur-satu');
+    if(satu.nextElementSibling!==inp.parentElement){
+      inp.parentElement.parentNode.insertBefore(satu, inp.parentElement);
+    }
+  }
+
+  // 4. Mic kiri hapus lagi kalau muncul lagi
+  if(inp && inp.parentElement){
+    inp.parentElement.querySelectorAll('button').forEach(function(b){
+      var txt=b.textContent.trim();
+      if((txt==='🎤'||txt==='🎙️'||txt.includes('🎤')) && (b.compareDocumentPosition(inp) & Node.DOCUMENT_POSITION_FOLLOWING)){
+        b.remove();
+      }
+    });
+  }
+
+  // 5. Anti dobel di dalam sheet Fitur
+  var sheet=document.getElementById('f-sheet');
+  if(sheet){
+    var seen={};
+    sheet.querySelectorAll('[data-f]').forEach(function(b){
+      var f=b.getAttribute('data-f');
+      if(seen[f]) b.remove(); else seen[f]=true;
+    });
+  }
+}
+
+setInterval(kunci, 800);
+kunci();
+})();
 </script>
 <script src="auth.js"></script>
 </body>
