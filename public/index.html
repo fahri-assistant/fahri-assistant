@@ -1431,6 +1431,57 @@ function pasangYangBener(){
 setInterval(function(){ hapusSemuaTambalanLama(); pasangYangBener(); }, 1000);
 pasangYangBener();
 })();
+<!-- === BAGIAN AKHIR - SATU-SATUNYA TAMBAHAN SETELAH BAGIAN 8 === -->
+<style>
+  #f-cuaca-akhir{display:flex !important; gap:8px !important; padding:0 12px 10px !important;}
+  #f-cuaca-akhir .f-ca-box{flex:1 !important; padding:10px 12px !important; border-radius:16px !important; background:rgba(20,15,35,.78) !important; border:1px solid rgba(168,85,247,.3) !important; color:#fff !important;}
+  #f-fitur-akhir{display:flex !important; padding:0 12px 8px !important;}
+  #f-fitur-akhir button{padding:8px 16px !important; border-radius:99px !important; font-size:12px !important; font-weight:800 !important; background:linear-gradient(135deg,#a855f7,#7c3aed) !important; color:#fff !important; border:none !important;}
+  #f-login-tengah{display:none !important;}
+</style>
+<script>
+(function(){
+if(window.__fahriAKHIR) return; window.__fahriAKHIR = true;
+
+function pasang(){
+  // 1. Hapus bar login yang di tengah (bukan di drawer)
+  document.querySelectorAll('div').forEach(function(el){
+    var t = el.textContent || '';
+    if(t.includes('Belum login') && t.includes('Login Google') && !el.closest('#drawer') && el.offsetHeight < 90 && el.offsetHeight > 20){
+      el.id = 'f-login-tengah';
+      el.remove();
+    }
+  });
+  document.querySelectorAll('button').forEach(function(b){
+    if(b.textContent.trim()==='Log' && !b.closest('#drawer')) b.remove();
+  });
+
+  // 2. Cuaca 2 kotak di bawah Selamat pagi
+  var kartu = null;
+  document.querySelectorAll('div').forEach(function(d){
+    if(!kartu && d.textContent.includes('Selamat pagi') && d.textContent.includes('Mau aku bantu') && d.offsetHeight < 220) kartu = d;
+  });
+  if(kartu && !document.getElementById('f-cuaca-akhir')){
+    var w = document.createElement('div'); w.id='f-cuaca-akhir';
+    w.innerHTML = '<div class="f-ca-box"><b style="font-size:12px">🌦️ Tahuna</b><br><span style="font-size:11px">25°C • Berawan 🌥️</span></div><div class="f-ca-box"><b style="font-size:12px">🕌 Sholat Hari Ini</b><br><span style="font-size:11px">Subuh 04:04 • Dzuhur 11:24 • Ashar 14:47 • Maghrib 17:22 • Isya 18:35</span></div>';
+    kartu.parentNode.insertBefore(w, kartu.nextSibling);
+  }
+
+  // 3. 1 tombol Fitur di atas papan teks
+  var inp = document.querySelector('input[placeholder*="Tanya"]');
+  if(inp && inp.parentElement && !document.getElementById('f-fitur-akhir')){
+    var f = document.createElement('div'); f.id='f-fitur-akhir';
+    f.innerHTML = '<button onclick="document.getElementById(\'f-sheet\')?.classList.add(\'open\')">✨ Fitur</button>';
+    inp.parentElement.parentNode.insertBefore(f, inp.parentElement);
+  }
+}
+
+// Jalanin 1x pas load, + 1x kalau ada chat baru. GAK PAKE setInterval.
+pasang();
+var obs = new MutationObserver(function(){ pasang(); });
+obs.observe(document.body, {childList:true, subtree:true});
+setTimeout(function(){ obs.disconnect(); }, 5000); // Berhenti ngawasin setelah 5 detik, biar gak kedip
+})();
 </script>
 <script src="auth.js"></script>
 </body>
