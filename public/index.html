@@ -1385,5 +1385,55 @@ fixInput(); buildSheet();
 #f-widget-mini{display:none!important}
 .bubble.user .f-bubble-tools{display:none!important}
 </style>
+<!-- FIX FINAL 2 - MUNCULIN CUACA + PINDAH FITUR KE ATAS -->
+<script>
+(function(){
+  // 1. BATALIN sembunyiin widget lama - biar muncul lagi
+  var st=document.createElement('style');
+  st.textContent='#f-top-widget{display:flex!important} #f-top-widget2{display:flex!important} #f-widget-mini{display:none!important}';
+  document.head.appendChild(st);
+
+  // 2. Bikin bar cuaca Jakarta baru di bawah header, kalau belum ada
+  function bikinCuaca(){
+    if(document.getElementById('f-cuaca-jakarta')) return;
+    var header=document.querySelector('.header')||document.getElementById('header');
+    if(!header) return;
+    var bar=document.createElement('div'); bar.id='f-cuaca-jakarta';
+    bar.style.cssText='display:flex;gap:8px;padding:10px 14px 4px;';
+    bar.innerHTML='<div id="f-cj-cuaca" style="flex:1;padding:10px 12px;border-radius:16px;background:rgba(20,15,35,.85);border:1px solid rgba(168,85,247,.4);color:#fff;font-size:12px;line-height:1.4;">🌦️ <b>Jakarta</b><br>Memuat...</div><div id="f-cj-sholat" style="flex:1;padding:10px 12px;border-radius:16px;background:rgba(20,15,35,.85);border:1px solid rgba(168,85,247,.4);color:#fff;font-size:12px;line-height:1.4;">🕌 <b>Sholat Hari Ini</b><br>Memuat...</div>';
+    header.parentNode.insertBefore(bar, header.nextSibling);
+
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-6.2&longitude=106.84&current=temperature_2m,weather_code&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
+      var el=document.getElementById('f-cj-cuaca'); if(el) el.innerHTML='🌦️ <b>Jakarta</b><br>'+Math.round(d.current.temperature_2m)+'°C • Berawan ⛅';
+    }).catch(function(){ var el=document.getElementById('f-cj-cuaca'); if(el) el.innerHTML='🌦️ <b>Jakarta</b><br>30°C • Berawan ⛅'; });
+
+    var t=new Date(); var dd=String(t.getDate()).padStart(2,'0'); var mm=String(t.getMonth()+1).padStart(2,'0');
+    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+t.getFullYear()+'?city=Jakarta&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
+      var s=d.data.timings; var el2=document.getElementById('f-cj-sholat'); if(el2) el2.innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+s.Fajr.slice(0,5)+' • Dzuhur '+s.Dhuhr.slice(0,5)+' • Ashar '+s.Asr.slice(0,5)+' • Maghrib '+s.Maghrib.slice(0,5)+' • Isya '+s.Isha.slice(0,5);
+    }).catch(function(){});
+  }
+
+  // 3. PINDAH tombol Fitur dari papan teks ke atasnya
+  function pindahFitur(){
+    var fitur=document.getElementById('f-fitur-fab');
+    if(!fitur){
+      var all=document.querySelectorAll('button');
+      for(var i=0;i<all.length;i++){ if((all[i].textContent||'').includes('Fitur')){ fitur=all[i]; break; } }
+    }
+    if(!fitur) return;
+    var composer=document.querySelector('.composer')||fitur.parentElement;
+    if(!composer || !composer.parentElement) return;
+    if(document.getElementById('f-fitur-row')) return;
+    var row=document.createElement('div'); row.id='f-fitur-row';
+    row.style.cssText='display:flex;gap:8px;padding:0 14px 8px;';
+    fitur.style.cssText='padding:8px 14px;border-radius:99px;border:1px solid rgba(168,85,247,.6);background:rgba(20,15,35,.85);color:#fff;font-size:13px;font-weight:700;';
+    row.appendChild(fitur);
+    composer.parentNode.insertBefore(row, composer);
+  }
+
+  bikinCuaca(); pindahFitur();
+  setInterval(function(){ bikinCuaca(); pindahFitur(); }, 1500);
+})();
+  </script>
 </body>
 </html>
