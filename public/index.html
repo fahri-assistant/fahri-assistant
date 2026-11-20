@@ -411,7 +411,7 @@ document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')window.send()});
 chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
 function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
-document.getElementById('btnLog').onclick=openLog;
+var _btnLog=document.getElementById('btnLog');if(_btnLog)_btnLog.onclick=openLog;
 document.getElementById('btnCloseLog').onclick=function(){document.getElementById('logPanel').classList.remove('open')};
 document.getElementById('btnClearLog').onclick=function(){localStorage.removeItem('fahri_log');document.getElementById('logBox').textContent='Log sudah dihapus'};
 document.getElementById('btnMenu').onclick=function(e){e.stopPropagation();document.getElementById('drawer').classList.add('open');try{var u=auth.currentUser;document.getElementById('drawerName').textContent=u?(u.displayName||'Pengguna'):'Pengguna';document.getElementById('drawerEmail').textContent=u?(u.email||'Login dengan Google / Github'):'Belum login';}catch(e){}};
