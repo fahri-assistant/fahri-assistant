@@ -1533,5 +1533,50 @@ css.textContent=`
 document.head.appendChild(css);
 })();
 </script>
+<script>
+/* FIX A: BENERIN TEKS PER TEMA - nggak ganti tema, cuma benerin yang nggak kebaca */
+(function(){
+if(window.__fixTemaA) return; window.__fixTemaA=true;
+var css=document.createElement('style');
+css.textContent=`
+/* ========== TEMA TERANG ========== */
+/* Cuaca + Sholat yang di tema terang masih hitam + teks hitam -> jadi putih + teks hitam */
+body.light .weather-card, body.light .prayer-card,
+body.light .info-card, body.light #f-top-widget .bubble,
+[data-theme="light"] .weather-card, [data-theme="light"] .prayer-card,
+.light .weather-card, .light .prayer-card{
+  background:#ffffff !important;
+  color:#1a0533 !important;
+  border:2px solid #C084FC !important;
+  box-shadow:0 0 6px rgba(192,132,252,.5), 0 0 18px rgba(192,132,252,.25) !important;
+}
+body.light .weather-card *, body.light .prayer-card *,
+[data-theme="light"] .weather-card *, [data-theme="light"] .prayer-card *{
+  color:#1a0533 !important;
+}
+/* Biar angka suhu / jam sholat di tema terang juga hitam, bukan putih */
+body.light .weather-card b, body.light .prayer-card b,
+[data-theme="light"] .weather-card b, [data-theme="light"] .prayer-card b{
+  color:#1a0533 !important;
+}
+
+/* ========== TEMA GELAP ========== */
+/* Bubble user (Tanya / chat user) yang di tema gelap masih gelap + teks gelap -> jadi gelap + teks putih */
+body.dark .msg.user, body.dark .bubble.user,
+[data-theme="dark"] .msg.user, [data-theme="dark"] .bubble.user,
+.dark .msg.user, .dark .bubble.user{
+  background:rgba(15,3,30,.95) !important;
+  color:#ffffff !important;
+  border:2px solid #FDF4FF !important;
+  box-shadow:0 0 6px rgba(255,255,255,.95), 0 0 18px rgba(245,208,254,.85), 0 0 45px rgba(217,70,239,.55) !important;
+}
+body.dark .msg.user *, body.dark .bubble.user *,
+[data-theme="dark"] .msg.user *, [data-theme="dark"] .bubble.user *{
+  color:#ffffff !important;
+}
+`;
+document.head.appendChild(css);
+})();
+</script>
 </body>
 </html>
