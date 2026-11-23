@@ -46,7 +46,6 @@ jobs:
           import android.graphics.Color;
           import android.view.View;
           import android.view.WindowManager;
-          import androidx.core.graphics.Insets;
           import androidx.core.view.ViewCompat;
           import androidx.core.view.WindowCompat;
           import androidx.core.view.WindowInsetsCompat;
@@ -64,14 +63,17 @@ jobs:
                 lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
                 getWindow().setAttributes(lp);
               }
-              if (Build.VERSION.SDK_INT >= 30) {
-                ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, insets) -> {
-                  Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-                  View content = findViewById(android.R.id.content);
-                  if (content != null) content.setPadding(0, 0, 0, ime.bottom);
-                  return ViewCompat.onApplyWindowInsets(v, insets);
-                });
-              }
+              ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, insets) -> {
+                int bottom;
+                if (Build.VERSION.SDK_INT >= 30) {
+                  bottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+                } else {
+                  bottom = insets.getSystemWindowInsetBottom();
+                }
+                View content = findViewById(android.R.id.content);
+                if (content != null) content.setPadding(0, 0, 0, bottom);
+                return ViewCompat.onApplyWindowInsets(v, insets);
+              });
               hideBars();
             }
             @Override
