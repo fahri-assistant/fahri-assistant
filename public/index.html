@@ -1481,26 +1481,130 @@ css.textContent=`
 `;
 document.head.appendChild(css);
 
+/* === CUACA & SHOLAT MENGIKUTI LOKASI PENGGUNA ===
+   Urutan: lokasi GPS sekarang -> kalau ditolak/gagal pakai lokasi terakhir yang tersimpan -> kalau belum ada pakai Surabaya. */
+var F_LOK_DEF={lat:-7.2575,lon:112.7521,nama:'Surabaya'};
+function fJarakKm(a,b,c,d){ var R=6371,t=Math.PI/180,x=(c-a)*t,y=(d-b)*t; var h=Math.sin(x/2)*Math.sin(x/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin(y/2)*Math.sin(y/2); return 2*R*Math.asin(Math.sqrt(h)); }
+function fLokasi(cb){
+  var cache=null; try{ cache=JSON.parse(localStorage.getItem('f_lokasi')||'null'); }catch(e){}
+  if(!cache || typeof cache.lat!=='number' || typeof cache.lon!=='number') cache=null;
+  function simpan(o){ try{ localStorage.setItem('f_lokasi',JSON.stringify(o)); }catch(e){} }
+  var selesai=false;
+  function kirim(o){ if(selesai) return; selesai=true; cb(o); }
+  if(!navigator.geolocation){ kirim(cache||F_LOK_DEF); return; }
+  navigator.geolocation.getCurrentPosition(function(p){
+    var lat=p.coords.latitude, lon=p.coords.longitude;
+    // masih di sekitar lokasi yang sama -> pakai nama yang sudah ada (hemat panggilan)
+    if(cache && cache.nama && fJarakKm(cache.lat,cache.lon,lat,lon)<3){ var o1={lat:lat,lon:lon,nama:cache.nama}; simpan(o1); kirim(o1); return; }
+    // lokasi baru -> cari nama kota (layanan gratis khusus dipakai dari HP pengguna dengan lokasi saat ini)
+    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+lat.toFixed(4)+'&longitude='+lon.toFixed(4)+'&localityLanguage=id')
+      .then(function(r){ return r.json(); })
+      .then(function(g){
+        var n=(g.city||g.locality||g.principalSubdivision||'Lokasi kamu')+''; n=n.replace(/^(Kota|Kabupaten|Kab\.)\s+/i,'');
+        if(n.length>22) n=n.slice(0,21)+'…';
+        var o2={lat:lat,lon:lon,nama:n}; simpan(o2); kirim(o2);
+      })
+      .catch(function(){ var o3={lat:lat,lon:lon,nama:'Lokasi kamu'}; simpan(o3); kirim(o3); });
+  }, function(){ kirim(cache||F_LOK_DEF); }, { enableHighAccuracy:false, timeout:10000, maximumAge:600000 });
+  // jaga-jaga kalau jendela izin tidak dijawab: tampilkan data cadangan setelah 15 detik
+  setTimeout(function(){ kirim(cache||F_LOK_DEF); },15000);
+}
+/* === PENGINGAT WAKTU SHOLAT (notifikasi lokal Android, dijadwalkan 7 hari ke depan) === */
+function fNotifPlugin(){ var C=window.Capacitor; try{ if(C && C.isNativePlatform && C.isNativePlatform()) return (C.Plugins&&C.Plugins.LocalNotifications)||(C.registerPlugin&&C.registerPlugin('LocalNotifications')); }catch(e){} return null; }
+function fNotifAktif(){ try{ return localStorage.getItem('f_sholat_notif')==='1'; }catch(e){ return false; } }
+function fNotifSet(v){ try{ localStorage.setItem('f_sholat_notif',v?'1':'0'); }catch(e){} }
+var F_SHOLAT=[['Fajr','Subuh'],['Dhuhr','Dzuhur'],['Asr','Ashar'],['Maghrib','Maghrib'],['Isha','Isya']];
+function fIndo(L){ return (L.lat>-11.5 && L.lat<6.5 && L.lon>94.5 && L.lon<141.5); }
+function fJadwalkanSholat(L){
+  var P=fNotifPlugin(); if(!P || !fNotifAktif()) return Promise.resolve();
+  var now=new Date(), batas=new Date(now.getTime()+7*86400000);
+  var bulan=[[now.getFullYear(),now.getMonth()+1]];
+  if(batas.getMonth()!==now.getMonth()) bulan.push([batas.getFullYear(),batas.getMonth()+1]);
+  return Promise.all(bulan.map(function(b){
+    return fetch('https://api.aladhan.com/v1/calendar/'+b[0]+'/'+b[1]+'?latitude='+L.lat.toFixed(4)+'&longitude='+L.lon.toFixed(4)+(fIndo(L)?'&method=20':'')).then(function(r){return r.json();}).then(function(d){ return d.data||[]; });
+  })).then(function(arr){
+    var hari=[].concat.apply([],arr), daftar=[];
+    hari.forEach(function(h){
+      var g=h.date&&h.date.gregorian&&h.date.gregorian.date; if(!g) return;
+      var p=g.split('-'), dd=+p[0], mm=+p[1], yy=+p[2];
+      F_SHOLAT.forEach(function(sh,i){
+        var m=String((h.timings&&h.timings[sh[0]])||'').match(/(\d{1,2}):(\d{2})/); if(!m) return;
+        var at=new Date(yy,mm-1,dd,+m[1],+m[2],0,0);
+        if(at.getTime()<=now.getTime()+5000 || at.getTime()>batas.getTime()) return;
+        daftar.push({ id:(yy*10000+mm*100+dd)*10+(i+1), title:'🕌 Waktunya sholat '+sh[1], body:m[1].padStart(2,'0')+':'+m[2]+(L.nama?' • '+L.nama:''), schedule:{ at:at, allowWhileIdle:true }, channelId:'sholat' });
+      });
+    });
+    return Promise.resolve(P.createChannel({ id:'sholat', name:'Pengingat Sholat', description:'Notifikasi saat masuk waktu sholat', importance:5, visibility:1, vibration:true })).catch(function(){})
+      .then(function(){ return P.getPending(); }).catch(function(){ return { notifications:[] }; })
+      .then(function(pen){ var ids=((pen&&pen.notifications)||[]).map(function(n){ return { id:n.id }; }); return ids.length?P.cancel({ notifications:ids }):null; }).catch(function(){})
+      .then(function(){ return daftar.length?P.schedule({ notifications:daftar }):null; });
+  }).catch(function(e){ console.log('Jadwal pengingat sholat gagal',e); });
+}
+function fNotifPopup(icon,judul,msg){ showAppPopup({ icon:icon, title:judul, msg:String(msg).replace(/</g,'&lt;'), okText:'OK' }); }
+function fNotifUI(){
+  var a=fNotifAktif();
+  var b=document.querySelector('#f-info-sholat b'); if(b) b.textContent='🕌 Sholat Hari Ini'+(a?' 🔔':'');
+  var it=document.querySelector('[data-a="sholat-notif"]'); if(it) it.innerHTML='<span>'+(a?'🔔':'🔕')+'</span>Pengingat Sholat: '+(a?'Aktif':'Mati');
+}
+function fToggleNotif(){
+  var P=fNotifPlugin();
+  if(!P){ fNotifPopup('🔔','Pengingat Sholat','Pengingat sholat hanya tersedia di aplikasi Android.'); return; }
+  if(fNotifAktif()){
+    fNotifSet(false); fNotifUI();
+    Promise.resolve(P.getPending()).then(function(p){ var ids=((p&&p.notifications)||[]).map(function(n){ return { id:n.id }; }); return ids.length?P.cancel({ notifications:ids }):null; }).catch(function(){});
+    fNotifPopup('🔕','Pengingat dimatikan','Notifikasi waktu sholat sudah dimatikan.');
+    return;
+  }
+  Promise.resolve(P.checkPermissions()).then(function(st){ return st.display==='granted'?st:P.requestPermissions(); }).then(function(st){
+    if(st.display!=='granted'){ fNotifPopup('⚠️','Izin notifikasi ditolak','Aktifkan lewat Pengaturan > Aplikasi > Fahri Assistant > Notifikasi, lalu coba lagi.'); return; }
+    fNotifSet(true); fNotifUI();
+    var cek=P.checkExactNotificationSetting?Promise.resolve(P.checkExactNotificationSetting()).catch(function(){ return null; }):Promise.resolve(null);
+    return cek.then(function(x){
+      fLokasi(function(L){ fJadwalkanSholat(L); });
+      var tepat=!x || x.exact_alarm!=='denied';
+      fNotifPopup('🔔','Pengingat aktif', tepat ? 'Kamu akan diingatkan tiap masuk waktu sholat sesuai lokasimu.' : 'Pengingat aktif, tetapi izin "Alarm & pengingat" belum diberikan sehingga waktunya bisa meleset. Aktifkan di Pengaturan > Aplikasi > Fahri Assistant.');
+    });
+  }).catch(function(e){ fNotifPopup('⚠️','Gagal mengaktifkan pengingat',(e&&e.message)||e); });
+}
+setInterval(function(){
+  var menu=document.querySelector('.f-menu-kanan');
+  if(menu && !menu.querySelector('[data-a="sholat-notif"]')){
+    var it=document.createElement('button'); it.className='f-item'; it.setAttribute('data-a','sholat-notif');
+    it.onclick=function(e){ e.preventDefault(); e.stopPropagation(); fToggleNotif(); };
+    var ref=menu.querySelector('[data-a="riwayat"]');
+    if(ref && ref.nextSibling) menu.insertBefore(it,ref.nextSibling); else menu.appendChild(it);
+    fNotifUI();
+  }
+},1000);
+
 function fetchInfo(){
+  window.__f_infoT=Date.now();
   var w=document.getElementById('f-info-cuaca');
   var s=document.getElementById('f-info-sholat');
-  // Surabaya: -7.2575, 112.7521
-  if(w) fetch('https://api.open-meteo.com/v1/forecast?latitude=-7.2575&longitude=112.7521&current=temperature_2m,weather_code,relative_humidity_2m&timezone=Asia%2FJakarta').then(function(r){return r.json();}).then(function(d){
-    var kode=d.current.weather_code; var desc=kode===0?'Cerah':kode<4?'Berawan':kode<60?'Hujan Ringan':'Hujan';
-    w.innerHTML='<b>🌦️ Surabaya</b>'+Math.round(d.current.temperature_2m)+'°C • '+desc;
-  }).catch(function(){ if(w) w.innerHTML='<b>🌦️ Surabaya</b>30°C • Berawan'; });
-  if(s){ var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
-    fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Surabaya&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){
-      var t=d.data.timings; s.innerHTML='<b>🕌 Sholat Hari Ini</b>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
-    }).catch(function(){ s.innerHTML='<b>🕌 Sholat Hari Ini</b>Subuh 04:15 • Dzuhur 11:30 • Ashar 14:50 • Maghrib 17:30 • Isya 18:45'; });
-  }
+  fLokasi(function(L){
+    var lat=L.lat.toFixed(4), lon=L.lon.toFixed(4);
+    if(fNotifAktif()) fJadwalkanSholat(L);
+    if(w) fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,weather_code,relative_humidity_2m&timezone=auto').then(function(r){return r.json();}).then(function(d){
+      var kode=d.current.weather_code; var desc=kode===0?'Cerah':kode<4?'Berawan':kode<60?'Hujan Ringan':'Hujan';
+      w.innerHTML=''; var b=document.createElement('b'); b.textContent='🌦️ '+L.nama; w.appendChild(b); w.appendChild(document.createTextNode(Math.round(d.current.temperature_2m)+'°C • '+desc));
+    }).catch(function(){ w.innerHTML=''; var b=document.createElement('b'); b.textContent='🌦️ '+L.nama; w.appendChild(b); w.appendChild(document.createTextNode('Cuaca belum tersedia')); });
+    if(s){ var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
+      // metode 20 = Kemenag RI, dipakai kalau lokasi di Indonesia; di luar itu pakai bawaan layanan
+      var indo=(L.lat>-11.5 && L.lat<6.5 && L.lon>94.5 && L.lon<141.5);
+      fetch('https://api.aladhan.com/v1/timings/'+dd+'-'+mm+'-'+yy+'?latitude='+lat+'&longitude='+lon+(indo?'&method=20':'')).then(function(r){return r.json();}).then(function(d){
+        var t=d.data.timings; s.innerHTML='<b>🕌 Sholat Hari Ini'+(fNotifAktif()?' 🔔':'')+'</b>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+      }).catch(function(){ s.innerHTML='<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia, cek internet'; });
+    }
+  });
 }
+// perbarui lagi kalau aplikasi dibuka kembali dan sudah lebih dari 10 menit
+document.addEventListener('visibilitychange',function(){ if(!document.hidden && Date.now()-(window.__f_infoT||0)>600000) fetchInfo(); });
 
 function pindahLogin(){
   var auth=document.getElementById('authBar'); if(!auth) return;
   if(!document.getElementById('f-auth-info')){
     var info=document.createElement('div'); info.id='f-auth-info';
-    info.innerHTML='<div class="f-info-row" id="f-info-cuaca">🌦️ Surabaya • Memuat...</div><div class="f-info-row" id="f-info-sholat">🕌 Memuat sholat...</div>';
+    info.innerHTML='<div class="f-info-row" id="f-info-cuaca">🌦️ Mencari lokasi...</div><div class="f-info-row" id="f-info-sholat">🕌 Memuat sholat...</div>';
     auth.appendChild(info); fetchInfo();
   }
   var loginBtns=document.getElementById('loginBtns');
@@ -1568,8 +1672,8 @@ function fix(){
   var light = isLight();
   document.querySelectorAll('div').forEach(function(el){
     var t = el.innerText || '';
-    var isCuaca = t.includes('Surabaya') && !t.includes('Sholat Hari Ini') && t.length < 100;
-    var isSholat = t.includes('Sholat Hari Ini') && !t.includes('Surabaya') && t.length < 200;
+    var isCuaca = el.id === 'f-info-cuaca' || (t.includes('Surabaya') && !t.includes('Sholat Hari Ini') && t.length < 100);
+    var isSholat = el.id === 'f-info-sholat' || (t.includes('Sholat Hari Ini') && !t.includes('Surabaya') && t.length < 200);
     if(isCuaca || isSholat){
       if(light){
         setImp(el,'background','#ffffff'); setImp(el,'color','#1a0533');
