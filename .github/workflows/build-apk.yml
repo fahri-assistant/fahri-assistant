@@ -41,9 +41,13 @@ jobs:
           MAIN=android/app/src/main/java/app/fahri/assistant/MainActivity.java
           cat > "$MAIN" <<'JAVA'
           package app.fahri.assistant;
+          import android.os.Build;
           import android.os.Bundle;
           import android.graphics.Color;
+          import android.view.WindowManager;
           import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
           import com.getcapacitor.BridgeActivity;
           public class MainActivity extends BridgeActivity {
             @Override
@@ -52,6 +56,22 @@ jobs:
               WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
               getWindow().setStatusBarColor(Color.TRANSPARENT);
               getWindow().setNavigationBarColor(Color.TRANSPARENT);
+              if (Build.VERSION.SDK_INT >= 28) {
+                WindowManager.LayoutParams lp = getWindow().getAttributes();
+                lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                getWindow().setAttributes(lp);
+              }
+              hideBars();
+            }
+            @Override
+            public void onWindowFocusChanged(boolean hasFocus) {
+              super.onWindowFocusChanged(hasFocus);
+              if (hasFocus) hideBars();
+            }
+            private void hideBars() {
+              WindowInsetsControllerCompat c = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+              c.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+              c.hide(WindowInsetsCompat.Type.systemBars());
             }
           }
           JAVA
