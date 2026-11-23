@@ -18,7 +18,7 @@ jobs:
           java-version: 21
       - name: Install deps
         run: |
-          npm install --legacy-peer-deps @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0 @capacitor/status-bar@6.0.1 @capacitor-firebase/authentication@6.2.0 @capacitor/app@6.0.2
+          npm install --legacy-peer-deps @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0 @capacitor/status-bar@6.0.1 @capacitor-firebase/authentication@6.2.0 @capacitor/app@6.0.2 @capacitor/local-notifications@latest-6
       - name: Add Android + Fix All
         run: |
           if [ ! -f capacitor.config.json ]; then
@@ -95,6 +95,13 @@ jobs:
             }
           }
           JAVA
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          for P in ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION POST_NOTIFICATIONS SCHEDULE_EXACT_ALARM USE_EXACT_ALARM; do
+            if ! grep -q "android.permission.$P" "$MANIFEST"; then
+              sed -i "s|</manifest>|    <uses-permission android:name=\"android.permission.$P\" />\n</manifest>|" "$MANIFEST"
+            fi
+          done
+          grep -q "ACCESS_COARSE_LOCATION" "$MANIFEST" || { echo "Izin lokasi gagal ditambahkan ke AndroidManifest"; exit 1; }
           npx cap sync android
       - name: Build APK
         run: |
