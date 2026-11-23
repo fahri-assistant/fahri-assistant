@@ -1543,5 +1543,55 @@ fix();
 setInterval(fix, 1200);
 })();
 </script>
+<script>
+/* FIX A9: HAPUS SEMUA BORDER - cuma border, yang lain nggak disentuh */
+(function(){
+if(window.__fixA9) return; window.__fixA9=true;
+function noBorder(el){
+  el.style.setProperty('border','none','important');
+  el.style.setProperty('border-width','0','important');
+  el.style.setProperty('outline','none','important');
+  el.style.setProperty('box-shadow','none','important');
+}
+function fix(){
+  // 1. Header Fahri Assistant
+  document.querySelectorAll('div, header').forEach(function(el){
+    var t = (el.innerText||'');
+    if(t.includes('Fahri Assistant') && t.length < 100){
+      noBorder(el);
+      el.querySelectorAll('*').forEach(noBorder);
+    }
+  });
+  // 2. Bubble Surabaya + Sholat
+  document.querySelectorAll('div').forEach(function(el){
+    var t = el.innerText||'';
+    if((t.includes('Surabaya') && t.length < 100) || (t.includes('Sholat Hari Ini') && t.length < 200)){
+      noBorder(el);
+      el.querySelectorAll('*').forEach(noBorder);
+    }
+  });
+  // 3. Bubble Chat / Gambar / Edit Foto + bubble chat
+  document.querySelectorAll('div, button').forEach(function(el){
+    var t = (el.innerText||'').trim();
+    if(t==='Chat' || t==='Gambar' || t==='Edit Foto' || t.includes('Apa yang bisa aku bantu')){
+      noBorder(el);
+    }
+  });
+  // 4. Semua bubble yang ada background gelap / ungu - biar rata
+  document.querySelectorAll('div').forEach(function(el){
+    var bg = getComputedStyle(el).backgroundColor;
+    // Kalau background-nya bukan transparan dan bukan background utama, anggap bubble
+    if(bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'rgb(255, 255, 255)'){
+      // Jangan sentuh wadah besar halaman, cuma yang kecil / bubble
+      if(el.offsetHeight < 250 && el.offsetWidth < 600){
+        noBorder(el);
+      }
+    }
+  });
+}
+fix();
+setInterval(fix, 1200);
+})();
+</script>
 </body>
 </html>
