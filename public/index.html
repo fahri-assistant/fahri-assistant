@@ -1161,6 +1161,39 @@ function openBuatGambar(){
     img.src=url;
   };
 }
+// --- EDIT FOTO AI: kirim foto + instruksi ke server (/api/edit), tampilkan hasilnya di chat ---
+window.__f_editFotoAI = function(origDataUrl, prompt){
+  var chat=getChat(); if(!chat) return;
+  function turun(){ try{ chat.scrollTop=chat.scrollHeight; }catch(e){} }
+  var u=document.createElement('div'); u.style.cssText='margin:10px 0;text-align:right';
+  var uImg=document.createElement('img'); uImg.src=origDataUrl; uImg.style.cssText='max-width:220px;border-radius:14px';
+  var uCap=document.createElement('div'); uCap.style.cssText='font-size:12px;opacity:.7'; uCap.textContent='✏️ Edit Foto: '+prompt;
+  u.appendChild(uImg); u.appendChild(uCap); chat.appendChild(u);
+  var ai=document.createElement('div'); ai.className='bubble ai'; ai.textContent='✨ Lagi mengedit foto kamu, tunggu sebentar ya...';
+  chat.appendChild(ai); turun();
+  var im=new Image();
+  im.onload=function(){
+    var k=Math.min(1,1024/Math.max(im.naturalWidth,im.naturalHeight));
+    var c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    var kecil=c.toDataURL('image/jpeg',0.88);
+    fetch('https://fahri-assistant.vercel.app/api/edit',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt:prompt, image:kecil }) })
+      .then(function(r){ return r.json().catch(function(){ return { error:'Server membalas tidak wajar (kode '+r.status+')' }; }); })
+      .then(function(d){
+        var src=d.image||d.url;
+        if(!src){ ai.textContent='😕 '+(d.error||'Edit foto gagal, coba lagi.'); return; }
+        ai.textContent='';
+        var out=document.createElement('img'); out.src=src; out.style.cssText='max-width:100%;border-radius:14px;display:block';
+        out.onerror=function(){ ai.textContent='😕 Hasil edit gagal dimuat, coba lagi.'; };
+        var cap=document.createElement('div'); cap.style.cssText='font-size:12px;opacity:.7;margin-top:6px'; cap.textContent='✅ Selesai diedit';
+        ai.appendChild(out); ai.appendChild(cap);
+      })
+      .catch(function(){ ai.textContent='😕 Tidak bisa terhubung ke server, cek internet lalu coba lagi.'; })
+      .then(turun);
+  };
+  im.onerror=function(){ ai.textContent='😕 Foto tidak bisa dibaca, coba foto lain.'; };
+  im.src=origDataUrl;
+};
 function openEditFoto(){
   var ov=document.createElement('div'); ov.className='f-app-overlay';
   ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">✏️</div><div style="font-weight:800;font-size:17px;margin:6px 0">Edit Foto AI</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Upload foto, ketik mau diedit jadi apa.</div><input type="file" id="f-edit-file" accept="image/*" style="margin-bottom:10px;color:#fff"><input class="f-ap-input" id="f-edit-prompt" placeholder="Contoh: jadi kartun, background pantai, dll" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-edit-batal">Batal</button><button class="f-ap-oke" id="f-edit-buat">✏️ Edit Foto</button></div><div id="f-edit-hasil"></div></div>';
@@ -1171,9 +1204,8 @@ function openEditFoto(){
     var f=document.getElementById('f-edit-file').files[0]; var p=document.getElementById('f-edit-prompt').value.trim()||'edit foto ini jadi lebih bagus';
     if(!f){ document.getElementById('f-edit-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Pilih foto dulu.</p>'; return; }
     var r=new FileReader(); r.onload=function(){
-      var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0;text-align:right'; d.innerHTML='<img src="'+r.result+'" style="max-width:220px;border-radius:14px"><div style="font-size:12px;opacity:.7">✏️ Edit Foto: '+p+'</div>'; chat.appendChild(d); }
-      var inp=getInp(); if(inp){ inp.value='Tolong edit foto ini: '+p+' (aku sudah upload fotonya)'; inp.focus(); }
       ov.remove();
+      window.__f_editFotoAI(r.result,p);
     }; r.readAsDataURL(f);
   };
 }
