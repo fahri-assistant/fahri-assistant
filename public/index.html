@@ -541,7 +541,20 @@ window.__f_getDrawer = function(){
 };
 window.__f_getInp = function(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]')||document.querySelector('textarea')||document.querySelector('input[type="text"]'); };
 window.__f_getChat = function(){ return document.querySelector('#chat')||document.querySelector('[class*="chat"]'); };
-window.__f_bicara = function(t){ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t.slice(0,600)); u.lang='id-ID'; window.speechSynthesis.speak(u); };
+window.__f_bicara = function(t){
+  t=(t||'').toString().replace(/[*#_`]/g,'').trim().slice(0,600); if(!t) return;
+  var C=window.Capacitor, P=null;
+  try{ if(C && C.isNativePlatform && C.isNativePlatform()) P=(C.Plugins&&C.Plugins.TextToSpeech)||(C.registerPlugin&&C.registerPlugin('TextToSpeech')); }catch(e){}
+  function web(){ try{ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.lang='id-ID'; window.speechSynthesis.speak(u); }catch(e){} }
+  function info(m){ try{ var d=document.createElement('div'); d.textContent=m; d.style.cssText='position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:99999;background:rgba(20,8,35,.95);color:#fff;border:1px solid #c084fc;border-radius:14px;padding:10px 14px;font-size:13px;max-width:80%;text-align:center'; document.body.appendChild(d); setTimeout(function(){ d.remove(); },4000); }catch(e){} }
+  if(P){
+    Promise.resolve().then(function(){ return P.stop(); }).catch(function(){})
+      .then(function(){ return P.speak({ text:t, lang:'id-ID', rate:1.0, pitch:1.0, volume:1.0 }); })
+      .catch(function(e){ info('Suara gagal: '+((e&&e.message)||e||'tidak diketahui')); web(); });
+    return;
+  }
+  web();
+};
 window.__f_isTrans = function(){ return localStorage.getItem('fahri_auto_trans')!=='0'; };
 window.__f_saveArr = function(k,v){ var a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(v); localStorage.setItem(k,JSON.stringify(a)); };
 
@@ -1112,10 +1125,7 @@ function openNgobrol(){
       setTimeout(function(){
         document.getElementById('f-v-status').textContent='✅ Udah aku masukin ke chat, pencet kirim atau aku bacakan?';
         // Coba bacakan respon singkat
-        if(window.speechSynthesis){
-          var u=new SpeechSynthesisUtterance('Oke, aku udah terima: '+txt+'. Coba kirim di chat ya biar aku jawab lengkap.');
-          u.lang='id-ID'; window.speechSynthesis.speak(u);
-        }
+        window.__f_bicara('Oke, aku udah terima: '+txt+'. Coba kirim di chat ya biar aku jawab lengkap.');
       }, 800);
     };
     r.onerror=function(){ document.getElementById('f-v-status').textContent='Mic gagal, coba lagi.'; document.getElementById('f-vc').classList.remove('listening'); };
@@ -1370,7 +1380,7 @@ function bersih(){
       var b1=document.createElement('button'); b1.textContent='📌 Simpan';
       b1.onclick=function(){ try{ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr.push(tx); localStorage.setItem('fahri_bookmark', JSON.stringify(arr)); b1.textContent='✅ Tersimpan'; }catch(e){} };
       var b2=document.createElement('button'); b2.textContent='🔊 Bacakan';
-      b2.onclick=function(){ try{ window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(tx.slice(0,600)); u.lang='id-ID'; window.speechSynthesis.speak(u); }catch(e){} };
+      b2.onclick=function(){ try{ window.__f_bicara(tx); }catch(e){} };
       var b3=document.createElement('button'); b3.textContent='🔖 Bookmark';
       b3.onclick=function(){ try{ var arr2=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr2.push(tx); localStorage.setItem('fahri_bookmark', JSON.stringify(arr2)); b3.textContent='✅ Bookmark'; }catch(e){} };
       wrap.appendChild(b1); wrap.appendChild(b2); wrap.appendChild(b3);
