@@ -269,6 +269,7 @@ body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
   scroll-behavior:smooth !important;
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain !important;
+  transform:translateZ(0) !important;
   will-change:scroll-position !important;
 }
 #chat > *{transform:translateZ(0) !important}
@@ -349,6 +350,7 @@ body[data-theme="premium"] .suggest-card{background:rgba(139,92,246,.35) !import
 </style>
 </head>
 <body>
+<div id="fahri-wall"></div>
 <div id="loader"><div class="l-logo">F</div><div class="l-text">Fahri Assistant</div><div class="l-sub">AI cerdas buatan FahriAI</div><div class="l-bar"><i></i></div></div>
 <div class="header" id="header">
 <button class="menu-btn" id="btnMenu">☰</button>
@@ -1540,6 +1542,80 @@ function fix(){
 }
 fix();
 setInterval(fix, 1200);
+})();
+</script>
+<style>
+/* FIX KOTAK HITAM v2: wallpaper 1 layer selebar layar di belakang semua baris (tema Original) */
+#fahri-wall{position:fixed;inset:0;z-index:0;pointer-events:none;display:none}
+body:not([data-theme]) #fahri-wall, body[data-theme="original"] #fahri-wall{display:block}
+#fahri-wall::before{content:"";position:absolute;inset:0;opacity:.92;background:url("/wallpaper.png") center 30%/cover no-repeat}
+#fahri-wall::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 18%, rgba(168,85,247,.32) 0, transparent 38%),radial-gradient(circle at 15% 82%, rgba(147,51,234,.26) 0, transparent 35%),radial-gradient(circle at 80% 85%, rgba(192,132,252,.26) 0, transparent 34%),linear-gradient(180deg, rgba(8,1,19,.22), rgba(8,1,19,.28) 50%, rgba(8,1,19,.34))}
+body:not([data-theme]) #chat::before, body:not([data-theme]) #chat::after, body[data-theme="original"] #chat::before, body[data-theme="original"] #chat::after{display:none !important}
+#f-fitur-top, .f-vision-bar, .f-search-bar{ position:relative; z-index:10; }
+/* FIX A12 BAGIAN 1: Kunci wallpaper biar DIEM, chat yang jalan */
+html, body{
+  background-attachment: fixed !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+}
+/* Kalau wallpaper-nya pakai ::before, kunci juga */
+body::before, body::after, #__next::before{
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  background-attachment: fixed !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+/* Biar yang ke-scroll cuma area chat-nya, bukan halaman + wallpaper */
+main, [class*="chat"], [class*="messages"]{
+  overscroll-behavior: contain !important;
+}
+</style>
+
+<script>
+/* FIX A12 BAGIAN 2: Bunuh glowing kotak gede, balikin border bubble kecil */
+(function(){
+if(window.__fixA12) return; window.__fixA12=true;
+
+// 1. Suntik CSS global yang ngalahin CSS template - ini yang kemarin kurang
+var st = document.createElement('style');
+st.innerHTML = `
+  *{ box-shadow: none !important; outline: none !important; }
+  div{ border: none !important; }
+  /* Balikin border tipis CUMA buat bubble kecil */
+  div:has(> *){ border: none !important; }
+`;
+document.head.appendChild(st);
+
+function balikinBorderBubbleKecil(){
+  document.querySelectorAll('div').forEach(function(el){
+    var t = (el.innerText||'').trim();
+    // Ini bubble kecil, kasih lagi border tipisnya biar kotaknya balik
+    var isBubbleKecil =
+      (t.startsWith('Surabaya') && t.length < 80) ||
+      (t.startsWith('Sholat Hari Ini') && t.length < 250) ||
+      (t === 'Tanya') ||
+      (t === 'Siapa orang terkaya di Indonesia') ||
+      (t === 'Chat') || (t === 'Gambar') || (t === 'Edit Foto') ||
+      (t.includes('Hari ini - Senin'));
+
+    if(isBubbleKecil){
+      el.style.setProperty('border','1px solid rgba(255,255,255,0.18)','important');
+      el.style.setProperty('box-shadow','none','important');
+    }
+    // Kalau ini kotak gede header / papan chat / wadah utama, PASTIIN tetep tanpa border
+    if(t.includes('Fahri Assistant') && t.includes('Selamat pagi')){
+      el.style.setProperty('border','none','important');
+      el.style.setProperty('box-shadow','none','important');
+      el.style.setProperty('background','transparent','important');
+      el.style.setProperty('background-color','transparent','important');
+    }
+  });
+}
+balikinBorderBubbleKecil();
+setInterval(balikinBorderBubbleKecil, 1000);
 })();
 </script>
 </body>
