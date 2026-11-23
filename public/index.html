@@ -1552,7 +1552,25 @@ body:not([data-theme]) #fahri-wall, body[data-theme="original"] #fahri-wall{disp
 #fahri-wall::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 18%, rgba(168,85,247,.32) 0, transparent 38%),radial-gradient(circle at 15% 82%, rgba(147,51,234,.26) 0, transparent 35%),radial-gradient(circle at 80% 85%, rgba(192,132,252,.26) 0, transparent 34%),linear-gradient(180deg, rgba(8,1,19,.22), rgba(8,1,19,.28) 50%, rgba(8,1,19,.34))}
 body:not([data-theme]) #chat::before, body:not([data-theme]) #chat::after, body[data-theme="original"] #chat::before, body[data-theme="original"] #chat::after{display:none !important}
 #f-fitur-top, .f-vision-bar, .f-search-bar{ position:relative; z-index:10; }
+/* STROKE & GLOW LEBIH TEBAL (tema Original) - nilai asli desain awal */
+body:not([data-theme]) .bubble.ai, body[data-theme="original"] .bubble.ai{border:2.5px solid #e9d5ff !important;box-shadow:inset 0 0 42px rgba(168,85,247,.55), inset 0 0 90px rgba(147,51,234,.28), 0 0 34px rgba(192,132,252,.75), 0 0 60px rgba(168,85,247,.35) !important}
+body:not([data-theme]) .bubble.user, body[data-theme="original"] .bubble.user{border:2px solid rgba(233,213,255,.85) !important;box-shadow:0 0 24px rgba(139,92,246,.75), 0 0 46px rgba(139,92,246,.35) !important}
+body:not([data-theme]) #authBar #f-auth-info .f-info-row, body[data-theme="original"] #authBar #f-auth-info .f-info-row{border:2px solid rgba(216,180,254,.95) !important;box-shadow:inset 0 0 22px rgba(168,85,247,.25), 0 0 22px rgba(168,85,247,.65), 0 0 44px rgba(168,85,247,.3) !important}
 </style>
 
+<script>
+/* PERPANJANG AREA CHAT: bubble tetap tampak di balik baris transparan (kartu cuaca/sholat & tombol Fitur) */
+(function(){
+  function fit(){
+    var chat=document.getElementById('chat'); if(!chat) return;
+    var a=document.getElementById('authBar'), f=document.getElementById('f-fitur-top');
+    var ah=a?a.offsetHeight:0, fh=f?f.offsetHeight:0;
+    function set(p,v){ chat.style.setProperty(p,v,'important'); }
+    set('margin-top',(-ah)+'px'); set('padding-top',(ah+10)+'px');
+    set('margin-bottom',(-fh)+'px'); set('padding-bottom',(fh+12)+'px');
+  }
+  fit(); window.addEventListener('resize',fit); setInterval(fit,700);
+})();
+</script>
 </body>
 </html>
