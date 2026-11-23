@@ -9,10 +9,12 @@ const MODELS = ['klein', 'gptimage', 'flux-2-dev', 'kontext'];
 
 function getKey() {
   const e = process.env;
-  const k = e.POLLINATIONS_API_KEY || e.POLLINATIONS_KEY || e.POLLINATIONS_TOKEN;
-  if (k) return k;
-  const name = Object.keys(e).find(n => /pollinations/i.test(n));
-  return name ? e[name] : '';
+  let name = ['POLLINATIONS_API_KEY', 'POLLINATIONS_KEY', 'POLLINATIONS_TOKEN'].find(n => e[n]);
+  if (!name) name = Object.keys(e).find(n => /pollinations/i.test(n) && /key|token|secret/i.test(n));
+  if (!name) return { key: '', name: '' };
+  // buang spasi / tanda kutip yang tidak sengaja ikut tertempel
+  const key = String(e[name]).trim().replace(/^["']+|["']+$/g, '').replace(/^Bearer\s+/i, '');
+  return { key, name };
 }
 
 function guessMime(b64) {
@@ -30,7 +32,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method salah' });
 
-  const key = getKey();
+  const { key, name: keyName } = getKey();
   if (!key) return res.status(500).json({ error: 'API key Pollinations belum terpasang di Vercel (nama variabel: POLLINATIONS_API_KEY).' });
 
   let body = req.body;
@@ -72,7 +74,7 @@ export default async function handler(req, res) {
 
       if (!r.ok) {
         lastErr = model + ': ' + r.status + ' ' + txt.slice(0, 160).replace(/\s+/g, ' ');
-        if (r.status === 401) return res.status(502).json({ error: 'API key Pollinations tidak valid (401). Cek lagi key di Vercel.' });
+        if (r.status === 401) return res.status(502).json({ error: 'API key Pollinations ditolak (401). Variabel terbaca: ' + keyName + ' (awalan "' + key.slice(0, 3) + '", panjang ' + key.length + '). Buat key baru di enter.pollinations.ai lalu isi POLLINATIONS_API_KEY di Vercel dan deploy ulang.' });
         continue;
       }
 
