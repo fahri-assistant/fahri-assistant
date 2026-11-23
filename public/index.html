@@ -23,7 +23,8 @@ body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.6
 #loader .l-bar{width:140px;height:5px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
 #loader .l-bar i{display:block;height:100%;width:40%;border-radius:999px;background:linear-gradient(90deg,#a855f7,#d8b4fe);animation:loadBar 1.1s ease-in-out infinite alternate}
 @keyframes loadBar{from{transform:translateX(-20%)}to{transform:translateX(260%)}}
-.header{padding:calc(env(safe-area-inset-top) + 84px) 28px 26px;text-align:left;background:#0a0218;flex-shrink:0;border-radius:32px;margin:28px 14px 10px;border:none;box-shadow:none;transition:all .35s ease;overflow:hidden;position:relative;z-index:10;animation:none}
+.header{padding:calc(env(safe-area-inset-top) + 84px) 28px 26px;text-align:left;background:#0a0218;flex-shrink:0;border-radius:32px;margin:28px 14px 10px;border:2.2px solid rgba(216,180,254,1);box-shadow:inset 0 0 48px rgba(168,85,247,.55), inset 0 0 110px rgba(147,51,234,.30), inset 0 0 22px rgba(216,180,254,.35), 0 0 42px rgba(168,85,247,.75), 0 0 90px rgba(147,51,234,.35);transition:all .35s ease;overflow:hidden;position:relative;z-index:10;animation:headerBreath 4.5s ease-in-out infinite}
+@keyframes headerBreath{0%,100%{box-shadow:inset 0 0 48px rgba(168,85,247,.55), inset 0 0 110px rgba(147,51,234,.30), inset 0 0 22px rgba(216,180,254,.35), 0 0 32px rgba(168,85,247,.6), 0 0 70px rgba(147,51,234,.28)}50%{box-shadow:inset 0 0 56px rgba(168,85,247,.7), inset 0 0 120px rgba(147,51,234,.38), inset 0 0 28px rgba(216,180,254,.45), 0 0 48px rgba(168,85,247,.85), 0 0 105px rgba(147,51,234,.45)}}
 .header::before{content:"";position:absolute;top:0;right:0;width:180px;height:180px;pointer-events:none;opacity:.35;background-image:radial-gradient(rgba(216,180,254,.55) 1.2px, transparent 1.3px);background-size:14px 14px}
 .header.collapsed{padding:calc(env(safe-area-inset-top) + 60px) 20px 14px;border-radius:24px;margin:14px 10px 6px;animation:none}
 .header-top{display:flex;align-items:center;gap:16px;transition:all .35s ease;position:relative;z-index:1}
@@ -67,8 +68,9 @@ button.badge{font-family:inherit;cursor:pointer;color:#fff}
 .btn-logout{background:transparent;color:#ff6b81;border:1px solid rgba(255,107,129,.5);padding:6px 10px;font-size:11px}
 .hidden{display:none!important}
 #chat{flex:1;overflow-y:auto;padding:10px 14px 12px;display:flex;flex-direction:column;gap:12px;justify-content:flex-start;overscroll-behavior:contain;position:relative;background-color:transparent;isolation:isolate}
-#chat::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.92;background-image:url("/wallpaper.png");background-size:cover;background-position:center 30%;background-repeat:no-repeat;animation:none}
+#chat::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.92;background-image:url("/wallpaper.png");background-size:cover;background-position:center 30%;background-repeat:no-repeat;animation:wallLive 16s ease-in-out infinite alternate}
 #chat::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 85% 18%, rgba(168,85,247,.32) 0, transparent 38%),radial-gradient(circle at 15% 82%, rgba(147,51,234,.26) 0, transparent 35%),radial-gradient(circle at 80% 85%, rgba(192,132,252,.26) 0, transparent 34%),linear-gradient(180deg, rgba(8,1,19,.22), rgba(8,1,19,.28) 50%, rgba(8,1,19,.34));animation:orbLive 5s ease-in-out infinite}
+@keyframes wallLive{0%{transform:scale(1) translateY(0);filter:brightness(1.15)}50%{transform:scale(1.06) translateY(-12px);filter:brightness(1.32)}100%{transform:scale(1.02) translateY(8px);filter:brightness(1.12)}}
 @keyframes orbLive{0%,100%{opacity:.85}50%{opacity:1}}
 .twinkle{position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:radial-gradient(rgba(255,255,255,.95) 1.2px, transparent 1.6px),radial-gradient(rgba(216,180,254,1) 1.5px, transparent 2px),radial-gradient(rgba(192,132,252,1) 1px, transparent 1.5px);background-size:120px 120px,190px 190px,90px 90px;background-position:0 0,40px 60px,80px 20px;animation:twinkle 2.8s ease-in-out infinite alternate;opacity:.75}
 @keyframes twinkle{0%{opacity:.35;transform:translateY(0)}50%{opacity:.95}100%{opacity:.45;transform:translateY(-6px)}}
@@ -76,7 +78,7 @@ button.badge{font-family:inherit;cursor:pointer;color:#fff}
 .date-pill{align-self:center;background:rgba(18,5,31,.85);border:1.2px solid rgba(168,85,247,.7);color:#d8b4fe;padding:6px 14px;border-radius:999px;font-size:12.5px;font-weight:700;box-shadow:0 0 14px rgba(168,85,247,.3)}
 .welcome{display:flex;flex-direction:column;gap:14px;justify-content:flex-start;margin-top:0}
 .bubble{max-width:92%;padding:13px 15px;border-radius:18px;font-size:15px;line-height:1.65;white-space:pre-wrap;word-break:break-word;position:relative}
-.bubble.ai{background:#0a0218;border:none;align-self:flex-start;border-radius:26px;border-top-left-radius:8px;box-shadow:none}
+.bubble.ai{background:#0a0218;border:2.5px solid #e9d5ff;align-self:flex-start;border-radius:26px;border-top-left-radius:8px;box-shadow:inset 0 0 42px rgba(168,85,247,.55), inset 0 0 90px rgba(147,51,234,.28), 0 0 34px rgba(192,132,252,.75), 0 0 60px rgba(168,85,247,.35)}
 .bubble.ai::before{display:none!important}
 .tts-btn{position:absolute;top:8px;right:10px;border:0;background:rgba(255,255,255,.12);color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px}
 .tts-btn.playing{background:#a855f7}
@@ -267,7 +269,6 @@ body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
   scroll-behavior:smooth !important;
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain !important;
-  transform:translateZ(0) !important;
   will-change:scroll-position !important;
 }
 #chat > *{transform:translateZ(0) !important}
@@ -563,7 +564,7 @@ css.textContent=`
   .f-mode.on{ background:#8b5cf6; border-color:#8b5cf6; color:#fff; }
   .f-fix{ padding:7px 12px; border-radius:99px; border:1px solid #22c55e; background:rgba(34,197,94,.12); color:#22c55e; font-size:12px; font-weight:700; cursor:pointer; margin-left:auto; }
   #f-top-widget{ display:flex; gap:8px; padding:10px; flex-wrap:wrap; }
-  .f-w{ flex:1; min-width:140px; padding:10px 12px; border-radius:14px; background:rgba(139,92,246,.12); border:none; font-size:12px; line-height:1.5; }
+  .f-w{ flex:1; min-width:140px; padding:10px 12px; border-radius:14px; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.25); font-size:12px; line-height:1.5; }
   #f-quick-bar{ display:flex; gap:6px; padding:0 10px 8px; flex-wrap:wrap; }
   .f-quick{ padding:8px 12px; border-radius:99px; border:1px solid #444; background:rgba(255,255,255,.06); color:inherit; font-size:12px; font-weight:700; cursor:pointer; }
   .f-modal{ position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:99999; display:none; align-items:flex-end; justify-content:center; }
@@ -1539,6 +1540,75 @@ function fix(){
 }
 fix();
 setInterval(fix, 1200);
+})();
+</script>
+<style>
+/* FIX KOTAK HITAM: baris di luar #chat tetap tampil di atas wallpaper */
+#f-fitur-top, .f-vision-bar, .f-search-bar{ position:relative; z-index:10; }
+/* FIX A12 BAGIAN 1: Kunci wallpaper biar DIEM, chat yang jalan */
+html, body{
+  background-attachment: fixed !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+}
+/* Kalau wallpaper-nya pakai ::before, kunci juga */
+body::before, body::after, #__next::before{
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  background-attachment: fixed !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+/* Biar yang ke-scroll cuma area chat-nya, bukan halaman + wallpaper */
+main, [class*="chat"], [class*="messages"]{
+  overscroll-behavior: contain !important;
+}
+</style>
+
+<script>
+/* FIX A12 BAGIAN 2: Bunuh glowing kotak gede, balikin border bubble kecil */
+(function(){
+if(window.__fixA12) return; window.__fixA12=true;
+
+// 1. Suntik CSS global yang ngalahin CSS template - ini yang kemarin kurang
+var st = document.createElement('style');
+st.innerHTML = `
+  *{ box-shadow: none !important; outline: none !important; }
+  div{ border: none !important; }
+  /* Balikin border tipis CUMA buat bubble kecil */
+  div:has(> *){ border: none !important; }
+`;
+document.head.appendChild(st);
+
+function balikinBorderBubbleKecil(){
+  document.querySelectorAll('div').forEach(function(el){
+    var t = (el.innerText||'').trim();
+    // Ini bubble kecil, kasih lagi border tipisnya biar kotaknya balik
+    var isBubbleKecil =
+      (t.startsWith('Surabaya') && t.length < 80) ||
+      (t.startsWith('Sholat Hari Ini') && t.length < 250) ||
+      (t === 'Tanya') ||
+      (t === 'Siapa orang terkaya di Indonesia') ||
+      (t === 'Chat') || (t === 'Gambar') || (t === 'Edit Foto') ||
+      (t.includes('Hari ini - Senin'));
+
+    if(isBubbleKecil){
+      el.style.setProperty('border','1px solid rgba(255,255,255,0.18)','important');
+      el.style.setProperty('box-shadow','none','important');
+    }
+    // Kalau ini kotak gede header / papan chat / wadah utama, PASTIIN tetep tanpa border
+    if(t.includes('Fahri Assistant') && t.includes('Selamat pagi')){
+      el.style.setProperty('border','none','important');
+      el.style.setProperty('box-shadow','none','important');
+      el.style.setProperty('background','transparent','important');
+      el.style.setProperty('background-color','transparent','important');
+    }
+  });
+}
+balikinBorderBubbleKecil();
+setInterval(balikinBorderBubbleKecil, 1000);
 })();
 </script>
 </body>
