@@ -1506,34 +1506,34 @@ setTimeout(jalan, 1500);
 })();
   </script>
 <script>
-/* FIX A4: Pakai setProperty !important biar menang lawan CSS asli */
+/* FIX A6: Wadah luar display:contents biar ukuran bubble balik normal */
 (function(){
-if(window.__fixA4) return; window.__fixA4=true;
-
-function setImp(el, prop, val){
-  el.style.setProperty(prop, val, 'important');
-}
+if(window.__fixA6) return; window.__fixA6=true;
+function setImp(el, prop, val){ el.style.setProperty(prop, val, 'important'); }
 function isLight(){
-  // cek header Fahri Assistant, bukan body - kalau headernya putih = tema terang
-  var h = document.querySelector('#welcome') || document.querySelector('header');
-  if(!h) return true;
-  var bg = getComputedStyle(h).backgroundColor;
-  var m = bg.match(/\d+/g); if(!m) return true;
-  return (+m[0]+ +m[1]+ +m[2]) > 400;
+  var all = document.querySelectorAll('h1, h2, div, span');
+  for(var i=0;i<all.length;i++){
+    if((all[i].innerText||'').trim() === 'Fahri Assistant'){
+      var c = getComputedStyle(all[i]).color;
+      var m = c.match(/\d+/g); if(!m) return true;
+      return (+m[0]+ +m[1]+ +m[2]) < 300;
+    }
+  }
+  return true;
 }
-
 function fix(){
   var light = isLight();
-  // 1. WADAH LUAR - dilucuti
+  // 1. WADAH LUAR - DIBIKIN HILANG, BUKAN FLEX. Ini yang balikin ukuran.
   document.querySelectorAll('div, section').forEach(function(el){
     var t = el.innerText || '';
     if(t.includes('Surabaya') && t.includes('Sholat Hari Ini') && el.children.length >= 2){
       setImp(el,'background','transparent'); setImp(el,'border','none');
       setImp(el,'box-shadow','none'); setImp(el,'outline','none');
-      setImp(el,'display','flex'); setImp(el,'gap','10px'); setImp(el,'padding','0');
+      setImp(el,'display','contents'); // <-- ini kuncinya, bukan flex
+      // JANGAN set padding / gap / display:flex di sini, itu yang bikin melar
     }
   });
-  // 2. BUBBLE DALEM - dipaksa pakai !important
+  // 2. BUBBLE DALEM - cuma warna + border, JANGAN utak-atik padding / lebar / tinggi
   document.querySelectorAll('div').forEach(function(el){
     var t = el.innerText || '';
     var isCuaca = t.includes('Surabaya') && !t.includes('Sholat Hari Ini') && t.length < 100;
@@ -1548,12 +1548,10 @@ function fix(){
         setImp(el,'border','2px solid #FDF4FF');
         setImp(el,'box-shadow','0 0 6px rgba(255,255,255,.95), 0 0 18px rgba(245,208,254,.85)');
       }
-      el.querySelectorAll('*').forEach(function(c){
-        setImp(c,'color', light ? '#1a0533' : '#ffffff');
-      });
+      el.querySelectorAll('*').forEach(function(c){ setImp(c,'color', light ? '#1a0533' : '#ffffff'); });
+      // padding / width / height sengaja NGGAK disentuh, biar ukuran balik asli
     }
   });
-  // 3. BUBBLE USER TEMA GELAP
   if(!light){
     document.querySelectorAll('div').forEach(function(el){
       var t=(el.innerText||'').trim();
