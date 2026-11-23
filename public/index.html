@@ -1543,57 +1543,71 @@ fix();
 setInterval(fix, 1200);
 })();
 </script>
-<script>
-/* FIX A11: Hapus KOTAK GEDE doang, pakai ukuran, bukan teks */
-(function(){
-if(window.__fixA11) return; window.__fixA11=true;
+<style>
+/* FIX A12 BAGIAN 1: Kunci wallpaper biar DIEM, chat yang jalan */
+html, body{
+  background-attachment: fixed !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+}
+/* Kalau wallpaper-nya pakai ::before, kunci juga */
+body::before, body::after, #__next::before{
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  background-attachment: fixed !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+/* Biar yang ke-scroll cuma area chat-nya, bukan halaman + wallpaper */
+main, [class*="chat"], [class*="messages"]{
+  overscroll-behavior: contain !important;
+}
+</style>
 
-// Matikan juga garis dari ::before / ::after yang bikin glowing
+<script>
+/* FIX A12 BAGIAN 2: Bunuh glowing kotak gede, balikin border bubble kecil */
+(function(){
+if(window.__fixA12) return; window.__fixA12=true;
+
+// 1. Suntik CSS global yang ngalahin CSS template - ini yang kemarin kurang
 var st = document.createElement('style');
-st.innerHTML = '*::before, *::after{ box-shadow:none !important; border:none !important; }';
+st.innerHTML = `
+  *{ box-shadow: none !important; outline: none !important; }
+  div{ border: none !important; }
+  /* Balikin border tipis CUMA buat bubble kecil */
+  div:has(> *){ border: none !important; }
+`;
 document.head.appendChild(st);
 
-function isWadahGede(el){
-  // Wadah gede = lebar hampir full layar + tinggi gede
-  // Bubble kecil = lebar kecil / tinggi kecil, jangan disentuh
-  var w = el.offsetWidth, h = el.offsetHeight;
-  if(w > 320 && h > 200) return true; // header gede
-  if(w > 320 && h > 120 && (el.innerText||'').includes('Fahri Assistant')) return true;
-  return false;
-}
-function makeTransparan(el){
-  el.style.setProperty('background','transparent','important');
-  el.style.setProperty('background-color','transparent','important');
-  el.style.setProperty('background-image','none','important');
-  el.style.setProperty('border','none','important');
-  el.style.setProperty('outline','none','important');
-  el.style.setProperty('box-shadow','none','important');
-}
-function fix(){
-  // 1. Cari kotak header gede pakai ukuran
+function balikinBorderBubbleKecil(){
   document.querySelectorAll('div').forEach(function(el){
-    if(isWadahGede(el)){
-      // Cek, jangan sampai ini bubble chat jawaban yang gede juga
-      // Kalau isinya ada Fahri Assistant, ini pasti wadah header
-      if((el.innerText||'').includes('Fahri Assistant')){
-        makeTransparan(el);
-      }
+    var t = (el.innerText||'').trim();
+    // Ini bubble kecil, kasih lagi border tipisnya biar kotaknya balik
+    var isBubbleKecil =
+      (t.startsWith('Surabaya') && t.length < 80) ||
+      (t.startsWith('Sholat Hari Ini') && t.length < 250) ||
+      (t === 'Tanya') ||
+      (t === 'Siapa orang terkaya di Indonesia') ||
+      (t === 'Chat') || (t === 'Gambar') || (t === 'Edit Foto') ||
+      (t.includes('Hari ini - Senin'));
+
+    if(isBubbleKecil){
+      el.style.setProperty('border','1px solid rgba(255,255,255,0.18)','important');
+      el.style.setProperty('box-shadow','none','important');
     }
-  });
-  // 2. Cari wadah utama halaman (yang paling luar, yang isinya semua)
-  document.querySelectorAll('div').forEach(function(el){
-    var t = el.innerText||'';
-    if(t.includes('Fahri Assistant') && t.includes('Apa yang bisa aku bantu') && el.offsetWidth > 340){
-      // Ini wadah paling luar, tapi jangan sentuh kalau dia body utama
-      // Kita cuma hilangin border + shadow-nya, background biarin transparan
+    // Kalau ini kotak gede header / papan chat / wadah utama, PASTIIN tetep tanpa border
+    if(t.includes('Fahri Assistant') && t.includes('Selamat pagi')){
       el.style.setProperty('border','none','important');
       el.style.setProperty('box-shadow','none','important');
-      el.style.setProperty('outline','none','important');
+      el.style.setProperty('background','transparent','important');
+      el.style.setProperty('background-color','transparent','important');
     }
   });
 }
-fix();
-setInterval(fix, 1000);
+balikinBorderBubbleKecil();
+setInterval(balikinBorderBubbleKecil, 1000);
 })();
 </script>
 </body>
