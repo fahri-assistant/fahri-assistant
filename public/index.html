@@ -1506,60 +1506,67 @@ setTimeout(jalan, 1500);
 })();
   </script>
 <script>
-/* FIX A2: Cari elemen lewat teksnya, jadi kena walau nama class-nya beda */
+/* FIX A3: Wadah luar cuaca+sholat dilucuti, bubble dalemnya tetap misah */
 (function(){
-if(window.__fixA2) return; window.__fixA2=true;
+if(window.__fixA3) return; window.__fixA3=true;
 
-function isLightTheme(){
-  var bg = getComputedStyle(document.body).backgroundColor;
-  // ambil angka rgb-nya, kalau terang = tema terang
-  var m = bg.match(/\d+/g); if(!m) return true;
-  var r=+m[0], g=+m[1], b=+m[2];
-  return (r+g+b) > 400; // terang kalau totalnya gede
+function isLight(){
+  var bg=getComputedStyle(document.body).backgroundColor;
+  var m=bg.match(/\d+/g); if(!m) return true;
+  return (+m[0]+ +m[1]+ +m[2]) > 400;
 }
 
 function fix(){
-  var light = isLightTheme();
-  // 1. CARI BUBBLE CUACA + SHOLAT LEWAT TEKSNYA
-  document.querySelectorAll('div, section, article').forEach(function(el){
-    var t = el.innerText || '';
-    // cuma yang persis bubble cuaca / sholat, bukan wadah gedenya
-    if((t.includes('Surabaya') && t.includes('Berawan')) || t.includes('Sholat Hari Ini')){
-      if(t.length < 200){ // biar nggak kena wadah gede
-        if(light){
-          el.style.background = '#ffffff';
-          el.style.color = '#1a0533';
-          el.style.border = '2px solid #C084FC';
-          el.style.boxShadow = '0 0 6px rgba(192,132,252,.5)';
-        } else {
-          el.style.background = 'rgba(15,3,30,.95)';
-          el.style.color = '#ffffff';
-          el.style.border = '2px solid #FDF4FF';
-          el.style.boxShadow = '0 0 6px rgba(255,255,255,.95), 0 0 18px rgba(245,208,254,.85)';
-        }
-        el.querySelectorAll('*').forEach(function(c){
-          c.style.color = light ? '#1a0533' : '#ffffff';
-        });
+  var light=isLight();
+  // 1. CARI WADAH LUAR YANG ISINYA ADA 2-2NYA (Surabaya + Sholat) -> INI YANG DILUCUTI
+  document.querySelectorAll('div, section').forEach(function(el){
+    var t=el.innerText||'';
+    if(t.includes('Surabaya') && t.includes('Sholat Hari Ini')){
+      // cek: ini wadah luar kalau dia punya 2 anak yang masing-masing ada Surabaya / Sholat
+      var hasBoth = el.children.length >= 2;
+      if(hasBoth){
+        el.style.background='transparent';
+        el.style.border='none';
+        el.style.outline='none';
+        el.style.boxShadow='none';
+        el.style.padding='0';
+        el.style.display='flex';
+        el.style.gap='10px';
       }
     }
   });
-  // 2. CARI BUBBLE USER LEWAT TEKSNYA - cuma di tema gelap
+  // 2. CARI BUBBLE DALEMNYA - yang cuma ada 1 teks aja, bukan 2-2nya
+  document.querySelectorAll('div').forEach(function(el){
+    var t=el.innerText||'';
+    var isCuaca = t.includes('Surabaya') && !t.includes('Sholat Hari Ini') && t.length < 100;
+    var isSholat = t.includes('Sholat Hari Ini') && !t.includes('Surabaya') && t.length < 200;
+    if(isCuaca || isSholat){
+      if(light){
+        el.style.background='#ffffff'; el.style.color='#1a0533';
+        el.style.border='2px solid #C084FC';
+        el.style.boxShadow='0 0 6px rgba(192,132,252,.5)';
+      } else {
+        el.style.background='rgba(15,3,30,.95)'; el.style.color='#ffffff';
+        el.style.border='2px solid #FDF4FF';
+        el.style.boxShadow='0 0 6px rgba(255,255,255,.95), 0 0 18px rgba(245,208,254,.85)';
+      }
+      el.querySelectorAll('*').forEach(function(c){ c.style.color = light ? '#1a0533' : '#ffffff'; });
+    }
+  });
+  // 3. BUBBLE USER DI TEMA GELAP - teksnya putih
   if(!light){
     document.querySelectorAll('div').forEach(function(el){
-      var t = (el.innerText || '').trim();
-      if(t === 'Tanya' || t.startsWith('Kemana arah badai salju')){
-        el.style.background = 'rgba(15,3,30,.95)';
-        el.style.color = '#ffffff';
-        el.style.border = '2px solid #FDF4FF';
-        el.querySelectorAll('*').forEach(function(c){ c.style.color = '#ffffff'; });
+      var t=(el.innerText||'').trim();
+      if(t==='Tanya' || t.startsWith('Kemana arah badai salju')){
+        el.style.color='#ffffff'; el.style.border='2px solid #FDF4FF';
+        el.querySelectorAll('*').forEach(function(c){ c.style.color='#ffffff'; });
       }
     });
   }
 }
 fix();
-// jalanin lagi tiap ganti tema / tiap chat baru masuk
 setInterval(fix, 1500);
 })();
-  </script>
+</script>
 </body>
 </html>
