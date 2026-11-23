@@ -52,6 +52,7 @@ jobs:
           import androidx.core.view.WindowInsetsControllerCompat;
           import com.getcapacitor.BridgeActivity;
           public class MainActivity extends BridgeActivity {
+            private boolean kbOpen = false;
             @Override
             protected void onCreate(Bundle savedInstanceState) {
               super.onCreate(savedInstanceState);
@@ -68,10 +69,16 @@ jobs:
                 if (Build.VERSION.SDK_INT >= 30) {
                   bottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
                 } else {
-                  bottom = insets.getSystemWindowInsetBottom();
+                  int sys = insets.getSystemWindowInsetBottom();
+                  int stable = insets.getStableInsetBottom();
+                  int min = (int) (80 * getResources().getDisplayMetrics().density);
+                  bottom = (sys - stable > min) ? sys : 0;
                 }
                 View content = findViewById(android.R.id.content);
                 if (content != null) content.setPadding(0, 0, 0, bottom);
+                boolean open = bottom > 0;
+                if (kbOpen && !open) v.post(() -> hideBars());
+                kbOpen = open;
                 return ViewCompat.onApplyWindowInsets(v, insets);
               });
               hideBars();
