@@ -1506,9 +1506,9 @@ setTimeout(jalan, 1500);
 })();
   </script>
 <script>
-/* FIX A6: Wadah luar display:contents biar ukuran bubble balik normal */
+/* FIX A7: Wadah balik jadi grid 2 kolom, bukan contents / flex */
 (function(){
-if(window.__fixA6) return; window.__fixA6=true;
+if(window.__fixA7) return; window.__fixA7=true;
 function setImp(el, prop, val){ el.style.setProperty(prop, val, 'important'); }
 function isLight(){
   var all = document.querySelectorAll('h1, h2, div, span');
@@ -1523,17 +1523,21 @@ function isLight(){
 }
 function fix(){
   var light = isLight();
-  // 1. WADAH LUAR - DIBIKIN HILANG, BUKAN FLEX. Ini yang balikin ukuran.
+  // 1. WADAH LUAR - BALIK JADI GRID 2 KOLOM, CUMA BORDER + BG YANG DILUCUTI
   document.querySelectorAll('div, section').forEach(function(el){
     var t = el.innerText || '';
     if(t.includes('Surabaya') && t.includes('Sholat Hari Ini') && el.children.length >= 2){
       setImp(el,'background','transparent'); setImp(el,'border','none');
       setImp(el,'box-shadow','none'); setImp(el,'outline','none');
-      setImp(el,'display','contents'); // <-- ini kuncinya, bukan flex
-      // JANGAN set padding / gap / display:flex di sini, itu yang bikin melar
+      setImp(el,'display','grid');
+      setImp(el,'grid-template-columns','1fr 1fr');
+      setImp(el,'gap','10px');
+      setImp(el,'width','100%');
+      setImp(el,'align-items','start');
+      setImp(el,'padding','0');
     }
   });
-  // 2. BUBBLE DALEM - cuma warna + border, JANGAN utak-atik padding / lebar / tinggi
+  // 2. BUBBLE DALEM - cuma warna, jangan sentuh ukuran
   document.querySelectorAll('div').forEach(function(el){
     var t = el.innerText || '';
     var isCuaca = t.includes('Surabaya') && !t.includes('Sholat Hari Ini') && t.length < 100;
@@ -1548,8 +1552,8 @@ function fix(){
         setImp(el,'border','2px solid #FDF4FF');
         setImp(el,'box-shadow','0 0 6px rgba(255,255,255,.95), 0 0 18px rgba(245,208,254,.85)');
       }
+      setImp(el,'width','auto'); setImp(el,'min-width','0');
       el.querySelectorAll('*').forEach(function(c){ setImp(c,'color', light ? '#1a0533' : '#ffffff'); });
-      // padding / width / height sengaja NGGAK disentuh, biar ukuran balik asli
     }
   });
   if(!light){
