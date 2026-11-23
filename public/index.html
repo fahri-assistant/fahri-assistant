@@ -1544,41 +1544,56 @@ setInterval(fix, 1200);
 })();
 </script>
 <script>
-/* FIX A10 REVISI: Hilangin SEMUA kotak gede di belakang, bubble kecil JANGAN disentuh */
+/* FIX A11: Hapus KOTAK GEDE doang, pakai ukuran, bukan teks */
 (function(){
-if(window.__fixA10R) return; window.__fixA10R=true;
-function makeWadahTransparan(el){
+if(window.__fixA11) return; window.__fixA11=true;
+
+// Matikan juga garis dari ::before / ::after yang bikin glowing
+var st = document.createElement('style');
+st.innerHTML = '*::before, *::after{ box-shadow:none !important; border:none !important; }';
+document.head.appendChild(st);
+
+function isWadahGede(el){
+  // Wadah gede = lebar hampir full layar + tinggi gede
+  // Bubble kecil = lebar kecil / tinggi kecil, jangan disentuh
+  var w = el.offsetWidth, h = el.offsetHeight;
+  if(w > 320 && h > 200) return true; // header gede
+  if(w > 320 && h > 120 && (el.innerText||'').includes('Fahri Assistant')) return true;
+  return false;
+}
+function makeTransparan(el){
   el.style.setProperty('background','transparent','important');
   el.style.setProperty('background-color','transparent','important');
+  el.style.setProperty('background-image','none','important');
   el.style.setProperty('border','none','important');
   el.style.setProperty('outline','none','important');
   el.style.setProperty('box-shadow','none','important');
 }
 function fix(){
+  // 1. Cari kotak header gede pakai ukuran
+  document.querySelectorAll('div').forEach(function(el){
+    if(isWadahGede(el)){
+      // Cek, jangan sampai ini bubble chat jawaban yang gede juga
+      // Kalau isinya ada Fahri Assistant, ini pasti wadah header
+      if((el.innerText||'').includes('Fahri Assistant')){
+        makeTransparan(el);
+      }
+    }
+  });
+  // 2. Cari wadah utama halaman (yang paling luar, yang isinya semua)
   document.querySelectorAll('div').forEach(function(el){
     var t = el.innerText||'';
-
-    // 1. Wadah HEADER - isinya Fahri Assistant + Surabaya
-    if(t.includes('Fahri Assistant') && t.includes('Surabaya') && t.length > 200){
-      makeWadahTransparan(el);
+    if(t.includes('Fahri Assistant') && t.includes('Apa yang bisa aku bantu') && el.offsetWidth > 340){
+      // Ini wadah paling luar, tapi jangan sentuh kalau dia body utama
+      // Kita cuma hilangin border + shadow-nya, background biarin transparan
+      el.style.setProperty('border','none','important');
+      el.style.setProperty('box-shadow','none','important');
+      el.style.setProperty('outline','none','important');
     }
-    // 2. Wadah CUACA + JADWAL - isinya Surabaya DAN Sholat sekaligus
-    else if(t.includes('Surabaya') && t.includes('Sholat Hari Ini')){
-      makeWadahTransparan(el);
-    }
-    // 3. Wadah PAPAN CHAT - isinya Apa yang bisa aku bantu + Chat + Gambar + Edit Foto
-    else if(t.includes('Apa yang bisa aku bantu') && t.includes('Chat') && t.includes('Edit Foto')){
-      makeWadahTransparan(el);
-    }
-    // 4. Wadah UTAMA halaman - isinya semuanya (header + cuaca + chat)
-    else if(t.includes('Fahri Assistant') && t.includes('Apa yang bisa aku bantu') && t.length > 500){
-      makeWadahTransparan(el);
-    }
-    // Bubble kecil kayak Surabaya doang, Sholat doang, Chat doang = JANGAN disentuh, sengaja nggak masuk sini
   });
 }
 fix();
-setInterval(fix, 1200);
+setInterval(fix, 1000);
 })();
 </script>
 </body>
