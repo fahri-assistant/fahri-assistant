@@ -1609,7 +1609,7 @@ function fToggleNotif(){
   }).catch(function(e){ fNotifPopup('⚠️','Gagal mengaktifkan pengingat',(e&&e.message)||e); });
 }
 setInterval(function(){
-  var menu=document.querySelector('.f-menu-kanan');
+  var menu=document.querySelector('#drawer .f-menu-kanan')||document.querySelector('#drawer .drawer-box');
   if(menu && !menu.querySelector('[data-a="sholat-notif"]')){
     var it=document.createElement('button'); it.className='f-item'; it.setAttribute('data-a','sholat-notif');
     it.onclick=function(e){ e.preventDefault(); e.stopPropagation(); fToggleNotif(); };
@@ -1783,6 +1783,11 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
 #f-info-sholat .f-sh-grid span{display:flex;flex-direction:column;align-items:center;line-height:1.3;font-size:12px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
 #f-info-sholat .f-sh-grid i{font-style:normal;font-size:9px;font-weight:600;opacity:.72}
 .f-retry-btn{margin-top:10px;display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(192,132,252,.8);background:rgba(168,85,247,.25);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer}
+/* MENU ☰ STRATEGIS: tombol tetap di pojok kanan atas (tidak ikut header mengecil), panel menu muncul tepat di bawahnya */
+#btnMenu{position:fixed !important;top:calc(max(env(safe-area-inset-top,0px),var(--fb-top,0px)) + 12px) !important;right:14px !important;left:auto !important;bottom:auto !important;z-index:10001 !important;width:46px !important;height:46px !important;min-width:46px !important;font-size:22px !important;margin:0 !important;transform:none !important}
+.header.collapsed #btnMenu{top:calc(max(env(safe-area-inset-top,0px),var(--fb-top,0px)) + 12px) !important;width:46px !important;height:46px !important;font-size:22px !important}
+#drawer{z-index:10000 !important}
+#drawer .drawer-box{top:calc(max(env(safe-area-inset-top,0px),var(--fb-top,0px)) + 66px) !important;right:14px !important;width:260px !important;max-height:calc(100dvh - max(env(safe-area-inset-top,0px),var(--fb-top,0px)) - 84px) !important;overflow-y:auto !important;overscroll-behavior:contain}
 </style>
 
 <script>
