@@ -1766,8 +1766,8 @@ body{padding-top:max(env(safe-area-inset-top,0px),var(--fb-top)) !important;padd
 #chat > *{transform:none !important}
 /* tepi chat memudar halus di balik kartu cuaca/sholat dan tombol Fitur (tema Original) */
 body:not([data-theme]) #chat, body[data-theme="original"] #chat{
-  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent calc(var(--f-ah,0px) - 2px),#000 calc(var(--f-ah,0px) + 18px),#000 calc(100% - var(--f-fh,0px) - 6px),transparent calc(100% - 8px));
-  mask-image:linear-gradient(to bottom,transparent 0,transparent calc(var(--f-ah,0px) - 2px),#000 calc(var(--f-ah,0px) + 18px),#000 calc(100% - var(--f-fh,0px) - 6px),transparent calc(100% - 8px));
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent calc(var(--f-ah,0px) - 2px),#000 calc(var(--f-ah,0px) + 18px),#000 100%);
+  mask-image:linear-gradient(to bottom,transparent 0,transparent calc(var(--f-ah,0px) - 2px),#000 calc(var(--f-ah,0px) + 18px),#000 100%);
 }
 body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{background:linear-gradient(rgba(168,85,247,.30),rgba(168,85,247,.30)),#12051f !important}
 /* markdown: kutipan */
@@ -1794,7 +1794,7 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
     var ah=a?a.offsetHeight:0, fh=f?f.offsetHeight:0;
     function set(p,v){ chat.style.setProperty(p,v,'important'); }
     set('margin-top',(-ah)+'px'); set('padding-top',(ah+26)+'px'); chat.style.setProperty('--f-ah',ah+'px'); chat.style.setProperty('--f-fh',fh+'px');
-    set('margin-bottom','0px'); set('padding-bottom',(fh+12)+'px');
+    var cp=document.querySelector('.composer'); var cpH=cp?cp.offsetHeight:0; var under=fh+cpH+14; set('margin-bottom',(-under)+'px'); set('padding-bottom',(under+12)+'px'); chat.style.setProperty('--f-under',under+'px');
   }
   fit(); window.addEventListener('resize',fit); setInterval(fit,700);
 })();
@@ -1845,12 +1845,6 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
     });
   }
 })();
-</script>
-<script>
-/* Daftarkan service worker agar aplikasi bisa dipasang (PWA). Gagal diam-diam di WebView APK, tidak mengganggu. */
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
-}
 </script>
 </body>
 </html>
