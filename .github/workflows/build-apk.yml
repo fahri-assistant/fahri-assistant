@@ -18,12 +18,13 @@ jobs:
           java-version: 21
       - name: Install deps
         run: |
-          npm install --legacy-peer-deps @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0 @capacitor/status-bar@6.0.1 @capacitor-firebase/authentication@6.2.0 @capacitor/app@6.0.2 @capacitor/local-notifications@latest-6
+          npm install --legacy-peer-deps @capacitor-firebase/authentication@6 @capacitor/core@6.2.2 @capacitor/cli@6.2.2 @capacitor/android@6.2.2 @capacitor/assets@3.0.1 @capacitor-community/text-to-speech@6.0.0 @capacitor/status-bar@6.0.1 @capacitor-firebase/authentication@6.2.0 @capacitor/app@6.0.2 @capacitor/local-notifications@latest-6
       - name: Add Android + Fix All
         run: |
           if [ ! -f capacitor.config.json ]; then
             echo '{"appId":"app.fahri.assistant","appName":"Fahri Assistant","webDir":"public"}' > capacitor.config.json
           fi
+          node -e "const fs=require('fs');const p='capacitor.config.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.plugins=Object.assign({},c.plugins,{FirebaseAuthentication:{skipNativeAuth:true,providers:['google.com','github.com']}});fs.writeFileSync(p,JSON.stringify(c,null,2));"
           mkdir -p assets
           npx cap add android || true
           cp google-services.json android/app/google-services.json
@@ -103,6 +104,14 @@ jobs:
           done
           grep -q "ACCESS_COARSE_LOCATION" "$MANIFEST" || { echo "Izin lokasi gagal ditambahkan ke AndroidManifest"; exit 1; }
           npx cap sync android
+      - name: Pasang keystore debug tetap
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$DEBUG_KEYSTORE_B64" ]; then echo "PERINGATAN: secret DEBUG_KEYSTORE_B64 belum diisi, SHA-1 bisa berubah tiap build"; exit 0; fi
+          mkdir -p ~/.android
+          echo "$DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey | grep "SHA1:" || true
       - name: Build APK
         run: |
           cd android
