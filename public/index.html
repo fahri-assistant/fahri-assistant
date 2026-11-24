@@ -351,6 +351,41 @@ body[data-theme="premium"] .suggest-card{background:rgba(139,92,246,.35) !import
 </head>
 <body>
 <div id="fahri-wall"></div>
+<script>
+/* PERF + UTILITAS: timer perapi UI hanya jalan kalau DOM berubah, tidak saat scroll, dan tidak saat aplikasi di latar belakang */
+(function(){
+  var mut=Date.now(), scrolling=false, sT=0;
+  function tandai(){ mut=Date.now(); }
+  document.addEventListener('DOMContentLoaded',function(){
+    try{ new MutationObserver(tandai).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+    try{ new MutationObserver(tandai).observe(document.body,{attributes:true,attributeFilter:['data-theme']}); }catch(e){}
+  });
+  document.addEventListener('scroll',function(){ scrolling=true; clearTimeout(sT); sT=setTimeout(function(){ scrolling=false; },180); },{capture:true,passive:true});
+  var si=window.setInterval;
+  window.setInterval=function(fn,ms){
+    if(typeof fn!=='function' || !(ms>=700 && ms<=1500)) return si.apply(window,arguments);
+    var extra=[].slice.call(arguments,2), last=0;
+    return si(function(){
+      if(document.hidden || scrolling) return;
+      if(last && mut<=last) return;
+      last=Date.now();
+      fn.apply(null,extra);
+    },ms);
+  };
+  /* salin teks (dipakai tombol Salin) */
+  window.__f_salin=function(t,cb){
+    t=String(t||''); function ok(v){ try{ if(cb) cb(v); }catch(e){} }
+    function lama(){ try{ var a=document.createElement('textarea'); a.value=t; a.style.cssText='position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(a); a.focus(); a.select(); var r=document.execCommand('copy'); document.body.removeChild(a); ok(!!r); }catch(e){ ok(false); } }
+    try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ ok(true); },lama); } else lama(); }catch(e){ lama(); }
+  };
+  /* alert bawaan Android diganti pop-up aplikasi */
+  window.alert=function(m){
+    var t=String(m==null?'':m);
+    try{ if(window.__f_showAppPopup){ window.__f_showAppPopup({ icon:'ℹ️', title:'Info', msg:t.replace(/&/g,'&amp;').replace(/</g,'&lt;'), okText:'OK' }); return; } }catch(e){}
+    try{ console.log(t); }catch(e){}
+  };
+})();
+</script>
 <div id="loader"><div class="l-logo">F</div><div class="l-text">Fahri Assistant</div><div class="l-sub">AI cerdas buatan FahriAI</div><div class="l-bar"><i></i></div></div>
 <div class="header" id="header">
 <button class="menu-btn" id="btnMenu">☰</button>
@@ -382,7 +417,7 @@ let history=[];try{history=JSON.parse(localStorage.getItem('fahri_history')||'[]
 function saveHistory(){try{localStorage.setItem('fahri_history',JSON.stringify(history))}catch(e){}}
 function saveLog(role,text){try{const logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');logs.push({role,text,time:new Date().toISOString()});localStorage.setItem('fahri_log',JSON.stringify(logs.slice(-200)))}catch(e){}}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function renderMarkdown(t){let text=esc(t);const lines=text.split('\n');let out='',i=0;while(i<lines.length){if(lines[i].includes('|')&&lines[i+1]&&lines[i+1].includes('---')){const headers=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';i+=2;while(i<lines.length&&lines[i].includes('|')){const cells=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';i++}out+='</table>';continue}out+=lines[i]+'\n';i++}text=out;text=text.replace(/^###\s*(.+)$/gm,'<h3>$1</h3>');text=text.replace(/^---$/gm,'<hr>');text=text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');return text.replace(/\n/g,'<br>')}
+function renderMarkdown(t){let text=esc(t).replace(/^\s+|\s+$/g,'').replace(/\n{3,}/g,'\n\n');const lines=text.split('\n');let out='',i=0;while(i<lines.length){if(lines[i].includes('|')&&lines[i+1]&&lines[i+1].includes('---')){const headers=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<table><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';i+=2;while(i<lines.length&&lines[i].includes('|')){const cells=lines[i].split('|').map(s=>s.trim()).filter(Boolean);out+='<tr>'+cells.map(c=>'<td>'+c+'</td>').join('')+'</tr>';i++}out+='</table>';continue}out+=lines[i]+'\n';i++}text=out;text=text.replace(/^###\s*(.+)$/gm,'<h3>$1</h3>');text=text.replace(/^---$/gm,'<hr>');text=text.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');text=text.replace(/(^|[\s(])\*([^*\s](?:[^*\n]*?[^*\s])?)\*(?=$|[\s.,;:!?)])/gm,'$1<i>$2</i>');text=text.replace(/^&gt;\s?(.+)$/gm,'<span class="f-quote">$1</span>');text=text.replace(/(<span class="f-quote">.*?<\/span>)\n/g,'$1');return text.replace(/\n/g,'<br>').replace(/(<br>)+$/,'')}
 /* === TTS 2: FUNGSI NGOMONG === */
 let currentUtter=null;
 async function speakText(btn, rawText){
@@ -407,10 +442,20 @@ function addBubble(text,who,isHtml){const d=document.createElement('div');d.clas
 history.forEach(m=>{if(m.role==='user')addBubble(m.content,'user');else addBubble(renderMarkdown(m.content),'ai',true)});
 if(history.length>0&&welcomeEl)welcomeEl.style.display='none';
 function quick(t){inputEl.value=t;send()}
-async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'user');inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const low=t.toLowerCase();if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=512&height=512&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading=addBubble('Fahri lagi mikir...','ai');try{const r=await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});const d=await r.json();const reply=d.reply||'Maaf, coba lagi ya.';loading.innerHTML=renderMarkdown(reply);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,reply)};loading.appendChild(bb);history.push({role:'assistant',content:reply});saveHistory();saveLog('assistant',reply)}catch(e){loading.textContent='Maaf, server lagi sibuk, coba lagi ya.'}}
+async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'user');inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const low=t.toLowerCase();if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading=addBubble('Fahri lagi mikir...','ai');try{const r=await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});const d=await r.json();const reply=d.reply||'Maaf, coba lagi ya.';loading.innerHTML=renderMarkdown(reply);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,reply)};loading.appendChild(bb);history.push({role:'assistant',content:reply});saveHistory();saveLog('assistant',reply)}catch(e){loading.textContent=(navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya.')}}
 document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
-chatEl.addEventListener('scroll',()=>{if(chatEl.scrollTop>60)headerEl.classList.add('collapsed');else headerEl.classList.remove('collapsed')});
+(function(){
+  var st=false, busy=false, lockUntil=0, tm=0;
+  function cek(){
+    busy=false; var now=Date.now();
+    if(now<lockUntil){ clearTimeout(tm); tm=setTimeout(function(){ if(!busy){ busy=true; requestAnimationFrame(cek); } },lockUntil-now+30); return; }
+    var y=chatEl.scrollTop;
+    if(!st && y>90 && (chatEl.scrollHeight-chatEl.clientHeight)>460){ st=true; lockUntil=now+420; headerEl.classList.add('collapsed'); }
+    else if(st && y<12){ st=false; lockUntil=now+420; headerEl.classList.remove('collapsed'); }
+  }
+  chatEl.addEventListener('scroll',function(){ if(!busy){ busy=true; requestAnimationFrame(cek); } },{passive:true});
+})();
 function openLog(){try{var logs=JSON.parse(localStorage.getItem('fahri_log')||'[]');var box=document.getElementById('logBox');if(!logs.length){box.textContent='Belum ada log'}else{box.textContent=logs.map(function(l){return '['+new Date(l.time).toLocaleString('id-ID')+'] '+l.role.toUpperCase()+': '+l.text}).join('\n\n---\n\n')}box.scrollTop=box.scrollHeight}catch(e){}document.getElementById('logPanel').classList.add('open')}
 document.getElementById('btnLog').onclick=openLog;
 document.getElementById('btnCloseLog').onclick=function(){document.getElementById('logPanel').classList.remove('open')};
@@ -490,7 +535,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
     if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){
       var loading = addBubble('Fahri lagi gambar...','ai');
       var prompt = encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);
-      var img = document.createElement('img'); img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=512&height=512&seed='+Date.now();
+      var img = document.createElement('img'); img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();
       img.style.width='100%'; img.style.borderRadius='12px'; img.style.marginTop='8px';
       loading.innerHTML='Ini gambarnya:'; loading.appendChild(img);
       var bb=document.createElement('button'); bb.className='tts-btn'; bb.textContent='🔊';
@@ -509,7 +554,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
         addSuggest(loading2);
       });
       history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
-    }catch(e){ loading2.textContent='Maaf, server lagi sibuk, coba lagi ya.'; }
+    }catch(e){ loading2.textContent=(navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya.'); }
   };
   document.getElementById('sendBtn').onclick = send;
 })();
@@ -649,7 +694,7 @@ function buildWidget(){
   var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
   fetch('https://api.aladhan.com/v1/timingsByCity/'+dd+'-'+mm+'-'+yy+'?city=Tahuna&country=Indonesia&method=20').then(function(r){return r.json();}).then(function(d){ var t=d.data.timings; document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat Hari Ini</b><br>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5); }).catch(function(){ document.getElementById('f-sholat').innerHTML='🕌 <b>Sholat</b><br>Subuh 04:50 • Dzuhur 11:50 • Ashar 15:10 • Maghrib 18:00 • Isya 19:10'; });
 }
-window.__f_init1 = function(){ buildDrawer(); buildHeader(); buildWidget(); };
+window.__f_init1 = function(){ buildDrawer(); buildHeader(); };
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.__f_init1); else window.__f_init1();
 setTimeout(window.__f_init1,1000); setTimeout(window.__f_init1,2500);
 })();
@@ -762,8 +807,7 @@ function buildChat(){
   wadah.style.display='flex'; wadah.style.alignItems='center'; wadah.style.gap='8px';
 }
 setInterval(function(){
-  document.querySelectorAll('.bubble,.message').forEach(function(b){
-    if(b.querySelector('.f-bubble-tools')) return;
+  document.querySelectorAll('#welcome .bubble,#welcome .message').forEach(function(b){ if(b.querySelector('.f-bubble-tools')) return;
     if(b.querySelector('img') && b.textContent.trim().length < 10) return;
     var tools=document.createElement('div'); tools.className='f-bubble-tools';
     var p=document.createElement('button'); p.className='f-pin'; p.textContent='📌 Simpan';
@@ -1152,7 +1196,7 @@ function openBuatGambar(){
   document.getElementById('f-img-buat').onclick=function(){
     var p=document.getElementById('f-img-prompt').value.trim(); if(!p) return;
     document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;opacity:.7">🎨 Lagi dibikinin...</p>';
-    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=512&height=512&seed='+Math.floor(Math.random()*100000)+'&nologo=true';
+    var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=768&height=768&seed='+Math.floor(Math.random()*100000)+'&nologo=true';
     var img=new Image(); img.onload=function(){
       document.getElementById('f-img-hasil').innerHTML='<img src="'+url+'" class="f-gen-img"><button id="f-img-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat</button>';
       document.getElementById('f-img-kirim').onclick=function(){ var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0'; d.innerHTML='<img src="'+url+'" style="max-width:280px;border-radius:14px"><div style="font-size:12px;opacity:.7">🎨 Gambar AI: '+p+'</div>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; } ov.remove(); };
@@ -1309,7 +1353,7 @@ function fixInput(){
     wadah.insertBefore(fab, inp);
   }
   // Widget mini cuaca/sholat - taruh di atas wadah, 1 baris aja
-  if(!document.getElementById('f-widget-mini')){
+  if(false && !document.getElementById('f-widget-mini')){
     var wm=document.createElement('div'); wm.id='f-widget-mini';
     wm.innerHTML='<span id="f-wm-cuaca">🌦️ Tahuna • Memuat...</span><span id="f-wm-sholat">🕌 Sholat • Memuat...</span>';
     wadah.parentNode.insertBefore(wm, wadah);
@@ -1387,7 +1431,8 @@ document.head.appendChild(css);
 function bersih(){
   var chat=document.getElementById('chat'); if(!chat) return;
   chat.querySelectorAll('.bubble.ai').forEach(function(b){
-    if(b.closest('#welcome')) return;
+ if(b.closest('#welcome')) return;
+ if(!b.querySelector('.typing-cursor') && b.dataset.fSig===(b.textContent.length+':'+b.childElementCount+':0')) return;
     b.querySelectorAll('.f-bubble-tools, .ai-actions').forEach(function(t){ t.remove(); });
     var tools=b.querySelectorAll(':scope > .f-tools');
     for(var i=1;i<tools.length;i++){ tools[i].remove(); }
@@ -1407,18 +1452,22 @@ function bersih(){
         }
       }
     }
-    if(!b.querySelector('.f-tools') && tx.length>3 && tx.indexOf('Fahri lagi')!==0){
+    if(!b.querySelector('.f-tools') && tx.length>3 && tx.indexOf('Fahri lagi')!==0 && !/^(Maaf,|😕|⚠️|✨ Lagi mengedit|✅ Selesai diedit|Tidak ada koneksi)/.test(tx)){
       var wrap=document.createElement('div'); wrap.className='f-tools';
       var b1=document.createElement('button'); b1.textContent='📌 Simpan';
-      b1.onclick=function(){ try{ var arr=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr.push(tx); localStorage.setItem('fahri_bookmark', JSON.stringify(arr)); b1.textContent='✅ Tersimpan'; }catch(e){} };
+      b1.onclick=function(){ try{ var arr=JSON.parse(localStorage.getItem('fahri_simpan')||'[]'); arr.push(tx); localStorage.setItem('fahri_simpan', JSON.stringify(arr)); b1.textContent='✅ Tersimpan'; }catch(e){} };
       var b2=document.createElement('button'); b2.textContent='🔊 Bacakan';
       b2.onclick=function(){ try{ window.__f_bicara(tx); }catch(e){} };
       var b3=document.createElement('button'); b3.textContent='🔖 Bookmark';
       b3.onclick=function(){ try{ var arr2=JSON.parse(localStorage.getItem('fahri_bookmark')||'[]'); arr2.push(tx); localStorage.setItem('fahri_bookmark', JSON.stringify(arr2)); b3.textContent='✅ Bookmark'; }catch(e){} };
       wrap.appendChild(b1); wrap.appendChild(b2); wrap.appendChild(b3);
+ var b4=document.createElement('button'); b4.textContent='📋 Salin';
+ b4.onclick=function(){ window.__f_salin(tx,function(ok){ b4.textContent=ok?'✅ Tersalin':'⚠️ Gagal'; setTimeout(function(){ b4.textContent='📋 Salin'; },1600); }); };
+ wrap.appendChild(b4);
       b.appendChild(wrap);
-    }
-  });
+ }
+ b.dataset.fSig=b.textContent.length+':'+b.childElementCount+':'+(b.querySelector('.typing-cursor')?1:0);
+ });
   var bubbles=Array.from(chat.querySelectorAll('.bubble'));
   var prev='';
   bubbles.forEach(function(b){
@@ -1434,17 +1483,9 @@ function bersih(){
       if(t==='🎤'||t==='🎙️'||t.indexOf('🎤')!==-1||t.indexOf('🎙️')!==-1){ btn.classList.add('f-mic-hapus'); btn.remove(); }
     });
   }
-  try{
-    var h=JSON.parse(localStorage.getItem('fahri_history')||'[]');
-    var out=[], s={};
-    h.forEach(function(m){
-      var kk=(m.role||'')+'|'+(m.content||'').slice(0,120);
-      if(!s[kk]){ s[kk]=1; out.push(m); }
-    });
-    if(out.length!==h.length) localStorage.setItem('fahri_history', JSON.stringify(out));
-  }catch(e){}
+  if(Date.now()-(window.__f_hd||0)>5000) try{ window.__f_hd=Date.now(); var h=JSON.parse(localStorage.getItem('fahri_history')||'[]'); var out=[]; h.forEach(function(m){ var pv=out[out.length-1]; if(pv && pv.role===m.role && pv.content===m.content) return; out.push(m); }); if(out.length!==h.length) localStorage.setItem('fahri_history', JSON.stringify(out)); }catch(e){}
 }
-var obs=new MutationObserver(function(){ bersih(); });
+var _bt=0; var obs=new MutationObserver(function(){ if(_bt) return; _bt=setTimeout(function(){ _bt=0; bersih(); },350); });
 obs.observe(document.body, {childList:true, subtree:true});
 setInterval(bersih, 1000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bersih); else bersih();
@@ -1540,7 +1581,7 @@ function fJadwalkanSholat(L){
       .then(function(){ return daftar.length?P.schedule({ notifications:daftar }):null; });
   }).catch(function(e){ console.log('Jadwal pengingat sholat gagal',e); });
 }
-function fNotifPopup(icon,judul,msg){ showAppPopup({ icon:icon, title:judul, msg:String(msg).replace(/</g,'&lt;'), okText:'OK' }); }
+function fNotifPopup(icon,judul,msg){ (window.__f_showAppPopup||function(o){ alert(o.msg); })({ icon:icon, title:judul, msg:String(msg).replace(/</g,'&lt;'), okText:'OK' }); }
 function fNotifUI(){
   var a=fNotifAktif();
   var b=document.querySelector('#f-info-sholat b'); if(b) b.textContent='🕌 Sholat Hari Ini'+(a?' 🔔':'');
@@ -1586,13 +1627,13 @@ function fetchInfo(){
     if(fNotifAktif()) fJadwalkanSholat(L);
     if(w) fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,weather_code,relative_humidity_2m&timezone=auto').then(function(r){return r.json();}).then(function(d){
       var kode=d.current.weather_code; var desc=kode===0?'Cerah':kode<4?'Berawan':kode<60?'Hujan Ringan':'Hujan';
-      w.innerHTML=''; var b=document.createElement('b'); b.textContent='🌦️ '+L.nama; w.appendChild(b); w.appendChild(document.createTextNode(Math.round(d.current.temperature_2m)+'°C • '+desc));
+      w.innerHTML=''; var b=document.createElement('b'); b.textContent='🌦️ '+L.nama; w.appendChild(b); w.appendChild(document.createTextNode(Math.round(d.current.temperature_2m)+'°C • '+desc)); var hm=d.current.relative_humidity_2m; if(typeof hm==='number'){ var hs=document.createElement('span'); hs.className='f-hum'; hs.textContent='💧 '+Math.round(hm)+'% lembap'; w.appendChild(hs); }
     }).catch(function(){ w.innerHTML=''; var b=document.createElement('b'); b.textContent='🌦️ '+L.nama; w.appendChild(b); w.appendChild(document.createTextNode('Cuaca belum tersedia')); });
     if(s){ var today=new Date(); var dd=String(today.getDate()).padStart(2,'0'); var mm=String(today.getMonth()+1).padStart(2,'0'); var yy=today.getFullYear();
       // metode 20 = Kemenag RI, dipakai kalau lokasi di Indonesia; di luar itu pakai bawaan layanan
       var indo=(L.lat>-11.5 && L.lat<6.5 && L.lon>94.5 && L.lon<141.5);
       fetch('https://api.aladhan.com/v1/timings/'+dd+'-'+mm+'-'+yy+'?latitude='+lat+'&longitude='+lon+(indo?'&method=20':'')).then(function(r){return r.json();}).then(function(d){
-        var t=d.data.timings; s.innerHTML='<b>🕌 Sholat Hari Ini'+(fNotifAktif()?' 🔔':'')+'</b>Subuh '+t.Fajr.slice(0,5)+' • Dzuhur '+t.Dhuhr.slice(0,5)+' • Ashar '+t.Asr.slice(0,5)+' • Maghrib '+t.Maghrib.slice(0,5)+' • Isya '+t.Isha.slice(0,5);
+        var t=d.data.timings; s.innerHTML='<b>🕌 Sholat Hari Ini'+(fNotifAktif()?' 🔔':'')+'</b><div class="f-sh-grid"><span><i>Subuh</i>'+t.Fajr.slice(0,5)+'</span><span><i>Dzuhur</i>'+t.Dhuhr.slice(0,5)+'</span><span><i>Ashar</i>'+t.Asr.slice(0,5)+'</span><span><i>Maghrib</i>'+t.Maghrib.slice(0,5)+'</span><span><i>Isya</i>'+t.Isha.slice(0,5)+'</span></div>';
       }).catch(function(){ s.innerHTML='<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia, cek internet'; });
     }
   });
@@ -1668,9 +1709,7 @@ function isLight(){
   }
   return true;
 }
-function fix(){
-  var light = isLight();
-  document.querySelectorAll('div').forEach(function(el){
+function fix(){ var light = isLight(); document.querySelectorAll('#authBar div').forEach(function(el){
     var t = el.innerText || '';
     var isCuaca = el.id === 'f-info-cuaca' || (t.includes('Surabaya') && !t.includes('Sholat Hari Ini') && t.length < 100);
     var isSholat = el.id === 'f-info-sholat' || (t.includes('Sholat Hari Ini') && !t.includes('Surabaya') && t.length < 200);
@@ -1707,6 +1746,41 @@ body:not([data-theme]) #authBar #f-auth-info .f-info-row, body[data-theme="origi
 body{padding-top:max(env(safe-area-inset-top,0px),var(--fb-top)) !important;padding-bottom:var(--fb-bottom) !important}
 .drawer-box{top:calc(max(env(safe-area-inset-top,0px),var(--fb-top)) + 38px) !important}
 #f-sheet, .f-modal{padding-bottom:var(--fb-bottom)}
+/* ===== RAPIKAN + HALUSKAN (v3) ===== */
+/* header: jarak aman kamera sudah dihitung sekali di body, jangan dihitung lagi di header */
+.header{padding-top:30px !important}
+.header.collapsed{padding-top:10px !important;transform:none !important}
+.menu-btn{top:30px !important}
+.header.collapsed .menu-btn{top:14px !important}
+/* animasi header: hanya properti yang memang berubah, lebih singkat, tanpa lapisan GPU berlebih */
+.header,.header-top,.logo,.header h1,.subtitle,.online-status,.greet,.greet2,.badge-row,.badge,.menu-btn{
+  transition:padding .3s cubic-bezier(.22,1,.36,1),margin .3s cubic-bezier(.22,1,.36,1),max-height .3s ease,opacity .22s ease,font-size .3s cubic-bezier(.22,1,.36,1),width .3s cubic-bezier(.22,1,.36,1),height .3s cubic-bezier(.22,1,.36,1),border-radius .3s ease,gap .3s ease,top .3s ease,transform .15s ease !important;
+  will-change:auto !important;
+  backface-visibility:visible !important;-webkit-backface-visibility:visible !important;
+}
+/* bubble, kolom ketik, menu: tidak perlu lapisan GPU sendiri-sendiri (boros memori di HP RAM kecil) */
+.bubble,.composer,.drawer-box{will-change:auto !important;backface-visibility:visible !important;-webkit-backface-visibility:visible !important}
+.composer,.drawer-box{transition:none !important}
+.bubble{transition:background-color .2s ease,border-color .2s ease !important}
+#chat > *{transform:none !important}
+/* tepi chat memudar halus di balik kartu cuaca/sholat dan tombol Fitur (tema Original) */
+body:not([data-theme]) #chat, body[data-theme="original"] #chat{
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent calc(var(--f-ah,0px) - 2px),#000 calc(var(--f-ah,0px) + 18px),#000 calc(100% - var(--f-fh,0px) - 6px),transparent calc(100% - 8px));
+  mask-image:linear-gradient(to bottom,transparent 0,transparent calc(var(--f-ah,0px) - 2px),#000 calc(var(--f-ah,0px) + 18px),#000 calc(100% - var(--f-fh,0px) - 6px),transparent calc(100% - 8px));
+}
+body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{background:linear-gradient(rgba(168,85,247,.30),rgba(168,85,247,.30)),#12051f !important}
+/* markdown: kutipan */
+.f-quote{display:block;margin:6px 0;padding:6px 10px;border-left:3px solid rgba(192,132,252,.8);background:rgba(168,85,247,.12);border-radius:8px}
+/* status online/offline */
+.online-status.f-off{color:#f87171 !important}
+.online-status.f-off .online-dot{background:#ef4444 !important}
+/* kartu cuaca & sholat: jadwal 5 kolom rapi */
+#authBar #f-auth-info #f-info-cuaca{flex:0 0 36% !important;min-width:0 !important}
+#authBar #f-auth-info #f-info-sholat{flex:1 1 0 !important;min-width:0 !important}
+#f-info-cuaca .f-hum{display:block;margin-top:3px;font-size:11.5px;opacity:.8}
+#f-info-sholat .f-sh-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;margin-top:7px;text-align:center}
+#f-info-sholat .f-sh-grid span{display:flex;flex-direction:column;align-items:center;line-height:1.3;font-size:12px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
+#f-info-sholat .f-sh-grid i{font-style:normal;font-size:9px;font-weight:600;opacity:.72}
 </style>
 
 <script>
@@ -1717,7 +1791,7 @@ body{padding-top:max(env(safe-area-inset-top,0px),var(--fb-top)) !important;padd
     var a=document.getElementById('authBar'), f=document.getElementById('f-fitur-top');
     var ah=a?a.offsetHeight:0, fh=f?f.offsetHeight:0;
     function set(p,v){ chat.style.setProperty(p,v,'important'); }
-    set('margin-top',(-ah)+'px'); set('padding-top',(ah+10)+'px');
+    set('margin-top',(-ah)+'px'); set('padding-top',(ah+26)+'px'); chat.style.setProperty('--f-ah',ah+'px'); chat.style.setProperty('--f-fh',fh+'px');
     set('margin-bottom',(-fh)+'px'); set('padding-bottom',(fh+12)+'px');
   }
   fit(); window.addEventListener('resize',fit); setInterval(fit,700);
@@ -1742,6 +1816,32 @@ body{padding-top:max(env(safe-area-inset-top,0px),var(--fb-top)) !important;padd
   var r=document.documentElement.style;
   if(t<1) r.setProperty('--fb-top',IMERSIF?'10px':'40px');
   if(b<1) r.setProperty('--fb-bottom',IMERSIF?'10px':'32px');
+})();
+</script>
+<script>
+/* STATUS ONLINE ASLI + TOMBOL BACK ANDROID */
+(function(){
+  function status(){
+    var el=document.querySelector('.online-status'); if(!el) return;
+    var on=navigator.onLine!==false; el.classList.toggle('f-off',!on);
+    var sp=el.querySelectorAll('span')[1]; if(sp) sp.textContent=on?'Online - Siap Membantu':'Offline - Tidak ada internet';
+  }
+  window.addEventListener('online',status); window.addEventListener('offline',status); status(); setTimeout(status,1500);
+  function toast(m){ try{ var d=document.createElement('div'); d.textContent=m; d.style.cssText='position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:99999;background:rgba(20,8,35,.95);color:#fff;border:1px solid #c084fc;border-radius:14px;padding:10px 14px;font-size:13px;max-width:80%;text-align:center'; document.body.appendChild(d); setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); },1800); }catch(e){} }
+  var C=window.Capacitor, A=null;
+  try{ if(C && C.isNativePlatform && C.isNativePlatform()) A=(C.Plugins&&C.Plugins.App)||(C.registerPlugin&&C.registerPlugin('App')); }catch(e){}
+  if(A && A.addListener){
+    var last=0;
+    A.addListener('backButton',function(){
+      var ovs=document.querySelectorAll('.f-app-overlay');
+      if(ovs.length){ var top=ovs[ovs.length-1]; top.click(); setTimeout(function(){ if(top.parentNode) top.parentNode.removeChild(top); },60); return; }
+      var open=document.querySelector('.f-modal.open,#f-sheet.open,#confirmClear.open,#profilePopup.open,#logPanel.open,#drawer.open');
+      if(open){ open.classList.remove('open'); return; }
+      var now=Date.now();
+      if(now-last<2000){ A.exitApp(); return; }
+      last=now; toast('Tekan sekali lagi untuk keluar');
+    });
+  }
 })();
 </script>
 </body>
