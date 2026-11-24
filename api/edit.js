@@ -24,6 +24,19 @@ function guessMime(b64) {
   return 'image/png';
 }
 
+// Pembatas pemakaian sederhana per alamat IP (tersimpan di memori fungsi; cukup untuk menahan penyalahgunaan ringan)
+const _hits = globalThis.__rl || (globalThis.__rl = new Map());
+function terlaluBanyak(req, nama, maks, jendelaMs) {
+  const xf = req.headers && req.headers['x-forwarded-for'];
+  const ip = String(xf || (req.socket && req.socket.remoteAddress) || '?').split(',')[0].trim();
+  const k = nama + ':' + ip, now = Date.now();
+  const arr = (_hits.get(k) || []).filter(t => now - t < jendelaMs);
+  if (arr.length >= maks) { _hits.set(k, arr); return true; }
+  arr.push(now); _hits.set(k, arr);
+  if (_hits.size > 2000) { for (const [kk, v] of _hits) { if (!v.length || now - v[v.length - 1] > jendelaMs) _hits.delete(kk); } }
+  return false;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -31,6 +44,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Max-Age', '86400');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method salah' });
+  if (terlaluBanyak(req, 'edit', 6, 10 * 60 * 1000)) { res.setHeader('Retry-After', '300'); return res.status(429).json({ error: 'Terlalu banyak permintaan edit foto. Tunggu beberapa menit lalu coba lagi ya.' }); }
 
   const { key, name: keyName } = getKey();
   if (!key) return res.status(500).json({ error: 'API key Pollinations belum terpasang di Vercel (nama variabel: POLLINATIONS_API_KEY).' });
