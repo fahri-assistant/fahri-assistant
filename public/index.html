@@ -269,7 +269,7 @@ body{padding-top:0 !important;height:100dvh !important;height:100svh !important}
   scroll-behavior:smooth !important;
   -webkit-overflow-scrolling:touch !important;
   overscroll-behavior:contain !important;
-  transform:translateZ(0) !important;
+  transform:none !important;
   will-change:scroll-position !important;
 }
 #chat > *{transform:translateZ(0) !important}
@@ -442,6 +442,26 @@ function addBubble(text,who,isHtml){const d=document.createElement('div');d.clas
 history.forEach(m=>{if(m.role==='user')addBubble(m.content,'user');else addBubble(renderMarkdown(m.content),'ai',true)});
 if(history.length>0&&welcomeEl)welcomeEl.style.display='none';
 function quick(t){inputEl.value=t;send()}
+window.__f_failBubble = function(b,msg){
+ b.innerHTML=''; var p=document.createElement('div'); p.textContent=msg; b.appendChild(p);
+ var rb=document.createElement('button'); rb.type='button'; rb.className='f-retry-btn'; rb.textContent='🔄 Kirim ulang';
+ rb.onclick=function(){ b.innerHTML=''; b.textContent='Fahri lagi mikir...'; window.__f_askAI(b); };
+ b.appendChild(rb);
+};
+window.__f_askAI = async function(loading2){
+  try{
+      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});
+      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.';
+      var html = renderMarkdown(reply);
+      typeInto(loading2, html, reply, function(){
+        var b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊';
+        b.onclick=function(){ speakText(b,reply) }; loading2.appendChild(b);
+        addCopyBtn(loading2, function(){ return reply; });
+        addSuggest(loading2);
+      });
+      history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
+    }catch(e){ window.__f_failBubble(loading2, navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya.'); }
+};
 async function send(){const t=inputEl.value.trim();if(!t)return;addBubble(t,'user');inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const low=t.toLowerCase();if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading=addBubble('Fahri lagi mikir...','ai');try{const r=await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});const d=await r.json();const reply=d.reply||'Maaf, coba lagi ya.';loading.innerHTML=renderMarkdown(reply);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,reply)};loading.appendChild(bb);history.push({role:'assistant',content:reply});saveHistory();saveLog('assistant',reply)}catch(e){loading.textContent=(navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya.')}}
 document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
@@ -543,18 +563,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
       history.push({role:'assistant',content:'Ini gambarnya:'}); saveHistory(); return;
     }
     var loading2 = addBubble('Fahri lagi mikir...','ai');
-    try{
-      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});
-      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.';
-      var html = renderMarkdown(reply);
-      typeInto(loading2, html, reply, function(){
-        var b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊';
-        b.onclick=function(){ speakText(b,reply) }; loading2.appendChild(b);
-        addCopyBtn(loading2, function(){ return reply; });
-        addSuggest(loading2);
-      });
-      history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
-    }catch(e){ loading2.textContent=(navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya.'); }
+  await window.__f_askAI(loading2);
   };
   document.getElementById('sendBtn').onclick = send;
 })();
@@ -1176,15 +1185,7 @@ function openNgobrol(){
     r.start();
   };
 }
-// Tambah tombol Ngobrol Suara di samping kolom chat
-setInterval(function(){
-  var inp=getInp(); if(!inp) return;
-  if(document.getElementById('f-ngobrol-btn')) return;
-  var wadah=inp.parentElement; if(!wadah) return;
-  var b=document.createElement('button'); b.id='f-ngobrol-btn'; b.className='f-mini-btn'; b.textContent='🎙️'; b.type='button'; b.title='Ngobrol Suara';
-  b.onclick=openNgobrol;
-  wadah.appendChild(b);
-}, 1500);
+// Tombol Ngobrol Suara tidak lagi di kolom ketik; sudah ada di menu Fitur
 
 // --- 3. BUAT GAMBAR AI + EDIT FOTO ---
 function openBuatGambar(){
@@ -1781,6 +1782,7 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
 #f-info-sholat .f-sh-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;margin-top:7px;text-align:center}
 #f-info-sholat .f-sh-grid span{display:flex;flex-direction:column;align-items:center;line-height:1.3;font-size:12px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
 #f-info-sholat .f-sh-grid i{font-style:normal;font-size:9px;font-weight:600;opacity:.72}
+.f-retry-btn{margin-top:10px;display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(192,132,252,.8);background:rgba(168,85,247,.25);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer}
 </style>
 
 <script>
@@ -1792,7 +1794,7 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
     var ah=a?a.offsetHeight:0, fh=f?f.offsetHeight:0;
     function set(p,v){ chat.style.setProperty(p,v,'important'); }
     set('margin-top',(-ah)+'px'); set('padding-top',(ah+26)+'px'); chat.style.setProperty('--f-ah',ah+'px'); chat.style.setProperty('--f-fh',fh+'px');
-    set('margin-bottom',(-fh)+'px'); set('padding-bottom',(fh+12)+'px');
+    set('margin-bottom','0px'); set('padding-bottom',(fh+12)+'px');
   }
   fit(); window.addEventListener('resize',fit); setInterval(fit,700);
 })();
@@ -1843,6 +1845,12 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
     });
   }
 })();
+</script>
+<script>
+/* Daftarkan service worker agar aplikasi bisa dipasang (PWA). Gagal diam-diam di WebView APK, tidak mengganggu. */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+}
 </script>
 </body>
 </html>
