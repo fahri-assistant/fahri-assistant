@@ -11,6 +11,44 @@ function terlaluBanyak(req, nama, maks, jendelaMs) {
   return false;
 }
 
+export const config = { maxDuration: 60 };
+
+// ===== PENCARIAN WEB (Firecrawl) =====
+// Dipakai hanya untuk pertanyaan yang butuh info terbaru (berita, skor, jadwal, hari ini, dll).
+const RE_CARI = /\b(berita|news|terbaru|terkini|hari ini|sekarang|barusan|kemarin|besok|skor|hasil (?:pertandingan|laga|liga)|jadwal|klasemen|harga|kurs|rilis|update|live|2026|2027|pemenang|menang|kalah|bola|liga|timnas|saham|cuaca)\b/i;
+function perluCari(teks) { return RE_CARI.test(String(teks || '')); }
+
+async function cariWeb(query, key) {
+  const c = new AbortController(); const t = setTimeout(() => c.abort(), 9000);
+  try {
+    const r = await fetch('https://api.firecrawl.dev/v2/search', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: String(query).slice(0, 300), limit: 5 }),
+      signal: c.signal
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const web = (j && j.data && j.data.web) || [];
+    return web.slice(0, 5).map(w => ({
+      title: String(w.title || w.url || '').slice(0, 160),
+      url: String(w.url || ''),
+      snippet: String(w.description || w.snippet || w.markdown || '').replace(/\s+/g, ' ').slice(0, 350)
+    })).filter(w => w.url);
+  } catch (e) { return []; }
+  finally { clearTimeout(t); }
+}
+
+function konteksCari(hasil) {
+  return 'Hasil pencarian web terbaru (gunakan untuk menjawab, dan sebut sumbernya dengan nama situs):\n' +
+    hasil.map((h, i) => (i + 1) + '. ' + h.title + ' - ' + h.snippet + ' (' + h.url + ')').join('\n');
+}
+
+function daftarSumber(hasil) {
+  if (!hasil || !hasil.length) return '';
+  return '\n\nSumber:\n' + hasil.map((h, i) => (i + 1) + '. ' + h.title + ' - ' + h.url).join('\n');
+}
+
 export default async function handler(req, res) {
   // CORS: izinkan aplikasi (APK/WebView) dan alamat lain memanggil API ini
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,12 +76,22 @@ Aturan WAJIB:
 - Jawab sesuai pertanyaan terakhir, jangan melenceng
 - Kalau user tanya "siapa kamu", jawab kamu Fahri Assistant buatan Fahri
 - Jawab singkat tapi lengkap, pakai poin-poin kalau perlu
+- Kalau ada hasil pencarian web di pesan, utamakan info itu dan jangan bilang kamu tidak punya akses internet
 - Jangan jawab bahasa Inggris kecuali user minta`;
 
     const cleanMsgs = [
       { role: 'system', content: systemPrompt },
       ...msgs.filter(m => m.role === 'user' || m.role === 'assistant').slice(-8)
     ];
+
+    // Pencarian web: hanya untuk pertanyaan yang butuh info terbaru, dan hanya kalau key tersedia
+    let hasilCari = [];
+    const firecrawlKey = (process.env.FIRECRAWL_API_KEY || '').trim();
+    if (firecrawlKey && perluCari(lastText)) {
+      hasilCari = await cariWeb(lastText, firecrawlKey);
+      if (hasilCari.length) cleanMsgs.splice(1, 0, { role: 'system', content: konteksCari(hasilCari) });
+    }
+    const SUMBER = daftarSumber(hasilCari);
 
     const isStream = body.stream === true || req.headers.accept?.includes('text/event-stream');
 
@@ -100,7 +148,7 @@ Aturan WAJIB:
         res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
         return res.end();
       }
-      return res.status(200).json({ reply: text });
+      return res.status(200).json({ reply: text + SUMBER });
     }
 
     // ===== 14 AI ANTRIAN - SEMUA AKTIF =====
@@ -200,7 +248,9 @@ Aturan WAJIB:
 
     // CADANGAN TERAKHIR - Pollinations, tanpa API Key, gratis
     try {
-      const pr = await fetch('https://text.pollinations.ai/' + encodeURIComponent(lastText), { headers: { 'Accept': 'text/plain' } });
+      const pc = new AbortController(); const pt = setTimeout(() => pc.abort(), 8000);
+      const pr = await fetch('https://text.pollinations.ai/' + encodeURIComponent(lastText), { headers: { 'Accept': 'text/plain' }, signal: pc.signal });
+      clearTimeout(pt);
       if (pr.ok) {
         const ptext = (await pr.text()).trim();
         if (ptext) return await sendText(ptext);
