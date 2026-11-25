@@ -453,12 +453,14 @@ window.__f_askAI = async function(loading2){
       var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});
       var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.';
       var html = renderMarkdown(reply);
-      typeInto(loading2, html, reply, function(){
+      var TI=window.__f_typeInto, AC=window.__f_addCopyBtn, AS=window.__f_addSuggest;
+      var doneFn=function(){
         var b=document.createElement('button'); b.className='tts-btn'; b.textContent='🔊';
         b.onclick=function(){ speakText(b,reply) }; loading2.appendChild(b);
-        addCopyBtn(loading2, function(){ return reply; });
-        addSuggest(loading2);
-      });
+        if(AC) AC(loading2, function(){ return reply; });
+        if(AS) AS(loading2);
+      };
+      if(TI){ TI(loading2, html, reply, doneFn); } else { loading2.innerHTML=html; doneFn(); }
       history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
     }catch(e){ window.__f_failBubble(loading2, navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya. [detail: '+String((e&&e.name)||'')+' '+String((e&&e.message)||e).slice(0,160)+']'); }
 };
@@ -513,6 +515,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
 
   // --- 2. FITUR COPY / ULANG / SARAN / KETIK ---
   var lastUserText = '';
+  window.__f_addCopyBtn=addCopyBtn;
   function addCopyBtn(bubble, getText){
     if(!bubble || bubble.querySelector('.ai-actions')) return;
     var wrap = document.createElement('div'); wrap.className = 'ai-actions';
@@ -522,6 +525,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
     b2.onclick = function(){ if(!lastUserText) return; bubble.remove(); var s = document.querySelector('.suggest-wrap'); if(s) s.remove(); inputEl.value = lastUserText; send(); };
     wrap.appendChild(b1); wrap.appendChild(b2); bubble.appendChild(wrap);
   }
+  window.__f_addSuggest=addSuggest;
   function addSuggest(afterEl){
     var old = document.querySelector('.suggest-wrap'); if(old) old.remove();
     var wrap = document.createElement('div'); wrap.className = 'suggest-wrap';
@@ -534,6 +538,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
     });
     wrap.appendChild(title); wrap.appendChild(grid); afterEl.after(wrap);
   }
+  window.__f_typeInto=typeInto;
   function typeInto(bubble, html, plain, onDone){
     var temp = document.createElement('div'); temp.innerHTML = html;
     var text = temp.textContent || plain || '';
