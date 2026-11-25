@@ -1867,6 +1867,11 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
 .header.collapsed #btnMenu{top:calc(max(env(safe-area-inset-top,0px),var(--fb-top,0px)) + 12px) !important;width:46px !important;height:46px !important;font-size:22px !important}
 #drawer{z-index:10000 !important}
 #drawer .drawer-box{top:calc(max(env(safe-area-inset-top,0px),var(--fb-top,0px)) + 66px) !important;right:14px !important;width:260px !important;max-height:calc(100dvh - max(env(safe-area-inset-top,0px),var(--fb-top,0px)) - 84px) !important;overflow-y:auto !important;overscroll-behavior:contain}
+/* SKALA TETAP: tampilan mengikuti lebar layar, tidak ikut pengaturan DPI/ukuran tampilan HP.
+   Bila var --fz tidak diisi (saklar mati), semua aturan di bawah memakai nilai asli. */
+html{zoom:var(--fz,1)}
+body{height:var(--app-h,100dvh) !important;height:var(--app-h,100svh) !important}
+#drawer .drawer-box{max-height:calc(var(--app-h,100dvh) - 84px) !important}
 </style>
 
 <script>
@@ -1979,6 +1984,24 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
   if(clr) clr.addEventListener('click', function(){
     var r=ref(); if(r) r.set({ messages: [], updatedAt: Date.now() }).catch(function(){});
   });
+})();
+</script>
+<script>
+/* SAKLAR SKALA TETAP: ubah ke false untuk mematikan */
+var FAHRI_SKALA_TETAP = true;
+(function(){
+  if(!FAHRI_SKALA_TETAP) return;
+  var REF = 390; /* lebar acuan dalam px desain */
+  function fit(){
+    var W = window.innerWidth, H = window.innerHeight; if(!W||!H) return;
+    var z = W / REF;
+    var st = document.documentElement.style;
+    st.setProperty('--fz', String(z));
+    st.setProperty('--app-h', (H / z) + 'px');
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
 })();
 </script>
 </body>
