@@ -566,6 +566,8 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
       loading.innerHTML='Ini gambarnya:'; loading.appendChild(img);
       var bb=document.createElement('button'); bb.className='tts-btn'; bb.textContent='🔊';
       bb.onclick=function(){ speakText(bb,'Ini gambarnya') }; loading.appendChild(bb);
+      var sbg=document.createElement('button'); sbg.className='tts-btn'; sbg.textContent='💾 Simpan';
+      sbg.onclick=function(){ window.__f_simpanGambar(img.src,'fahri-gambar'); }; loading.appendChild(sbg);
       history.push({role:'assistant',content:'Ini gambarnya:'}); saveHistory(); return;
     }
     var loading2 = addBubble('Fahri lagi mikir...','ai');
@@ -1279,12 +1281,45 @@ function openBuatGambar(){
     var url='https://image.pollinations.ai/prompt/'+encodeURIComponent(p)+'?width=768&height=768&seed='+Math.floor(Math.random()*100000)+'&nologo=true';
     var img=new Image(); img.onload=function(){
       document.getElementById('f-img-hasil').innerHTML='<img src="'+url+'" class="f-gen-img"><button id="f-img-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat</button>';
+      var fsb=document.createElement('button'); fsb.textContent='💾 Simpan';
+      fsb.style.cssText='width:100%;padding:11px;border-radius:99px;border:none;background:#7c3aed;color:#fff;font-weight:800;margin-top:8px';
+      fsb.onclick=function(){ window.__f_simpanGambar(url,'fahri-gambar'); };
+      document.getElementById('f-img-hasil').appendChild(fsb);
       document.getElementById('f-img-kirim').onclick=function(){ var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0'; d.innerHTML='<img src="'+url+'" style="max-width:280px;border-radius:14px"><div style="font-size:12px;opacity:.7">🎨 Gambar AI: '+p+'</div>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; } ov.remove(); };
     };
     img.onerror=function(){ document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Gagal bikin gambar, coba lagi / cek internet.</p>'; };
     img.src=url;
   };
 }
+// === SIMPAN GAMBAR: unduh gambar (dari link atau data) sebagai file ===
+window.__f_simpanGambar = async function(src, nama){
+  var nm=(nama||'fahri-gambar')+'-'+Date.now()+'.jpg';
+  function info(m){ try{ (window.__f_showAppPopup||function(o){alert(o.msg);})({icon:'💾',title:'Simpan gambar',msg:String(m),okText:'OK'}); }catch(e){} }
+  try{
+    var blob;
+    if(String(src).indexOf('data:')===0){
+      var parts=String(src).split(','); var mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'image/png';
+      var bin=atob(parts[1]); var arr=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+      blob=new Blob([arr],{type:mime});
+    } else {
+      var r=await fetch(src); if(!r.ok) throw new Error('unduh gagal'); blob=await r.blob();
+    }
+    if(navigator.share && navigator.canShare){
+      var file=new File([blob], nm, {type:blob.type||'image/jpeg'});
+      if(navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Gambar dari Fahri'}); return 'ok'; }
+    }
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download=nm;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); },60000);
+    return 'ok';
+  }catch(e){
+    if(e && e.name==='AbortError') return 'batal';
+    info('Gambar tidak bisa disimpan langsung di sini. Tahan gambarnya lalu pilih "Simpan gambar".');
+    return 'gagal';
+  }
+};
 // --- EDIT FOTO AI: kirim foto + instruksi ke server (/api/edit), tampilkan hasilnya di chat ---
 window.__f_editFotoAI = function(origDataUrl, prompt){
   var chat=getChat(); if(!chat) return;
@@ -1311,6 +1346,8 @@ window.__f_editFotoAI = function(origDataUrl, prompt){
         out.onerror=function(){ ai.textContent='😕 Hasil edit gagal dimuat, coba lagi.'; };
         var cap=document.createElement('div'); cap.style.cssText='font-size:12px;opacity:.7;margin-top:6px'; cap.textContent='✅ Selesai diedit';
         ai.appendChild(out); ai.appendChild(cap);
+        var sbe=document.createElement('button'); sbe.className='tts-btn'; sbe.textContent='💾 Simpan'; sbe.style.marginTop='8px';
+        sbe.onclick=function(){ window.__f_simpanGambar(src,'fahri-edit'); }; ai.appendChild(sbe);
       })
       .catch(function(){ ai.textContent='😕 Tidak bisa terhubung ke server, cek internet lalu coba lagi.'; })
       .then(turun);
