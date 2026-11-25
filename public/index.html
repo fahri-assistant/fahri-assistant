@@ -1305,10 +1305,13 @@ window.__f_simpanGambar = async function(src, nama){
     } else {
       var r=await fetch(src); if(!r.ok) throw new Error('unduh gagal'); blob=await r.blob();
     }
-    if(navigator.share && navigator.canShare){
+    var nativeApp=!!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    // Di APK: pakai menu berbagi (bisa pilih Simpan ke Galeri)
+    if(nativeApp && navigator.share && navigator.canShare){
       var file=new File([blob], nm, {type:blob.type||'image/jpeg'});
       if(navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Gambar dari Fahri'}); return 'ok'; }
     }
+    // Di Chrome/web: unduh langsung ke folder Download (lebih andal)
     var url=URL.createObjectURL(blob);
     var a=document.createElement('a'); a.href=url; a.download=nm;
     document.body.appendChild(a); a.click(); a.remove();
