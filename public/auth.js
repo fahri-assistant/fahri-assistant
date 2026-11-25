@@ -32,15 +32,23 @@ function pasang(id, provName){
   if(!b) return;
   b.onclick = function(e){
     e.preventDefault();
+    // Cegah dua popup terbuka bersamaan (satu ketukan bisa terbaca dua kali di HP)
+    if (window.__authBusy) return;
     var p = provName === 'google' ? new firebase.auth.GoogleAuthProvider() : new firebase.auth.GithubAuthProvider();
     // Kalau di HP / aplikasi Capacitor, pake Redirect. Kalau di web, pake Popup.
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       authObj.signInWithRedirect(p);
     } else {
+      window.__authBusy = true;
       authObj.signInWithPopup(p).then(function(result){
         updateLoginUI(result.user);
       }).catch(function(e){
-        alert('Login gagal: ' + e.code + ' - ' + e.message);
+        // Batal sendiri atau popup ganda: tidak perlu pesan
+        var kode = (e && e.code) || '';
+        if (/cancelled-popup-request|popup-closed-by-user|cancelled/.test(kode)) return;
+        alert('Login gagal: ' + kode + ' - ' + ((e && e.message) || ''));
+      }).finally(function(){
+        window.__authBusy = false;
       });
     }
   };
