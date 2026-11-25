@@ -11,6 +11,7 @@
 <link rel="manifest" href="/manifest.json">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:radial-gradient(ellipse 110% 48% at 50% -8%, rgba(196,112,255,.65) 0%, rgba(147,51,234,.28) 32%, transparent 65%), linear-gradient(180deg,#150826 0%,#0b021a 48%,#070112 100%);color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding-top:14px}
@@ -600,15 +601,88 @@ window.__f_getDrawer = function(){
 };
 window.__f_getInp = function(){ return document.querySelector('input[placeholder*="Tanya"]')||document.querySelector('textarea[placeholder*="Tanya"]')||document.querySelector('textarea')||document.querySelector('input[type="text"]'); };
 window.__f_getChat = function(){ return document.querySelector('#chat')||document.querySelector('[class*="chat"]'); };
+/* === PILIHAN SUARA TEXT-TO-SPEECH === */
+var F_VOICE_KEY='f_tts_voice';
+function fVoiceSaved(){ try{ return localStorage.getItem(F_VOICE_KEY)||''; }catch(e){ return ''; } }
+function fVoiceSet(name){ try{ if(name) localStorage.setItem(F_VOICE_KEY,name); else localStorage.removeItem(F_VOICE_KEY); }catch(e){} }
+function fTTSNative(){ var C=window.Capacitor; try{ if(C&&C.isNativePlatform&&C.isNativePlatform()) return (C.Plugins&&C.Plugins.TextToSpeech)||null; }catch(e){} return null; }
+/* Daftar suara Bahasa Indonesia (native: plugin; web: browser) */
+window.__f_listVoices=function(){
+  var P=fTTSNative();
+  if(P){
+    return Promise.resolve(P.getSupportedVoices()).then(function(r){
+      var all=(r&&r.voices)||[];
+      P.__cacheVoices = all.map(function(v,i){ return {idx:i,name:v.name,lang:v.lang||''}; });
+      return P.__cacheVoices.filter(function(v){ return /^id/i.test(v.lang); });
+    }).catch(function(){ return []; });
+  }
+  var list=('speechSynthesis' in window)? window.speechSynthesis.getVoices() : [];
+  return Promise.resolve(list.map(function(v,i){ return {idx:i,name:v.name,lang:v.lang||''}; }).filter(function(v){ return /^id/i.test(v.lang); }));
+};
+/* opsi tambahan untuk speak() native: indeks suara yang dipilih */
+window.__f_voiceNativeOpt=function(){
+  var nm=fVoiceSaved(); if(!nm) return {};
+  var P=fTTSNative(); var idx=-1;
+  if(!P || !P.__cacheVoices) { if(P) window.__f_listVoices(); return {}; }
+  var arr=P.__cacheVoices;
+  for(var i=0;i<arr.length;i++){ if(arr[i].name===nm){ idx=arr[i].idx; break; } }
+  return idx>=0? { voice: idx } : {};
+};
+/* suara untuk SpeechSynthesisUtterance (web) */
+window.__f_voiceWebObj=function(){
+  var nm=fVoiceSaved(); if(!nm||!('speechSynthesis' in window)) return null;
+  var list=window.speechSynthesis.getVoices();
+  for(var i=0;i<list.length;i++){ if(list[i].name===nm) return list[i]; }
+  return null;
+};
+function fVoiceOverlay(){
+  var ov=document.createElement('div');
+  ov.className='f-app-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px';
+  var box=document.createElement('div');
+  box.style.cssText='background:#14082a;border:2px solid #c084fc;border-radius:20px;padding:18px;width:100%;max-width:340px;max-height:80vh;overflow-y:auto;color:#fff;font-family:inherit';
+  var h=document.createElement('div'); h.textContent='🗣️ Pilih Suara'; h.style.cssText='font-weight:800;font-size:17px;margin-bottom:6px'; box.appendChild(h);
+  var sub=document.createElement('div'); sub.textContent='Memuat daftar suara...'; sub.style.cssText='font-size:12.5px;opacity:.75;margin-bottom:12px'; box.appendChild(sub);
+  function tombol(teks,aktif,onc){
+    var b=document.createElement('button'); b.type='button'; b.textContent=teks;
+    b.style.cssText='display:block;width:100%;text-align:left;margin:6px 0;padding:10px 12px;border-radius:12px;border:1px solid '+(aktif?'#c084fc':'rgba(216,180,254,.35)')+';background:'+(aktif?'rgba(168,85,247,.35)':'rgba(255,255,255,.05)')+';color:#fff;font-size:14px;cursor:pointer';
+    b.onclick=onc; return b;
+  }
+  var tutup=document.createElement('button'); tutup.type='button'; tutup.textContent='Tutup';
+  tutup.style.cssText='margin-top:10px;width:100%;padding:10px;border-radius:12px;border:none;background:#7c3aed;color:#fff;font-weight:700;cursor:pointer';
+  tutup.onclick=function(){ ov.remove(); };
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  box.appendChild(tutup); ov.appendChild(box); document.body.appendChild(ov);
+  window.__f_listVoices().then(function(list){
+    sub.textContent = list.length ? 'Suara Bahasa Indonesia di HP ini:' : 'Belum ada suara Bahasa Indonesia terpasang. Pasang lewat Pengaturan > Output text-to-speech.';
+    var aktif=fVoiceSaved();
+    box.insertBefore(tombol('Otomatis (default HP)', !aktif, function(){ fVoiceSet(''); ov.remove(); fVoiceNotif('Suara diatur ke default HP.'); }), tutup);
+    list.forEach(function(v){
+      box.insertBefore(tombol(v.name+' ('+v.lang+')', aktif===v.name, function(){ fVoiceSet(v.name); ov.remove(); fVoiceNotif('Suara: '+v.name); window.__f_bicara('Halo, ini suara pilihan kamu.'); }), tutup);
+    });
+  });
+}
+function fVoiceNotif(m){ try{ (window.__f_showAppPopup||function(o){alert(o.msg);})({ icon:'🗣️', title:'Suara', msg:String(m), okText:'OK' }); }catch(e){} }
+/* Tambah item menu "Suara" di drawer (sekali, dicek berkala) */
+setInterval(function(){
+  var box=document.querySelector('#drawer .drawer-box');
+  if(!box || box.querySelector('[data-a="suara"]')) return;
+  var it=document.createElement('button'); it.className='f-item'; it.setAttribute('data-a','suara');
+  it.textContent='🗣️ Suara: '+(fVoiceSaved()||'Otomatis');
+  it.onclick=function(e){ e.preventDefault(); e.stopPropagation(); fVoiceOverlay(); };
+  box.appendChild(it);
+},1000);
+/* Muat cache suara native (dipakai saat bicara) */
+setTimeout(function(){ var P=fTTSNative(); if(P){ window.__f_listVoices().then(function(){}); } },2000);
 window.__f_bicara = function(t){
   t=(t||'').toString().replace(/[*#_`]/g,'').trim().slice(0,600); if(!t) return;
   var C=window.Capacitor, P=null;
   try{ if(C && C.isNativePlatform && C.isNativePlatform()) P=(C.Plugins&&C.Plugins.TextToSpeech)||(C.registerPlugin&&C.registerPlugin('TextToSpeech')); }catch(e){}
-  function web(){ try{ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.lang='id-ID'; window.speechSynthesis.speak(u); }catch(e){} }
+  function web(){ try{ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.lang='id-ID'; try{ var wv=window.__f_voiceWebObj&&window.__f_voiceWebObj(); if(wv) u.voice=wv; }catch(e){} window.speechSynthesis.speak(u); }catch(e){} }
   function info(m){ try{ var d=document.createElement('div'); d.textContent=m; d.style.cssText='position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:99999;background:rgba(20,8,35,.95);color:#fff;border:1px solid #c084fc;border-radius:14px;padding:10px 14px;font-size:13px;max-width:80%;text-align:center'; document.body.appendChild(d); setTimeout(function(){ d.remove(); },4000); }catch(e){} }
   if(P){
     Promise.resolve().then(function(){ return P.stop(); }).catch(function(){})
-      .then(function(){ return P.speak({ text:t, lang:'id-ID', rate:1.0, pitch:1.0, volume:1.0 }); })
+      .then(function(){ return P.speak(Object.assign({ text:t, lang:'id-ID', rate:1.0, pitch:1.0, volume:1.0 }, window.__f_voiceNativeOpt ? window.__f_voiceNativeOpt() : {})); })
       .catch(function(e){ info('Suara gagal: '+((e&&e.message)||e||'tidak diketahui')); web(); });
     return;
   }
@@ -1854,6 +1928,57 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
       last=now; toast('Tekan sekali lagi untuk keluar');
     });
   }
+})();
+</script>
+<script>
+/* === RIWAYAT CHAT TERSIMPAN DI AKUN (Firestore) ===
+   Riwayat tetap disimpan di HP (localStorage) seperti biasa, dan salinannya disimpan ke akun saat login.
+   Kalau Firestore belum aktif, aplikasi tetap berjalan dengan riwayat lokal. */
+(function(){
+  var cloudT=0, cloudReady=false;
+  function ref(){
+    try{
+      var u=firebase.auth().currentUser;
+      if(!u || !firebase.firestore) return null;
+      return firebase.firestore().collection('users').doc(u.uid).collection('data').doc('history');
+    }catch(e){ return null; }
+  }
+  function saveNow(){
+    var r=ref(); if(!r) return;
+    r.set({ messages: history.slice(-200), updatedAt: Date.now() }).catch(function(e){ console.log('Simpan riwayat akun gagal', e); });
+  }
+  function schedule(){ clearTimeout(cloudT); cloudT=setTimeout(saveNow, 1500); }
+  var localSave=saveHistory;
+  saveHistory=function(){ localSave(); if(cloudReady) schedule(); };
+  function load(){
+    var r=ref(); if(!r) return;
+    r.get().then(function(snap){
+      var data=snap.exists ? snap.data() : null;
+      var cloud=(data && Array.isArray(data.messages)) ? data.messages : [];
+      var local=history||[];
+      cloudReady=true;
+      if(cloud.length > local.length){
+        history=cloud;
+        try{ localStorage.setItem('fahri_history', JSON.stringify(history)); }catch(e){}
+        // tampilkan ulang chat dari akun (sekali per sesi)
+        if(!sessionStorage.getItem('f_cloud_loaded')){ sessionStorage.setItem('f_cloud_loaded','1'); location.reload(); }
+      } else if(local.length){
+        schedule();
+      }
+    }).catch(function(e){ cloudReady=true; console.log('Muat riwayat akun gagal', e); });
+  }
+  try{
+    firebase.auth().onAuthStateChanged(function(u){
+      cloudReady=false;
+      if(u){ setTimeout(load,300); }
+      else { try{ sessionStorage.removeItem('f_cloud_loaded'); }catch(e){} }
+    });
+  }catch(e){}
+  // Hapus semua chat juga menghapus salinan di akun
+  var clr=document.getElementById('btnYesClear');
+  if(clr) clr.addEventListener('click', function(){
+    var r=ref(); if(r) r.set({ messages: [], updatedAt: Date.now() }).catch(function(){});
+  });
 })();
 </script>
 </body>
