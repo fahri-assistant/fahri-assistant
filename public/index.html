@@ -872,7 +872,7 @@ function buildChat(){
   var wadah=inp.parentElement; for(var i=0;i<3;i++){ if(wadah&&wadah.querySelector('button')) break; if(wadah&&wadah.parentElement) wadah=wadah.parentElement; }
   if(!wadah) wadah=inp.parentElement;
   var mic=document.createElement('button'); mic.className='f-mini-btn'; mic.textContent='🎤'; mic.type='button'; mic.onclick=startVoice;
-  var att=document.createElement('button'); att.className='f-mini-btn'; att.textContent='📎'; att.type='button'; att.onclick=function(){file.click();};
+  var att=document.createElement('button'); att.className='f-mini-btn'; att.textContent='📎'; att.type='button'; att.onclick=function(){ try{ var iv=document.querySelector('input[placeholder*="Tanya"], textarea[placeholder*="Tanya"]'); if(iv && iv.value) sessionStorage.setItem('f_draft', iv.value); }catch(e){} file.click(); };
   wadah.insertBefore(att,inp); var kirim=wadah.querySelector('button'); if(kirim&&kirim!==att&&kirim!==mic) wadah.insertBefore(mic,kirim); else wadah.appendChild(mic);
   wadah.style.display='flex'; wadah.style.alignItems='center'; wadah.style.gap='8px';
 }
@@ -2148,6 +2148,18 @@ window.__f_fotoPreview = function(dataUrl){
   var wadah = inp.closest('.composer') || inp.parentElement;
   wadah.parentNode.insertBefore(box, wadah);
 };
+</script>
+<script>
+/* PULIHKAN TEKS YANG SEDANG DIKETIK jika halaman sempat dimuat ulang saat memilih foto */
+(function(){
+  try{
+    var d = sessionStorage.getItem('f_draft');
+    if(!d) return;
+    sessionStorage.removeItem('f_draft');
+    var iv = document.querySelector('input[placeholder*="Tanya"], textarea[placeholder*="Tanya"]');
+    if(iv && !iv.value) iv.value = d;
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
