@@ -4,6 +4,9 @@ import crypto from 'crypto';
 
 const FB_API_KEY = process.env.FIREBASE_API_KEY || 'AIzaSyC_enCjCWHSq4GTFHABA6kcCgjWeww1hks';
 export const BATAS = { chat_user: 100, chat_tamu: 10, gambar: 10, edit: 3 };
+// true = kalau pengecekan kuota gagal (misal service account belum siap), layanan tetap jalan.
+// Ubah ke false setelah setup Firebase beres agar batas benar-benar dipaksa.
+export const KUOTA_FAIL_OPEN = true;
 
 let _sa = null;
 function serviceAccount() {
@@ -106,7 +109,8 @@ export async function cekKuota(req, jenis) {
     if (!tulis) return { ok: false, pesan: 'Server sedang sibuk mencatat pemakaian, coba kirim lagi sebentar.' };
     return { ok: true, sisa: batas - (h.count + 1) };
   } catch (e) {
-    // Gagal cek kuota = tolak (lebih aman daripada membiarkan batas terlewati)
+    console.error('KUOTA GAGAL:', e && e.message ? e.message : e);
+    if (KUOTA_FAIL_OPEN) return { ok: true, sisa: null };
     return { ok: false, pesan: 'Tidak bisa mengecek batas pemakaian sekarang. Coba lagi sebentar.' };
   }
 }
