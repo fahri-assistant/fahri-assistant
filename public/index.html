@@ -1326,7 +1326,7 @@ window.__f_editFotoAI = function(origDataUrl, prompt){
   var chat=getChat(); if(!chat) return;
   function turun(){ try{ chat.scrollTop=chat.scrollHeight; }catch(e){} }
   var u=document.createElement('div'); u.style.cssText='margin:10px 0;text-align:right';
-  var uImg=document.createElement('img'); uImg.src=origDataUrl; uImg.style.cssText='max-width:220px;border-radius:14px';
+  var uImg=document.createElement('img'); uImg.onload=function(){ turun(); setTimeout(turun,150); }; uImg.src=origDataUrl; uImg.style.cssText='max-width:220px;border-radius:14px';
   var uCap=document.createElement('div'); uCap.style.cssText='font-size:12px;opacity:.7'; uCap.textContent='✏️ Edit Foto: '+prompt;
   u.appendChild(uImg); u.appendChild(uCap); chat.appendChild(u);
   var ai=document.createElement('div'); ai.className='bubble ai'; ai.textContent='✨ Lagi mengedit foto kamu, tunggu sebentar ya...';
@@ -1344,20 +1344,21 @@ window.__f_editFotoAI = function(origDataUrl, prompt){
     var imgCF=c2.toDataURL('image/jpeg',0.85);
     var k3=768/Math.max(im.naturalWidth,im.naturalHeight);
     var ow=Math.min(1920,Math.max(256,Math.round(im.naturalWidth*k3/16)*16)), oh=Math.min(1920,Math.max(256,Math.round(im.naturalHeight*k3/16)*16));
-    fetch('https://fahri-assistant.vercel.app/api/edit',{ method:'POST', headers:window.__f_authHeaders(), body:JSON.stringify({ prompt:prompt, image:kecil, imageCF:imgCF, ow:ow, oh:oh }) })
-      .then(function(r){ return r.json().catch(function(){ return { error:'Server membalas tidak wajar (kode '+r.status+')' }; }); })
+    var _ac=new AbortController(); var _tm=setTimeout(function(){ _ac.abort(); },65000);
+    fetch('https://fahri-assistant.vercel.app/api/edit',{ method:'POST', headers:window.__f_authHeaders(), signal:_ac.signal, body:JSON.stringify({ prompt:prompt, image:kecil, imageCF:imgCF, ow:ow, oh:oh }) })
+      .then(function(r){ clearTimeout(_tm); return r.json().catch(function(){ return { error:'Server membalas tidak wajar (kode '+r.status+')' }; }); })
       .then(function(d){
         var src=d.image||d.url;
         if(!src){ ai.textContent='😕 '+(d.error||'Edit foto gagal, coba lagi.'); return; }
         ai.textContent='';
         var out=document.createElement('img'); out.src=src; out.style.cssText='max-width:100%;border-radius:14px;display:block';
-        out.onerror=function(){ ai.textContent='😕 Hasil edit gagal dimuat, coba lagi.'; };
+        out.onload=function(){ turun(); setTimeout(turun,150); }; out.onerror=function(){ ai.textContent='😕 Hasil edit gagal dimuat, coba lagi.'; };
         var cap=document.createElement('div'); cap.style.cssText='font-size:12px;opacity:.7;margin-top:6px'; cap.textContent='✅ Selesai diedit';
         ai.appendChild(out); ai.appendChild(cap);
         var sbe=document.createElement('button'); sbe.className='tts-btn'; sbe.textContent='💾 Simpan'; sbe.style.marginTop='8px';
         sbe.onclick=function(){ window.__f_simpanGambar(src,'fahri-edit'); }; ai.appendChild(sbe);
       })
-      .catch(function(){ ai.textContent='😕 Tidak bisa terhubung ke server, cek internet lalu coba lagi.'; })
+      .catch(function(e){ clearTimeout(_tm); ai.textContent=(e && e.name==='AbortError') ? '😕 Server terlalu lama membalas, coba lagi sebentar lagi.' : '😕 Tidak bisa terhubung ke server, cek internet lalu coba lagi.'; })
       .then(turun);
   };
   im.onerror=function(){ ai.textContent='😕 Foto tidak bisa dibaca, coba foto lain.'; };
