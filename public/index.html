@@ -1337,7 +1337,14 @@ window.__f_editFotoAI = function(origDataUrl, prompt){
     var c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k);
     c.getContext('2d').drawImage(im,0,0,c.width,c.height);
     var kecil=c.toDataURL('image/jpeg',0.88);
-    fetch('https://fahri-assistant.vercel.app/api/edit',{ method:'POST', headers:window.__f_authHeaders(), body:JSON.stringify({ prompt:prompt, image:kecil }) })
+    // Salinan kecil (maks 480 px) untuk Cloudflare + ukuran hasil yang diinginkan (kelipatan 16, maks 768 px)
+    var k2=Math.min(1,480/Math.max(im.naturalWidth,im.naturalHeight));
+    var c2=document.createElement('canvas'); c2.width=Math.max(16,Math.round(im.naturalWidth*k2)); c2.height=Math.max(16,Math.round(im.naturalHeight*k2));
+    c2.getContext('2d').drawImage(im,0,0,c2.width,c2.height);
+    var imgCF=c2.toDataURL('image/jpeg',0.85);
+    var k3=768/Math.max(im.naturalWidth,im.naturalHeight);
+    var ow=Math.min(1920,Math.max(256,Math.round(im.naturalWidth*k3/16)*16)), oh=Math.min(1920,Math.max(256,Math.round(im.naturalHeight*k3/16)*16));
+    fetch('https://fahri-assistant.vercel.app/api/edit',{ method:'POST', headers:window.__f_authHeaders(), body:JSON.stringify({ prompt:prompt, image:kecil, imageCF:imgCF, ow:ow, oh:oh }) })
       .then(function(r){ return r.json().catch(function(){ return { error:'Server membalas tidak wajar (kode '+r.status+')' }; }); })
       .then(function(d){
         var src=d.image||d.url;
