@@ -84,7 +84,7 @@ export default async function handler(req, res) {
 
   const { key, name: keyName } = getKey();
   const cfAkun = (process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
-  const cfToken = (process.env.CLOUDFLARE_API_TOKEN || '').trim();
+  const cfToken = (process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY || '').trim();
   const adaCF = !!(cfAkun && cfToken);
   if (!key && !adaCF) return res.status(500).json({ error: 'API key belum terpasang di Vercel (CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN, atau POLLINATIONS_API_KEY).' });
 
