@@ -465,7 +465,7 @@ window.__f_askAI = async function(loading2){
       history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
     }catch(e){ window.__f_failBubble(loading2, navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya. [detail: '+String((e&&e.name)||'')+' '+String((e&&e.message)||e).slice(0,160)+']'); }
 };
-async function send(){const t=inputEl.value.trim();if(!t)return;var tampil=t.replace(/\[(Jawab[^\]]*|Auto Translate[^\]]*)\]\s*/g,'').trim()||t;var vb=document.getElementById('f-vision-bar'); if(vb) vb.remove();addBubble(tampil,'user');inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const low=t.toLowerCase();const adaFoto=!!window.__f_pendingImg;if(!adaFoto && (low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw'))){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading=addBubble('Fahri lagi mikir...','ai');try{const r=await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});const d=await r.json();const reply=d.reply||'Maaf, coba lagi ya.';loading.innerHTML=renderMarkdown(reply);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,reply)};loading.appendChild(bb);history.push({role:'assistant',content:reply});saveHistory();saveLog('assistant',reply)}catch(e){loading.textContent=(navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya.')}}
+async function send(){const t=inputEl.value.trim();if(!t)return;lastUserText=t;var tampil=t.replace(/\[(Jawab[^\]]*|Auto Translate[^\]]*)\]\s*/g,'').trim()||t;var vb=document.getElementById('f-vision-bar'); if(vb) vb.remove();var pend=window.__f_pendingImg; if(pend){ var esc1=tampil.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); addBubble('<img src="'+pend+'" style="max-width:200px;border-radius:12px;display:block;margin-left:auto;margin-bottom:6px"><div>'+esc1+'</div>','user',true); } else { addBubble(tampil,'user'); } var pv=document.getElementById('f-foto-preview'); if(pv) pv.remove();inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const low=t.toLowerCase();const adaFoto=!!window.__f_pendingImg;if(!adaFoto && (low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw'))){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading2=addBubble('Fahri lagi mikir...','ai'); await window.__f_askAI(loading2);}
 document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
 (function(){
@@ -552,27 +552,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
       else { clearInterval(iv); cur.remove(); bubble.innerHTML = html; onDone && onDone(); }
     }, 8);
   }
-  window.send = async function(){
-    var t = inputEl.value.trim(); if(!t) return;
-    lastUserText = t;
-    addBubble(t,'user'); inputEl.value='';
-    history.push({role:'user',content:t}); saveHistory(); saveLog('user',t);
-    var low = t.toLowerCase();
-    if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){
-      var loading = addBubble('Fahri lagi gambar...','ai');
-      var prompt = encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);
-      var img = document.createElement('img'); window.__f_cekGambar().then(function(ok){ if(ok) img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now(); });
-      img.style.width='100%'; img.style.borderRadius='12px'; img.style.marginTop='8px';
-      loading.innerHTML='Ini gambarnya:'; loading.appendChild(img);
-      var bb=document.createElement('button'); bb.className='tts-btn'; bb.textContent='🔊';
-      bb.onclick=function(){ speakText(bb,'Ini gambarnya') }; loading.appendChild(bb);
-      var sbg=document.createElement('button'); sbg.className='tts-btn'; sbg.textContent='💾 Simpan';
-      sbg.onclick=function(){ window.__f_simpanGambar(img.src,'fahri-gambar'); }; loading.appendChild(sbg);
-      history.push({role:'assistant',content:'Ini gambarnya:'}); saveHistory(); return;
-    }
-    var loading2 = addBubble('Fahri lagi mikir...','ai');
-  await window.__f_askAI(loading2);
-  };
+  
   document.getElementById('sendBtn').onclick = send;
 })();
 /* === BERSIHIN SISA PASTE LAMA - PASTE SEBELUM V4 === */
@@ -884,7 +864,7 @@ function buildChat(){
     }
     var r=new FileReader();
     r.onload=function(){
-      var chat2=getChat(); var d2=document.createElement('div'); d2.style.cssText='text-align:right;margin:10px 0'; d2.innerHTML='<img src="'+r.result+'" style="max-width:220px;border-radius:14px;display:block;margin-left:auto"><div style="font-size:12px;opacity:.7">📎 Foto siap!</div>'; chat2.appendChild(d2); chat2.scrollTop=chat2.scrollHeight;
+      var chat2=getChat(); var d2=document.createElement('div'); d2.style.cssText='text-align:right;margin:10px 0'; d2.innerHTML='<img src="'+r.result+'" style="max-width:220px;border-radius:14px;display:block;margin-left:auto"><div style="font-size:12px;opacity:.7">📎 Foto siap!</div>'; window.__f_fotoPreview(r.result); chat2.scrollTop=chat2.scrollHeight;
       if(!document.getElementById('f-vision-bar')){ var bar2=document.createElement('div'); bar2.id='f-vision-bar'; bar2.className='f-vision-bar'; bar2.innerHTML='<button class="f-vision-chip" data-cmd="Jawabin soal ini + caranya">📝 Jawab Soal</button><button class="f-vision-chip" data-cmd="Jelaskan gambar ini secara detail">🔍 Jelaskan</button><button class="f-vision-chip" data-cmd="Terjemahkan teks di foto ini">🌐 Terjemahkan</button><button class="f-vision-chip" data-cmd="Rangkum isi foto ini">📋 Rangkum</button><button class="f-vision-chip" data-cmd="Cek jawaban di foto ini, mana yang salah?">✅ Cek Jawaban</button><button class="f-vision-chip" data-cmd="Buatkan soal latihan mirip foto ini">✍️ Soal Mirip</button>'; if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar2,inp.parentElement); bar2.addEventListener('click',function(e){var b=e.target.closest('[data-cmd]'); if(!b) return; inp.value=getModePrefix()+b.getAttribute('data-cmd'); inp.focus();}); }
       inp.focus();
 }; window.__f_siapkanFoto(f); r.readAsDataURL(f);
@@ -2144,6 +2124,30 @@ document.addEventListener('click', function(e){
     var sh = document.getElementById('f-sheet'); if(sh) sh.classList.remove('open');
   }, 0);
 }, true);
+</script>
+<script>
+/* PRATINJAU FOTO DI ATAS KOLOM KETIK (belum terkirim sampai Anda menekan kirim) */
+window.__f_fotoPreview = function(dataUrl){
+  var inp = document.querySelector('input[placeholder*="Tanya"], textarea[placeholder*="Tanya"]');
+  if(!inp) return;
+  var old = document.getElementById('f-foto-preview'); if(old) old.remove();
+  var box = document.createElement('div');
+  box.id = 'f-foto-preview';
+  box.style.cssText = 'display:flex;align-items:center;gap:10px;margin:0 14px 6px;padding:8px 10px;border-radius:14px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.45)';
+  var im = document.createElement('img'); im.src = dataUrl;
+  im.style.cssText = 'width:44px;height:44px;object-fit:cover;border-radius:10px';
+  var tx = document.createElement('div'); tx.style.cssText = 'flex:1;font-size:12.5px;color:#e9d5ff';
+  tx.textContent = 'Foto siap. Tulis perintahnya di kolom ketik, lalu kirim.';
+  var x = document.createElement('button'); x.type = 'button'; x.textContent = '✖';
+  x.style.cssText = 'width:30px;height:30px;border-radius:50%;border:1px solid #c084fc;background:transparent;color:#fff';
+  x.onclick = function(){
+    window.__f_pendingImg = null; box.remove();
+    var vb = document.getElementById('f-vision-bar'); if(vb) vb.remove();
+  };
+  box.appendChild(im); box.appendChild(tx); box.appendChild(x);
+  var wadah = inp.closest('.composer') || inp.parentElement;
+  wadah.parentNode.insertBefore(box, wadah);
+};
 </script>
 </body>
 </html>
