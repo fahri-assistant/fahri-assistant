@@ -1752,7 +1752,7 @@ function fetchInfo(){
       var indo=(L.lat>-11.5 && L.lat<6.5 && L.lon>94.5 && L.lon<141.5);
       fetch('https://api.aladhan.com/v1/timings/'+dd+'-'+mm+'-'+yy+'?latitude='+lat+'&longitude='+lon+(indo?'&method=20':'')).then(function(r){return r.json();}).then(function(d){
         var t=d.data.timings; window.__f_sholatRetry=false; try{ localStorage.setItem('f_sholat_cache', JSON.stringify({k: dd+'-'+mm+'-'+yy+'|'+lat+'|'+lon, t:{Fajr:t.Fajr,Dhuhr:t.Dhuhr,Asr:t.Asr,Maghrib:t.Maghrib,Isha:t.Isha}})); }catch(e){} s.innerHTML='<b>🕌 Sholat Hari Ini'+(fNotifAktif()?' 🔔':'')+'</b><div class="f-sh-grid"><span><i>Subuh</i>'+t.Fajr.slice(0,5)+'</span><span><i>Dzuhur</i>'+t.Dhuhr.slice(0,5)+'</span><span><i>Ashar</i>'+t.Asr.slice(0,5)+'</span><span><i>Maghrib</i>'+t.Maghrib.slice(0,5)+'</span><span><i>Isya</i>'+t.Isha.slice(0,5)+'</span></div>';
-      }).catch(function(){ window.__f_sholatCadangan(s, dd+'-'+mm+'-'+yy+'|'+lat+'|'+lon, fetchInfo); });
+      }).catch(function(e){ window.__f_sholatCadangan(s, dd+'-'+mm+'-'+yy+'|'+lat+'|'+lon, fetchInfo, String((e&&e.message)||e)); });
     }
   });
 }
@@ -2163,7 +2163,7 @@ window.__f_fotoPreview = function(dataUrl){
 </script>
 <script>
 /* JADWAL SHOLAT CADANGAN: pakai jadwal terakhir yang tersimpan, dan coba ulang sekali */
-window.__f_sholatCadangan = function(s, kunci, ulang){
+window.__f_sholatCadangan = function(s, kunci, ulang, detail){
   try{
     var c = JSON.parse(localStorage.getItem('f_sholat_cache') || 'null');
     if(c && c.k === kunci && c.t){
@@ -2177,7 +2177,7 @@ window.__f_sholatCadangan = function(s, kunci, ulang){
     s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Memuat jadwal...';
     setTimeout(function(){ if(ulang) ulang(); }, 3000);
   } else {
-    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia, cek internet';
+    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia [detail: '+String(detail||'').slice(0,120)+']';
   }
 };
 </script>
