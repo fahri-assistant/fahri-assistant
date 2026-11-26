@@ -103,7 +103,7 @@ Aturan WAJIB:
       if (!valid) {
         return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya. Coba kirim ulang fotonya ya (format JPG, PNG, atau WEBP, ukuran tidak terlalu besar).' });
       }
-      // Model gambar: Gemini 2.5 Flash (Google AI Studio, tingkat gratis, tanpa kartu kredit). Model Groq Llama 4 Scout sudah dihentikan Groq (Juli 2026).
+      // Model gambar: Gemini 3.8 Flash (Google AI Studio). Model 2.5 sudah tidak tersedia untuk pengguna baru. Model Groq Llama 4 Scout sudah dihentikan Groq (Juli 2026).
       const sysTxt = cleanMsgs.filter(m => m.role === 'system').map(m => m.content).join('\n');
       const percakapan = cleanMsgs.filter(m => m.role !== 'system');
       const vm = percakapan.map((m, i) => (i === percakapan.length - 1 && m.role === 'user')
@@ -123,7 +123,7 @@ Aturan WAJIB:
         const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + kunciGemini, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'gemini-2.5-flash', messages: vm, temperature: 0.5, max_tokens: 900 }),
+          body: JSON.stringify({ model: 'gemini-3.8-flash', messages: vm, temperature: 0.5, max_tokens: 900 }),
           signal: c.signal
         });
         clearTimeout(t);
