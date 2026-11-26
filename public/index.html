@@ -440,7 +440,7 @@ async function speakText(btn, rawText){
   }
 /* === TTS 3: addBubble UDAH ADA TOMBOL 🔊 === */
 function addBubble(text,who,isHtml){const d=document.createElement('div');d.className='bubble '+who;if(isHtml)d.innerHTML=text;else d.textContent=text;if(who==='ai'){const b=document.createElement('button');b.className='tts-btn';b.textContent='🔊';b.onclick=function(){speakText(b,text)};d.appendChild(b)}if(welcomeEl)welcomeEl.style.display='none';chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;return d}
-history.forEach(m=>{if(m.role==='user')addBubble(m.content,'user');else addBubble(renderMarkdown(m.content),'ai',true)});
+history.forEach(m=>{if(m.role==='user'){ if(m.img) addBubble('<img src="'+m.img+'" style="max-width:160px;border-radius:12px;display:block;margin-left:auto;margin-bottom:6px"><div>'+String(m.content).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>','user',true); else addBubble(m.content,'user'); } else addBubble(renderMarkdown(m.content),'ai',true)});
 if(history.length>0&&welcomeEl)welcomeEl.style.display='none';
 function quick(t){inputEl.value=t;send()}
 window.__f_failBubble = function(b,msg){
@@ -451,8 +451,8 @@ window.__f_failBubble = function(b,msg){
 };
 window.__f_askAI = async function(loading2){
   try{
-      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({messages:history, image: window.__f_pendingImg || undefined})});
-      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.'; if(r.ok) window.__f_pendingImg=null;
+      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({messages:history.map(function(m){ return {role:m.role, content:m.content}; }), image: window.__f_pendingImg || undefined})});
+      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.'; if(r.ok){ window.__f_pendingImg=null; window.__f_pendingThumb=null; }
       var html = renderMarkdown(reply);
       var TI=window.__f_typeInto, AC=window.__f_addCopyBtn, AS=window.__f_addSuggest;
       var doneFn=function(){
@@ -465,7 +465,7 @@ window.__f_askAI = async function(loading2){
       history.push({role:'assistant',content:reply}); saveHistory(); saveLog('assistant',reply);
     }catch(e){ window.__f_failBubble(loading2, navigator.onLine===false?'Tidak ada koneksi internet. Cek jaringanmu lalu coba lagi ya.':'Maaf, server lagi sibuk, coba lagi ya. [detail: '+String((e&&e.name)||'')+' '+String((e&&e.message)||e).slice(0,160)+']'); }
 };
-async function send(){const t=inputEl.value.trim();if(!t)return;lastUserText=t;var tampil=t.replace(/\[(Jawab[^\]]*|Auto Translate[^\]]*)\]\s*/g,'').trim()||t;var vb=document.getElementById('f-vision-bar'); if(vb) vb.remove();var pend=window.__f_pendingImg; if(pend){ var esc1=tampil.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); addBubble('<img src="'+pend+'" style="max-width:200px;border-radius:12px;display:block;margin-left:auto;margin-bottom:6px"><div>'+esc1+'</div>','user',true); } else { addBubble(tampil,'user'); } var pv=document.getElementById('f-foto-preview'); if(pv) pv.remove();inputEl.value='';history.push({role:'user',content:t});saveHistory();saveLog('user',t);const low=t.toLowerCase();const adaFoto=!!window.__f_pendingImg;if(!adaFoto && (low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw'))){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading2=addBubble('Fahri lagi mikir...','ai'); await window.__f_askAI(loading2);}
+async function send(){const t=inputEl.value.trim();if(!t)return;lastUserText=t;var tampil=t.replace(/\[(Jawab[^\]]*|Auto Translate[^\]]*)\]\s*/g,'').trim()||t;var vb=document.getElementById('f-vision-bar'); if(vb) vb.remove();var pend=window.__f_pendingImg; if(pend){ var esc1=tampil.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); addBubble('<img src="'+pend+'" style="max-width:200px;border-radius:12px;display:block;margin-left:auto;margin-bottom:6px"><div>'+esc1+'</div>','user',true); } else { addBubble(tampil,'user'); } var pv=document.getElementById('f-foto-preview'); if(pv) pv.remove();inputEl.value='';history.push({role:'user',content:t, img: window.__f_pendingThumb || undefined});saveHistory();saveLog('user',t);const low=t.toLowerCase();const adaFoto=!!window.__f_pendingImg;if(!adaFoto && (low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw'))){const loading=addBubble('Fahri lagi gambar...','ai');const prompt=encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);const img=document.createElement('img');img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();img.style.width='100%';img.style.borderRadius='12px';img.style.marginTop='8px';loading.innerHTML='Ini gambarnya:';loading.appendChild(img);const bb=document.createElement('button');bb.className='tts-btn';bb.textContent='🔊';bb.onclick=function(){speakText(bb,'Ini gambarnya')};loading.appendChild(bb);history.push({role:'assistant',content:'Ini gambarnya:'});saveHistory();return}const loading2=addBubble('Fahri lagi mikir...','ai'); await window.__f_askAI(loading2);}
 document.getElementById('sendBtn').onclick=send;
 inputEl.addEventListener('keydown',(e)=>{if(e.key==='Enter')send()});
 (function(){
@@ -1314,7 +1314,7 @@ window.__f_siapkanFoto = function(file){
         var k=Math.min(1,1024/Math.max(im.naturalWidth,im.naturalHeight));
         var c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k);
         c.getContext('2d').drawImage(im,0,0,c.width,c.height);
-        window.__f_pendingImg=c.toDataURL('image/jpeg',0.85);
+        window.__f_pendingImg=c.toDataURL('image/jpeg',0.85); var kt=Math.min(1,160/Math.max(im.naturalWidth,im.naturalHeight)); var tc=document.createElement('canvas'); tc.width=Math.round(im.naturalWidth*kt); tc.height=Math.round(im.naturalHeight*kt); tc.getContext('2d').drawImage(im,0,0,tc.width,tc.height); window.__f_pendingThumb=tc.toDataURL('image/jpeg',0.6);
       };
       im.src=fr.result;
     };
@@ -1751,8 +1751,8 @@ function fetchInfo(){
       // metode 20 = Kemenag RI, dipakai kalau lokasi di Indonesia; di luar itu pakai bawaan layanan
       var indo=(L.lat>-11.5 && L.lat<6.5 && L.lon>94.5 && L.lon<141.5);
       fetch('https://api.aladhan.com/v1/timings/'+dd+'-'+mm+'-'+yy+'?latitude='+lat+'&longitude='+lon+(indo?'&method=20':'')).then(function(r){return r.json();}).then(function(d){
-        var t=d.data.timings; s.innerHTML='<b>🕌 Sholat Hari Ini'+(fNotifAktif()?' 🔔':'')+'</b><div class="f-sh-grid"><span><i>Subuh</i>'+t.Fajr.slice(0,5)+'</span><span><i>Dzuhur</i>'+t.Dhuhr.slice(0,5)+'</span><span><i>Ashar</i>'+t.Asr.slice(0,5)+'</span><span><i>Maghrib</i>'+t.Maghrib.slice(0,5)+'</span><span><i>Isya</i>'+t.Isha.slice(0,5)+'</span></div>';
-      }).catch(function(){ s.innerHTML='<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia, cek internet'; });
+        var t=d.data.timings; window.__f_sholatRetry=false; try{ localStorage.setItem('f_sholat_cache', JSON.stringify({k: dd+'-'+mm+'-'+yy+'|'+lat+'|'+lon, t:{Fajr:t.Fajr,Dhuhr:t.Dhuhr,Asr:t.Asr,Maghrib:t.Maghrib,Isha:t.Isha}})); }catch(e){} s.innerHTML='<b>🕌 Sholat Hari Ini'+(fNotifAktif()?' 🔔':'')+'</b><div class="f-sh-grid"><span><i>Subuh</i>'+t.Fajr.slice(0,5)+'</span><span><i>Dzuhur</i>'+t.Dhuhr.slice(0,5)+'</span><span><i>Ashar</i>'+t.Asr.slice(0,5)+'</span><span><i>Maghrib</i>'+t.Maghrib.slice(0,5)+'</span><span><i>Isya</i>'+t.Isha.slice(0,5)+'</span></div>';
+      }).catch(function(){ window.__f_sholatCadangan(s, dd+'-'+mm+'-'+yy+'|'+lat+'|'+lon, fetchInfo); });
     }
   });
 }
@@ -2133,7 +2133,7 @@ window.__f_fotoPreview = function(dataUrl){
   var old = document.getElementById('f-foto-preview'); if(old) old.remove();
   var box = document.createElement('div');
   box.id = 'f-foto-preview';
-  box.style.cssText = 'display:flex;align-items:center;gap:10px;margin:0 14px 6px;padding:8px 10px;border-radius:14px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.45)';
+  box.style.cssText = 'position:fixed;left:14px;right:14px;bottom:92px;z-index:45;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#1a0a2e;border:1px solid #c084fc;box-shadow:0 0 18px rgba(168,85,247,.5)';
   var im = document.createElement('img'); im.src = dataUrl;
   im.style.cssText = 'width:44px;height:44px;object-fit:cover;border-radius:10px';
   var tx = document.createElement('div'); tx.style.cssText = 'flex:1;font-size:12.5px;color:#e9d5ff';
@@ -2146,7 +2146,7 @@ window.__f_fotoPreview = function(dataUrl){
   };
   box.appendChild(im); box.appendChild(tx); box.appendChild(x);
   var wadah = inp.closest('.composer') || inp.parentElement;
-  wadah.parentNode.insertBefore(box, wadah);
+  document.body.appendChild(box);
 };
 </script>
 <script>
@@ -2160,6 +2160,26 @@ window.__f_fotoPreview = function(dataUrl){
     if(iv && !iv.value) iv.value = d;
   }catch(e){}
 })();
+</script>
+<script>
+/* JADWAL SHOLAT CADANGAN: pakai jadwal terakhir yang tersimpan, dan coba ulang sekali */
+window.__f_sholatCadangan = function(s, kunci, ulang){
+  try{
+    var c = JSON.parse(localStorage.getItem('f_sholat_cache') || 'null');
+    if(c && c.k === kunci && c.t){
+      var t = c.t;
+      s.innerHTML = '<b>🕌 Sholat Hari Ini (tersimpan)</b><div class="f-sh-grid"><span><i>Subuh</i>'+String(t.Fajr).slice(0,5)+'</span><span><i>Dzuhur</i>'+String(t.Dhuhr).slice(0,5)+'</span><span><i>Ashar</i>'+String(t.Asr).slice(0,5)+'</span><span><i>Maghrib</i>'+String(t.Maghrib).slice(0,5)+'</span><span><i>Isya</i>'+String(t.Isha).slice(0,5)+'</span></div>';
+      return;
+    }
+  }catch(e){}
+  if(!window.__f_sholatRetry){
+    window.__f_sholatRetry = true;
+    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Memuat jadwal...';
+    setTimeout(function(){ if(ulang) ulang(); }, 3000);
+  } else {
+    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia, cek internet';
+  }
+};
 </script>
 </body>
 </html>
