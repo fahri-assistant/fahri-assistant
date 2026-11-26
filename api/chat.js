@@ -117,6 +117,7 @@ Aturan WAJIB:
         console.error('VISION: OPENROUTER_API_KEY belum terpasang');
         return res.status(200).json({ reply: 'Maaf, fitur baca foto belum aktif di server. Coba lagi nanti ya.' });
       }
+      let visionErr = '';
       try {
         const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000);
         const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -130,15 +131,15 @@ Aturan WAJIB:
           const j = await r.json();
           const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
           if (txt) return res.status(200).json({ reply: String(txt) });
-          console.error('VISION: balasan kosong', JSON.stringify(j).slice(0, 300));
+          visionErr = 'balasan kosong'; console.error('VISION: balasan kosong', JSON.stringify(j).slice(0, 300));
         } else {
           const detail = (await r.text()).slice(0, 300).replace(/\s+/g, ' ');
-          console.error('VISION: gagal ' + r.status + ' - ' + detail);
+          visionErr = 'status ' + r.status + ' - ' + detail.slice(0, 160); console.error('VISION: gagal ' + r.status + ' - ' + detail);
         }
       } catch (e) {
-        console.error('VISION: error ' + (e && e.message ? e.message : e));
+        visionErr = 'error ' + (e && e.message ? e.message : e); console.error('VISION: error ' + (e && e.message ? e.message : e));
       }
-      return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.' });
+      return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.\n\n[detail: ' + visionErr + ']' });
     }
 
     const isStream = body.stream === true || req.headers.accept?.includes('text/event-stream');
