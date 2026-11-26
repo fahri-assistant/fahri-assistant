@@ -118,26 +118,34 @@ Aturan WAJIB:
         return res.status(200).json({ reply: 'Maaf, fitur baca foto belum aktif di server. Coba lagi nanti ya.' });
       }
       let visionErr = '';
-      try {
-        const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000);
-        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + kunciGemini, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'gemini-3.8-flash', messages: vm, temperature: 0.5, max_tokens: 900 }),
-          signal: c.signal
-        });
-        clearTimeout(t);
-        if (r.ok) {
-          const j = await r.json();
-          const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-          if (txt) return res.status(200).json({ reply: String(txt) });
-          visionErr = 'balasan kosong'; console.error('VISION: balasan kosong', JSON.stringify(j).slice(0, 300));
-        } else {
+      for (let coba = 1; coba <= 3; coba++) {
+        try {
+          const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000);
+          const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + kunciGemini, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'gemini-3.8-flash', messages: vm, temperature: 0.5, max_tokens: 900 }),
+            signal: c.signal
+          });
+          clearTimeout(t);
+          if (r.ok) {
+            const j = await r.json();
+            const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+            if (txt) return res.status(200).json({ reply: String(txt) });
+            visionErr = 'balasan kosong'; console.error('VISION: balasan kosong', JSON.stringify(j).slice(0, 300));
+            break;
+          }
           const detail = (await r.text()).slice(0, 300).replace(/\s+/g, ' ');
-          visionErr = 'status ' + r.status + ' - ' + detail.slice(0, 160); console.error('VISION: gagal ' + r.status + ' - ' + detail);
+          visionErr = 'status ' + r.status + ' - ' + detail.slice(0, 160);
+          console.error('VISION: gagal ' + r.status + ' - ' + detail);
+          // 503 (sibuk) dan 429 (batas sementara): coba lagi sebentar
+          if ((r.status === 503 || r.status === 429) && coba < 3) { await new Promise(res2 => setTimeout(res2, 1500 * coba)); continue; }
+          break;
+        } catch (e) {
+          visionErr = 'error ' + (e && e.message ? e.message : e);
+          console.error('VISION: error ' + (e && e.message ? e.message : e));
+          break;
         }
-      } catch (e) {
-        visionErr = 'error ' + (e && e.message ? e.message : e); console.error('VISION: error ' + (e && e.message ? e.message : e));
       }
       return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.\n\n[detail: ' + visionErr + ']' });
     }
