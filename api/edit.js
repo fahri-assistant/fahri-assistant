@@ -119,6 +119,7 @@ export default async function handler(req, res) {
     }
   }
 
+  const galatGemini = lastErr;
   // 2) Cadangan: Pollinations
   for (const model of (key ? MODELS : [])) {
     const remaining = deadline - Date.now();
@@ -142,7 +143,7 @@ export default async function handler(req, res) {
 
       if (!r.ok) {
         lastErr = model + ': ' + r.status + ' ' + txt.slice(0, 160).replace(/\s+/g, ' ');
-        if (r.status === 401) return res.status(502).json({ error: 'API key Pollinations ditolak (401). Variabel terbaca: ' + keyName + ' (awalan "' + key.slice(0, 3) + '", panjang ' + key.length + '). Buat key baru di enter.pollinations.ai lalu isi POLLINATIONS_API_KEY di Vercel dan deploy ulang.' });
+        if (r.status === 401) return res.status(502).json({ error: 'API key Pollinations ditolak (401). Variabel terbaca: ' + keyName + ' (awalan "' + key.slice(0, 3) + '", panjang ' + key.length + '). Buat key baru di enter.pollinations.ai lalu isi POLLINATIONS_API_KEY di Vercel dan deploy ulang.' + (galatGemini ? ' | Percobaan Gemini juga gagal: ' + galatGemini : (kunciGemini ? '' : ' | GEMINI_API_KEY belum terpasang.')) });
         continue;
       }
 
