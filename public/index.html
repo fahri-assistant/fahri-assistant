@@ -451,7 +451,7 @@ window.__f_failBubble = function(b,msg){
 };
 window.__f_askAI = async function(loading2){
   try{
-      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})});
+      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({messages:history})});
       var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.';
       var html = renderMarkdown(reply);
       var TI=window.__f_typeInto, AC=window.__f_addCopyBtn, AS=window.__f_addSuggest;
@@ -561,7 +561,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
     if(low.includes('gambar')||low.includes('buatkan')||low.includes('lukis')||low.includes('draw')){
       var loading = addBubble('Fahri lagi gambar...','ai');
       var prompt = encodeURIComponent(t.replace(/buatkan gambar|gambar|buatkan|lukis/gi,'').trim()||t);
-      var img = document.createElement('img'); img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now();
+      var img = document.createElement('img'); window.__f_cekGambar().then(function(ok){ if(ok) img.src='https://image.pollinations.ai/prompt/'+prompt+'?width=768&height=768&seed='+Date.now(); });
       img.style.width='100%'; img.style.borderRadius='12px'; img.style.marginTop='8px';
       loading.innerHTML='Ini gambarnya:'; loading.appendChild(img);
       var bb=document.createElement('button'); bb.className='tts-btn'; bb.textContent='🔊';
@@ -1288,7 +1288,7 @@ function openBuatGambar(){
       document.getElementById('f-img-kirim').onclick=function(){ var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0'; d.innerHTML='<img src="'+url+'" style="max-width:280px;border-radius:14px"><div style="font-size:12px;opacity:.7">🎨 Gambar AI: '+p+'</div>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; } ov.remove(); };
     };
     img.onerror=function(){ document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Gagal bikin gambar, coba lagi / cek internet.</p>'; };
-    img.src=url;
+    window.__f_cekGambar().then(function(ok){ if(ok) img.src=url; else { document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;color:#fbbf24">Batas gambar hari ini habis. Coba lagi besok.</p>'; } });
   };
 }
 // === SIMPAN GAMBAR: unduh gambar (dari link atau data) sebagai file ===
@@ -1339,7 +1339,7 @@ window.__f_editFotoAI = function(origDataUrl, prompt){
     var c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k);
     c.getContext('2d').drawImage(im,0,0,c.width,c.height);
     var kecil=c.toDataURL('image/jpeg',0.88);
-    fetch('https://fahri-assistant.vercel.app/api/edit',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prompt:prompt, image:kecil }) })
+    fetch('https://fahri-assistant.vercel.app/api/edit',{ method:'POST', headers:window.__f_authHeaders(), body:JSON.stringify({ prompt:prompt, image:kecil }) })
       .then(function(r){ return r.json().catch(function(){ return { error:'Server membalas tidak wajar (kode '+r.status+')' }; }); })
       .then(function(d){
         var src=d.image||d.url;
@@ -2043,6 +2043,35 @@ var FAHRI_SKALA_TETAP = false;
   window.addEventListener('resize', fit);
   window.addEventListener('orientationchange', fit);
 })();
+</script>
+<script>
+/* === TOKEN LOGIN UNTUK KUOTA: disimpan di window.__f_idt dan disegarkan berkala === */
+window.__f_idt = null;
+window.__f_refreshIdt = function(){
+  try{
+    var u=firebase.auth().currentUser;
+    if(!u){ window.__f_idt=null; return; }
+    u.getIdToken().then(function(t){ window.__f_idt=t; }).catch(function(){});
+  }catch(e){}
+};
+try{ firebase.auth().onAuthStateChanged(function(){ window.__f_refreshIdt(); }); }catch(e){}
+setInterval(function(){ window.__f_refreshIdt(); }, 1800000);
+window.__f_authHeaders = function(){
+  var h={'Content-Type':'application/json'};
+  if(window.__f_idt) h['Authorization']='Bearer '+window.__f_idt;
+  return h;
+};
+/* cek kuota gambar sebelum membuat gambar */
+window.__f_cekGambar = async function(){
+  function pesan(m){ try{ (window.__f_showAppPopup||function(o){alert(o.msg);})({icon:'⛔',title:'Batas tercapai',msg:String(m),okText:'OK'}); }catch(e){} }
+  try{
+    var r=await fetch('https://fahri-assistant.vercel.app/api/kuota',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({jenis:'gambar'})});
+    var j=await r.json();
+    if(j.ok) return true;
+    pesan(j.pesan||'Batas gambar hari ini habis.');
+    return false;
+  }catch(e){ pesan('Tidak bisa mengecek batas pemakaian sekarang. Coba lagi sebentar.'); return false; }
+};
 </script>
 </body>
 </html>
