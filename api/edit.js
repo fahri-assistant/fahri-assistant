@@ -1,5 +1,5 @@
 import { cekKuota } from './kuota.js';
-// api/edit.js - Edit foto pakai Pollinations (POST /v1/images/edits)
+// api/edit.js - Edit foto: Gemini (Nano Banana) dulu, cadangan Pollinations (POST /v1/images/edits)
 // Kirim: { "prompt": "jadikan anime", "image": "data:image/jpeg;base64,..." }
 // Balasan sukses: { "image": "data:image/...;base64,..." } atau { "url": "https://..." }
 export const config = { maxDuration: 60 };
@@ -23,6 +23,39 @@ function guessMime(b64) {
   if (b64.startsWith('iVBOR')) return 'image/png';
   if (b64.startsWith('UklG')) return 'image/webp';
   return 'image/png';
+}
+
+// ===== Edit foto lewat Gemini (Nano Banana) - dicoba lebih dulu, kalau gagal lanjut ke Pollinations =====
+// Nama model bisa diganti lewat variabel GEMINI_IMAGE_MODEL di Vercel (tanpa ubah kode).
+async function editGemini(kunci, model, prompt, mime, b64, timeoutMs) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': kunci },
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: b64 } }] }],
+        generationConfig: { responseModalities: ['IMAGE'] }
+      })
+    });
+    const txt = await r.text();
+    clearTimeout(t);
+    if (!r.ok) return { ok: false, status: r.status, err: 'gemini ' + model + ': ' + r.status + ' ' + txt.slice(0, 160).replace(/\s+/g, ' ') };
+    let j; try { j = JSON.parse(txt); } catch { return { ok: false, status: 0, err: 'gemini ' + model + ': balasan bukan JSON' }; }
+    const parts = (j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || [];
+    const p = parts.find(x => (x.inlineData || x.inline_data));
+    const d = p && (p.inlineData || p.inline_data);
+    if (d && d.data) {
+      if (d.data.length > 4.2 * 1024 * 1024) return { ok: false, status: 0, err: 'gemini ' + model + ': hasil terlalu besar' };
+      return { ok: true, image: 'data:' + (d.mimeType || d.mime_type || guessMime(d.data)) + ';base64,' + d.data };
+    }
+    return { ok: false, status: 0, err: 'gemini ' + model + ': tidak ada gambar di balasan' };
+  } catch (e) {
+    clearTimeout(t);
+    return { ok: false, status: 0, err: 'gemini ' + model + ': ' + (e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'error') };
+  }
 }
 
 // Pembatas pemakaian sederhana per alamat IP (tersimpan di memori fungsi; cukup untuk menahan penyalahgunaan ringan)
@@ -50,7 +83,8 @@ export default async function handler(req, res) {
   if (!kuotaEdit.ok) return res.status(429).json({ error: kuotaEdit.pesan });
 
   const { key, name: keyName } = getKey();
-  if (!key) return res.status(500).json({ error: 'API key Pollinations belum terpasang di Vercel (nama variabel: POLLINATIONS_API_KEY).' });
+  const kunciGemini = (process.env.GEMINI_API_KEY || '').trim();
+  if (!key && !kunciGemini) return res.status(500).json({ error: 'API key belum terpasang di Vercel (GEMINI_API_KEY atau POLLINATIONS_API_KEY).' });
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
@@ -69,7 +103,24 @@ export default async function handler(req, res) {
   const deadline = Date.now() + 55000;
   let lastErr = '';
 
-  for (const model of MODELS) {
+  // 1) Gemini (Nano Banana) lebih dulu
+  if (kunciGemini) {
+    const modelGemini = (process.env.GEMINI_IMAGE_MODEL || '').trim();
+    const daftarGemini = modelGemini ? [modelGemini] : ['gemini-3.1-flash-lite-image', 'gemini-3.1-flash-image'];
+    for (const gm of daftarGemini) {
+      const sisa = deadline - Date.now();
+      if (sisa < 10000) break;
+      const g = await editGemini(kunciGemini, gm, prompt, mime, m[2], Math.min(sisa - 8000, 22000));
+      if (g.ok) return res.status(200).json({ image: g.image, model: gm });
+      lastErr = g.err;
+      console.error('EDIT: ' + g.err);
+      // kuota habis / kunci tidak boleh: tidak perlu coba model Gemini lain
+      if (g.status === 429 || g.status === 403 || g.status === 401) break;
+    }
+  }
+
+  // 2) Cadangan: Pollinations
+  for (const model of (key ? MODELS : [])) {
     const remaining = deadline - Date.now();
     if (remaining < 6000) break;
     const ctrl = new AbortController();
