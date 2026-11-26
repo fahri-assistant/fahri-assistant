@@ -96,6 +96,34 @@ Aturan WAJIB:
     }
     const SUMBER = daftarSumber(hasilCari);
 
+    // ===== TANYA LEWAT FOTO: model vision Groq (Llama 4 Scout) =====
+    const gambarUser = typeof body.image === 'string' ? body.image : '';
+    if (gambarUser) {
+      const valid = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(gambarUser) && gambarUser.length < 4 * 1024 * 1024;
+      if (!valid || !process.env.GROQ_API_KEY) {
+        return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya. Coba kirim ulang fotonya ya (format JPG, PNG, atau WEBP, ukuran tidak terlalu besar).' });
+      }
+      const vm = cleanMsgs.map((m, i) => (i === cleanMsgs.length - 1 && m.role === 'user')
+        ? { role: 'user', content: [{ type: 'text', text: lastText || 'Jelaskan gambar ini' }, { type: 'image_url', image_url: { url: gambarUser } }] }
+        : m);
+      try {
+        const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000);
+        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + process.env.GROQ_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', messages: vm, temperature: 0.5, max_tokens: 900 }),
+          signal: c.signal
+        });
+        clearTimeout(t);
+        if (r.ok) {
+          const j = await r.json();
+          const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+          if (txt) return res.status(200).json({ reply: String(txt) });
+        }
+      } catch (e) { /* jatuh ke pesan di bawah */ }
+      return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.' });
+    }
+
     const isStream = body.stream === true || req.headers.accept?.includes('text/event-stream');
 
     async function tryOpenAI(url, key, model, timeoutMs, extraHeaders = {}) {
