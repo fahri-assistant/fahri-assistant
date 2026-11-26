@@ -1,6 +1,6 @@
 import { cekKuota } from './kuota.js';
-// api/edit.js - Edit foto: Gemini (Nano Banana) dulu, cadangan Pollinations (POST /v1/images/edits)
-// Kirim: { "prompt": "jadikan anime", "image": "data:image/jpeg;base64,..." }
+// api/edit.js - Edit foto: Cloudflare Workers AI (FLUX.2 klein) dulu, cadangan Pollinations (POST /v1/images/edits)
+// Kirim: { "prompt": "jadikan anime", "image": "data:image/jpeg;base64,...", "imageCF": "(opsional) foto <=480px", "ow": 768, "oh": 768 }
 // Balasan sukses: { "image": "data:image/...;base64,..." } atau { "url": "https://..." }
 export const config = { maxDuration: 60 };
 
@@ -25,36 +25,36 @@ function guessMime(b64) {
   return 'image/png';
 }
 
-// ===== Edit foto lewat Gemini (Nano Banana) - dicoba lebih dulu, kalau gagal lanjut ke Pollinations =====
-// Nama model bisa diganti lewat variabel GEMINI_IMAGE_MODEL di Vercel (tanpa ubah kode).
-async function editGemini(kunci, model, prompt, mime, b64, timeoutMs) {
+// ===== Cloudflare Workers AI (FLUX.2 klein) - jatah gratis harian =====
+// Variabel di Vercel: CLOUDFLARE_ACCOUNT_ID dan CLOUDFLARE_API_TOKEN.
+// Opsional: CLOUDFLARE_IMAGE_MODEL (default flux-2-klein-4b; boleh diganti ke @cf/black-forest-labs/flux-2-klein-9b).
+// Catatan: foto masukan harus kecil (di bawah 512x512), jadi pakai imageCF dari aplikasi.
+async function editCloudflare(akun, token, model, prompt, mime, buf, ow, oh, timeoutMs) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+    const form = new FormData();
+    form.append('prompt', prompt);
+    form.append('width', String(ow));
+    form.append('height', String(oh));
+    form.append('input_image_0', new Blob([buf], { type: mime }), 'foto.' + (mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1]));
+    const r = await fetch('https://api.cloudflare.com/client/v4/accounts/' + encodeURIComponent(akun) + '/ai/run/' + model, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': kunci },
-      signal: ctrl.signal,
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: b64 } }] }],
-        generationConfig: { responseModalities: ['IMAGE'] }
-      })
+      headers: { Authorization: 'Bearer ' + token },
+      body: form,
+      signal: ctrl.signal
     });
     const txt = await r.text();
     clearTimeout(t);
-    if (!r.ok) return { ok: false, status: r.status, err: 'gemini ' + model + ': ' + r.status + ' ' + txt.slice(0, 160).replace(/\s+/g, ' ') };
-    let j; try { j = JSON.parse(txt); } catch { return { ok: false, status: 0, err: 'gemini ' + model + ': balasan bukan JSON' }; }
-    const parts = (j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || [];
-    const p = parts.find(x => (x.inlineData || x.inline_data));
-    const d = p && (p.inlineData || p.inline_data);
-    if (d && d.data) {
-      if (d.data.length > 4.2 * 1024 * 1024) return { ok: false, status: 0, err: 'gemini ' + model + ': hasil terlalu besar' };
-      return { ok: true, image: 'data:' + (d.mimeType || d.mime_type || guessMime(d.data)) + ';base64,' + d.data };
-    }
-    return { ok: false, status: 0, err: 'gemini ' + model + ': tidak ada gambar di balasan' };
+    if (!r.ok) return { ok: false, err: 'cloudflare: ' + r.status + ' ' + txt.slice(0, 160).replace(/\s+/g, ' ') };
+    let j; try { j = JSON.parse(txt); } catch { return { ok: false, err: 'cloudflare: balasan bukan JSON' }; }
+    const b64 = j && j.result && j.result.image;
+    if (!b64) return { ok: false, err: 'cloudflare: tidak ada gambar di balasan' };
+    if (b64.length > 4.2 * 1024 * 1024) return { ok: false, err: 'cloudflare: hasil terlalu besar' };
+    return { ok: true, image: 'data:' + guessMime(b64) + ';base64,' + b64 };
   } catch (e) {
     clearTimeout(t);
-    return { ok: false, status: 0, err: 'gemini ' + model + ': ' + (e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'error') };
+    return { ok: false, err: 'cloudflare: ' + (e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'error') };
   }
 }
 
@@ -83,8 +83,10 @@ export default async function handler(req, res) {
   if (!kuotaEdit.ok) return res.status(429).json({ error: kuotaEdit.pesan });
 
   const { key, name: keyName } = getKey();
-  const kunciGemini = (process.env.GEMINI_API_KEY || '').trim();
-  if (!key && !kunciGemini) return res.status(500).json({ error: 'API key belum terpasang di Vercel (GEMINI_API_KEY atau POLLINATIONS_API_KEY).' });
+  const cfAkun = (process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
+  const cfToken = (process.env.CLOUDFLARE_API_TOKEN || '').trim();
+  const adaCF = !!(cfAkun && cfToken);
+  if (!key && !adaCF) return res.status(500).json({ error: 'API key belum terpasang di Vercel (CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN, atau POLLINATIONS_API_KEY).' });
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
@@ -103,23 +105,25 @@ export default async function handler(req, res) {
   const deadline = Date.now() + 55000;
   let lastErr = '';
 
-  // 1) Gemini (Nano Banana) lebih dulu
-  if (kunciGemini) {
-    const modelGemini = (process.env.GEMINI_IMAGE_MODEL || '').trim();
-    const daftarGemini = modelGemini ? [modelGemini] : ['gemini-3.1-flash-lite-image', 'gemini-3.1-flash-image'];
-    for (const gm of daftarGemini) {
-      const sisa = deadline - Date.now();
-      if (sisa < 10000) break;
-      const g = await editGemini(kunciGemini, gm, prompt, mime, m[2], Math.min(sisa - 8000, 22000));
-      if (g.ok) return res.status(200).json({ image: g.image, model: gm });
-      lastErr = g.err;
-      console.error('EDIT: ' + g.err);
-      // kuota habis / kunci tidak boleh: tidak perlu coba model Gemini lain
-      if (g.status === 429 || g.status === 403 || g.status === 401) break;
+  // 1) Cloudflare (FLUX.2 klein) lebih dulu
+  if (adaCF) {
+    const mc = String(body.imageCF || '').match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+    const bufCF = mc ? Buffer.from(mc[2], 'base64') : buf;
+    const mimeCF = mc ? mc[1] : mime;
+    const dim = v => { v = parseInt(v, 10); return (v >= 256 && v <= 1920) ? Math.round(v / 16) * 16 : 768; };
+    const sisa = deadline - Date.now();
+    if (bufCF.length <= 1024 * 1024 && sisa > 10000) {
+      const modelCF = (process.env.CLOUDFLARE_IMAGE_MODEL || '').trim() || '@cf/black-forest-labs/flux-2-klein-4b';
+      const c = await editCloudflare(cfAkun, cfToken, modelCF, prompt, mimeCF, bufCF, dim(body.ow), dim(body.oh), Math.min(sisa - 8000, 28000));
+      if (c.ok) return res.status(200).json({ image: c.image, model: modelCF });
+      lastErr = c.err;
+      console.error('EDIT: ' + c.err);
+    } else {
+      lastErr = 'cloudflare: foto terlalu besar untuk jalur ini';
     }
   }
+  const galatCF = lastErr;
 
-  const galatGemini = lastErr;
   // 2) Cadangan: Pollinations
   for (const model of (key ? MODELS : [])) {
     const remaining = deadline - Date.now();
@@ -143,7 +147,7 @@ export default async function handler(req, res) {
 
       if (!r.ok) {
         lastErr = model + ': ' + r.status + ' ' + txt.slice(0, 160).replace(/\s+/g, ' ');
-        if (r.status === 401) return res.status(502).json({ error: 'API key Pollinations ditolak (401). Variabel terbaca: ' + keyName + ' (awalan "' + key.slice(0, 3) + '", panjang ' + key.length + '). Buat key baru di enter.pollinations.ai lalu isi POLLINATIONS_API_KEY di Vercel dan deploy ulang.' + (galatGemini ? ' | Percobaan Gemini juga gagal: ' + galatGemini : (kunciGemini ? '' : ' | GEMINI_API_KEY belum terpasang.')) });
+        if (r.status === 401) return res.status(502).json({ error: 'API key Pollinations ditolak (401). Variabel terbaca: ' + keyName + ' (awalan "' + key.slice(0, 3) + '", panjang ' + key.length + '). Buat key baru (jenis Secret, awalan sk_) di enter.pollinations.ai lalu isi POLLINATIONS_API_KEY di Vercel dan deploy ulang.' + (galatCF ? ' | Percobaan Cloudflare juga gagal: ' + galatCF : (adaCF ? '' : ' | Cloudflare belum dipasang.')) });
         continue;
       }
 
