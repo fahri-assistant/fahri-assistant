@@ -440,7 +440,7 @@ async function speakText(btn, rawText){
   }
 /* === TTS 3: addBubble UDAH ADA TOMBOL 🔊 === */
 function addBubble(text,who,isHtml){const d=document.createElement('div');d.className='bubble '+who;if(isHtml)d.innerHTML=text;else d.textContent=text;if(who==='ai'){const b=document.createElement('button');b.className='tts-btn';b.textContent='🔊';b.onclick=function(){speakText(b,text)};d.appendChild(b)}if(welcomeEl)welcomeEl.style.display='none';chatEl.appendChild(d);chatEl.scrollTop=chatEl.scrollHeight;return d}
-history.forEach(m=>{if(m.role==='user'){ if(m.img) addBubble('<img src="'+m.img+'" style="max-width:160px;border-radius:12px;display:block;margin-left:auto;margin-bottom:6px"><div>'+String(m.content).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>','user',true); else addBubble(m.content,'user'); } else addBubble(renderMarkdown(m.content),'ai',true)});
+history.forEach(m=>{if(m.role==='user'){ if(m.img) addBubble('<img src="'+m.img+'" style="max-width:160px;border-radius:12px;display:block;margin-left:auto;margin-bottom:6px"><div>'+String(m.content).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>','user',true); else addBubble(m.content,'user'); } else if(m.img){ addBubble('<img src="'+m.img+'" style="max-width:100%;border-radius:14px;display:block;margin-bottom:6px"><div>'+String(m.content).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>','ai',true); } else addBubble(renderMarkdown(m.content),'ai',true)});
 if(history.length>0&&welcomeEl)welcomeEl.style.display='none';
 function quick(t){inputEl.value=t;send()}
 window.__f_failBubble = function(b,msg){
@@ -451,7 +451,7 @@ window.__f_failBubble = function(b,msg){
 };
 window.__f_askAI = async function(loading2){
   try{
-      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({messages:history.map(function(m){ return {role:m.role, content:m.content}; }), image: window.__f_pendingImg || undefined})});
+      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({messages:history.filter(function(m){ return !m.edit; }).map(function(m){ return {role:m.role, content:m.content}; }), image: window.__f_pendingImg || undefined})});
       var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.'; if(r.ok){ window.__f_pendingImg=null; window.__f_pendingThumb=null; }
       var html = renderMarkdown(reply);
       var TI=window.__f_typeInto, AC=window.__f_addCopyBtn, AS=window.__f_addSuggest;
@@ -1265,7 +1265,7 @@ function openBuatGambar(){
       fsb.style.cssText='width:100%;padding:11px;border-radius:99px;border:none;background:#7c3aed;color:#fff;font-weight:800;margin-top:8px';
       fsb.onclick=function(){ window.__f_simpanGambar(url,'fahri-gambar'); };
       document.getElementById('f-img-hasil').appendChild(fsb);
-      document.getElementById('f-img-kirim').onclick=function(){ var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0'; d.innerHTML='<img src="'+url+'" style="max-width:280px;border-radius:14px"><div style="font-size:12px;opacity:.7">🎨 Gambar AI: '+p+'</div>'; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; } ov.remove(); };
+      document.getElementById('f-img-kirim').onclick=function(){ var chat=getChat(); if(chat){ var d=document.createElement('div'); d.style.cssText='margin:10px 0'; d.innerHTML='<img src="'+url+'" style="max-width:280px;border-radius:14px"><div style="font-size:12px;opacity:.7">🎨 Gambar AI: '+p+'</div>'; var _gi=d.querySelector('img'); if(_gi){ _gi.style.cursor='pointer'; _gi.onclick=function(){ window.__f_bukaGambar(url,'fahri-gambar'); }; } chat.appendChild(d); chat.scrollTop=chat.scrollHeight; } ov.remove(); };
     };
     img.onerror=function(){ document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;color:#f87171">Gagal bikin gambar, coba lagi / cek internet.</p>'; };
     window.__f_cekGambar().then(function(ok){ if(ok) img.src=url; else { document.getElementById('f-img-hasil').innerHTML='<p style="font-size:12px;color:#fbbf24">Batas gambar hari ini habis. Coba lagi besok.</p>'; } });
@@ -1302,6 +1302,37 @@ window.__f_simpanGambar = async function(src, nama){
     info('Gambar tidak bisa disimpan langsung di sini. Tahan gambarnya lalu pilih "Simpan gambar".');
     return 'gagal';
   }
+};
+// === BAGIKAN GAMBAR + TAMPILAN LAYAR PENUH (tekan gambar -> Simpan / Bagikan) ===
+window.__f_bagikanGambar = async function(src, nama){
+  try{
+    var blob;
+    if(String(src).indexOf('data:')===0){
+      var parts=String(src).split(','); var mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'image/png';
+      var bin=atob(parts[1]); var arr=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+      blob=new Blob([arr],{type:mime});
+    } else { var r=await fetch(src); if(!r.ok) throw new Error('unduh gagal'); blob=await r.blob(); }
+    var ext=(blob.type||'image/jpeg').split('/')[1]||'jpg';
+    var file=new File([blob],(nama||'fahri-gambar')+'-'+Date.now()+'.'+ext,{type:blob.type||'image/jpeg'});
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'Gambar dari Fahri'}); return 'ok';
+    }
+  }catch(e){ if(e && e.name==='AbortError') return 'batal'; }
+  return window.__f_simpanGambar(src,nama);
+};
+window.__f_bukaGambar = function(src, nama){
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483000;background:rgba(0,0,0,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;box-sizing:border-box';
+  var im=document.createElement('img'); im.src=src; im.style.cssText='max-width:100%;max-height:70vh;object-fit:contain;border-radius:12px';
+  var row=document.createElement('div'); row.style.cssText='display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center';
+  function tb(t,bg,fn){ var b=document.createElement('button'); b.textContent=t; b.style.cssText='padding:11px 18px;border-radius:99px;border:none;background:'+bg+';color:#fff;font-weight:800;font-size:14px'; b.onclick=function(e){ e.stopPropagation(); fn(); }; row.appendChild(b); }
+  tb('💾 Simpan','#7c3aed',function(){ window.__f_simpanGambar(src,nama||'fahri-gambar'); });
+  tb('↗️ Bagikan','#22c55e',function(){ window.__f_bagikanGambar(src,nama||'fahri-gambar'); });
+  tb('✕ Tutup','#475569',function(){ ov.remove(); });
+  ov.appendChild(im); ov.appendChild(row);
+  ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
 };
 // === LAMPIRAN FOTO UNTUK TANYA: diperkecil lalu dikirim bersama pertanyaan berikutnya ===
 window.__f_pendingImg = null;
@@ -1352,11 +1383,13 @@ window.__f_editFotoAI = function(origDataUrl, prompt){
         if(!src){ ai.textContent='😕 '+(d.error||'Edit foto gagal, coba lagi.'); return; }
         ai.textContent='';
         var out=document.createElement('img'); out.src=src; out.style.cssText='max-width:100%;border-radius:14px;display:block';
-        out.onload=function(){ turun(); setTimeout(turun,150); }; out.onerror=function(){ ai.textContent='😕 Hasil edit gagal dimuat, coba lagi.'; };
+        out.style.cursor='pointer'; out.onclick=function(){ window.__f_bukaGambar(src,'fahri-edit'); }; out.onload=function(){ turun(); setTimeout(turun,150); try{ var ks=Math.min(1,256/Math.max(out.naturalWidth,out.naturalHeight)); var cs=document.createElement('canvas'); cs.width=Math.max(1,Math.round(out.naturalWidth*ks)); cs.height=Math.max(1,Math.round(out.naturalHeight*ks)); cs.getContext('2d').drawImage(out,0,0,cs.width,cs.height); var tOut=cs.toDataURL('image/jpeg',0.55); var ku=Math.min(1,160/Math.max(im.naturalWidth,im.naturalHeight)); var cu=document.createElement('canvas'); cu.width=Math.max(1,Math.round(im.naturalWidth*ku)); cu.height=Math.max(1,Math.round(im.naturalHeight*ku)); cu.getContext('2d').drawImage(im,0,0,cu.width,cu.height); var tIn=cu.toDataURL('image/jpeg',0.6); history.push({role:'user',content:'✏️ Edit Foto: '+prompt,img:tIn,edit:true}); history.push({role:'assistant',content:'✅ Selesai diedit (pratinjau kecil; simpan hasilnya dengan menekan gambar sebelum menutup aplikasi)',img:tOut,edit:true}); saveHistory(); }catch(e){} }; out.onerror=function(){ ai.textContent='😕 Hasil edit gagal dimuat, coba lagi.'; };
         var cap=document.createElement('div'); cap.style.cssText='font-size:12px;opacity:.7;margin-top:6px'; cap.textContent='✅ Selesai diedit';
         ai.appendChild(out); ai.appendChild(cap);
         var sbe=document.createElement('button'); sbe.className='tts-btn'; sbe.textContent='💾 Simpan'; sbe.style.marginTop='8px';
         sbe.onclick=function(){ window.__f_simpanGambar(src,'fahri-edit'); }; ai.appendChild(sbe);
+        var sbg=document.createElement('button'); sbg.className='tts-btn'; sbg.textContent='↗️ Bagikan'; sbg.style.cssText='margin-top:8px;margin-left:8px';
+        sbg.onclick=function(){ window.__f_bagikanGambar(src,'fahri-edit'); }; ai.appendChild(sbg);
       })
       .catch(function(e){ clearTimeout(_tm); ai.textContent=(e && e.name==='AbortError') ? '😕 Server terlalu lama membalas, coba lagi sebentar lagi.' : '😕 Tidak bisa terhubung ke server, cek internet lalu coba lagi.'; })
       .then(turun);
@@ -1996,7 +2029,7 @@ body{height:var(--app-h,100dvh) !important;height:var(--app-h,100svh) !important
   }
   function saveNow(){
     var r=ref(); if(!r) return;
-    r.set({ messages: history.slice(-200), updatedAt: Date.now() }).catch(function(e){ console.log('Simpan riwayat akun gagal', e); });
+    var msgs=history.slice(-200); for(var i=0;i<msgs.length && JSON.stringify(msgs).length>800000;i++){ if(msgs[i].img){ msgs[i]=Object.assign({},msgs[i]); delete msgs[i].img; } } r.set({ messages: msgs, updatedAt: Date.now() }).catch(function(e){ console.log('Simpan riwayat akun gagal', e); });
   }
   function schedule(){ clearTimeout(cloudT); cloudT=setTimeout(saveNow, 1500); }
   var localSave=saveHistory;
