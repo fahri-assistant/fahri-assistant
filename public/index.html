@@ -1311,7 +1311,7 @@ window.__f_siapkanFoto = function(file){
     fr.onload=function(){
       var im=new Image();
       im.onload=function(){
-        var k=Math.min(1,1024/Math.max(im.naturalWidth,im.naturalHeight));
+        var k=Math.min(1,640/Math.max(im.naturalWidth,im.naturalHeight));
         var c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k);
         c.getContext('2d').drawImage(im,0,0,c.width,c.height);
         window.__f_pendingImg=c.toDataURL('image/jpeg',0.85); var kt=Math.min(1,160/Math.max(im.naturalWidth,im.naturalHeight)); var tc=document.createElement('canvas'); tc.width=Math.round(im.naturalWidth*kt); tc.height=Math.round(im.naturalHeight*kt); tc.getContext('2d').drawImage(im,0,0,tc.width,tc.height); window.__f_pendingThumb=tc.toDataURL('image/jpeg',0.6);
