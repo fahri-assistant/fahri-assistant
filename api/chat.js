@@ -103,15 +103,26 @@ Aturan WAJIB:
       if (!valid || !process.env.GROQ_API_KEY) {
         return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya. Coba kirim ulang fotonya ya (format JPG, PNG, atau WEBP, ukuran tidak terlalu besar).' });
       }
-      const vm = cleanMsgs.map((m, i) => (i === cleanMsgs.length - 1 && m.role === 'user')
-        ? { role: 'user', content: [{ type: 'text', text: lastText || 'Jelaskan gambar ini' }, { type: 'image_url', image_url: { url: gambarUser } }] }
-        : m);
+      // Model gambar: Gemma 3 27B lewat OpenRouter (gratis). Model Groq Llama 4 Scout sudah dihentikan Groq (Juli 2026).
+      const sysTxt = cleanMsgs.filter(m => m.role === 'system').map(m => m.content).join('\n');
+      const percakapan = cleanMsgs.filter(m => m.role !== 'system');
+      const vm = percakapan.map((m, i) => (i === percakapan.length - 1 && m.role === 'user')
+        ? { role: 'user', content: [
+            { type: 'text', text: (sysTxt ? sysTxt + '\n\n' : '') + (lastText || 'Jelaskan gambar ini') },
+            { type: 'image_url', image_url: { url: gambarUser } }
+          ] }
+        : { role: m.role, content: m.content });
+      const kunciOR = (process.env.OPENROUTER_API_KEY || '').trim();
+      if (!kunciOR) {
+        console.error('VISION: OPENROUTER_API_KEY belum terpasang');
+        return res.status(200).json({ reply: 'Maaf, fitur baca foto belum aktif di server. Coba lagi nanti ya.' });
+      }
       try {
         const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000);
-        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + process.env.GROQ_API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'meta-llama/llama-4-scout-17b-16e-instruct', messages: vm, temperature: 0.5, max_tokens: 900 }),
+          headers: { 'Authorization': 'Bearer ' + kunciOR, 'Content-Type': 'application/json', 'X-Title': 'Fahri Assistant' },
+          body: JSON.stringify({ model: 'google/gemma-3-27b-it:free', messages: vm, temperature: 0.5, max_tokens: 900 }),
           signal: c.signal
         });
         clearTimeout(t);
@@ -119,8 +130,14 @@ Aturan WAJIB:
           const j = await r.json();
           const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
           if (txt) return res.status(200).json({ reply: String(txt) });
+          console.error('VISION: balasan kosong', JSON.stringify(j).slice(0, 300));
+        } else {
+          const detail = (await r.text()).slice(0, 300).replace(/\s+/g, ' ');
+          console.error('VISION: gagal ' + r.status + ' - ' + detail);
         }
-      } catch (e) { /* jatuh ke pesan di bawah */ }
+      } catch (e) {
+        console.error('VISION: error ' + (e && e.message ? e.message : e));
+      }
       return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.' });
     }
 
