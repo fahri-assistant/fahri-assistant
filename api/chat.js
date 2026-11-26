@@ -100,10 +100,10 @@ Aturan WAJIB:
     const gambarUser = typeof body.image === 'string' ? body.image : '';
     if (gambarUser) {
       const valid = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(gambarUser) && gambarUser.length < 4 * 1024 * 1024;
-      if (!valid || !process.env.GROQ_API_KEY) {
+      if (!valid) {
         return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya. Coba kirim ulang fotonya ya (format JPG, PNG, atau WEBP, ukuran tidak terlalu besar).' });
       }
-      // Model gambar: Gemma 3 27B lewat OpenRouter (gratis). Model Groq Llama 4 Scout sudah dihentikan Groq (Juli 2026).
+      // Model gambar: Gemini 2.5 Flash (Google AI Studio, tingkat gratis, tanpa kartu kredit). Model Groq Llama 4 Scout sudah dihentikan Groq (Juli 2026).
       const sysTxt = cleanMsgs.filter(m => m.role === 'system').map(m => m.content).join('\n');
       const percakapan = cleanMsgs.filter(m => m.role !== 'system');
       const vm = percakapan.map((m, i) => (i === percakapan.length - 1 && m.role === 'user')
@@ -112,18 +112,18 @@ Aturan WAJIB:
             { type: 'image_url', image_url: { url: gambarUser } }
           ] }
         : { role: m.role, content: m.content });
-      const kunciOR = (process.env.OPENROUTER_API_KEY || '').trim();
-      if (!kunciOR) {
-        console.error('VISION: OPENROUTER_API_KEY belum terpasang');
+      const kunciGemini = (process.env.GEMINI_API_KEY || '').trim();
+      if (!kunciGemini) {
+        console.error('VISION: GEMINI_API_KEY belum terpasang');
         return res.status(200).json({ reply: 'Maaf, fitur baca foto belum aktif di server. Coba lagi nanti ya.' });
       }
       let visionErr = '';
       try {
         const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000);
-        const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + kunciOR, 'Content-Type': 'application/json', 'X-Title': 'Fahri Assistant' },
-          body: JSON.stringify({ model: 'google/gemma-3-27b-it:free', messages: vm, temperature: 0.5, max_tokens: 900 }),
+          headers: { 'Authorization': 'Bearer ' + kunciGemini, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'gemini-2.5-flash', messages: vm, temperature: 0.5, max_tokens: 900 }),
           signal: c.signal
         });
         clearTimeout(t);
