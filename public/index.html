@@ -451,8 +451,8 @@ window.__f_failBubble = function(b,msg){
 };
 window.__f_askAI = async function(loading2){
   try{
-      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({messages:history})});
-      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.';
+      var r = await fetch('https://fahri-assistant.vercel.app/api/chat',{method:'POST',headers:window.__f_authHeaders(),body:JSON.stringify({messages:history, image: window.__f_pendingImg || undefined})});
+      var d = await r.json(); var reply = d.reply || 'Maaf, coba lagi ya.'; if(r.ok) window.__f_pendingImg=null;
       var html = renderMarkdown(reply);
       var TI=window.__f_typeInto, AC=window.__f_addCopyBtn, AS=window.__f_addSuggest;
       var doneFn=function(){
@@ -887,7 +887,7 @@ function buildChat(){
       var chat2=getChat(); var d2=document.createElement('div'); d2.style.cssText='text-align:right;margin:10px 0'; d2.innerHTML='<img src="'+r.result+'" style="max-width:220px;border-radius:14px;display:block;margin-left:auto"><div style="font-size:12px;opacity:.7">📎 Foto siap!</div>'; chat2.appendChild(d2); chat2.scrollTop=chat2.scrollHeight;
       if(!document.getElementById('f-vision-bar')){ var bar2=document.createElement('div'); bar2.id='f-vision-bar'; bar2.className='f-vision-bar'; bar2.innerHTML='<button class="f-vision-chip" data-cmd="Jawabin soal ini + caranya">📝 Jawab Soal</button><button class="f-vision-chip" data-cmd="Jelaskan gambar ini secara detail">🔍 Jelaskan</button><button class="f-vision-chip" data-cmd="Terjemahkan teks di foto ini">🌐 Terjemahkan</button><button class="f-vision-chip" data-cmd="Rangkum isi foto ini">📋 Rangkum</button><button class="f-vision-chip" data-cmd="Cek jawaban di foto ini, mana yang salah?">✅ Cek Jawaban</button><button class="f-vision-chip" data-cmd="Buatkan soal latihan mirip foto ini">✍️ Soal Mirip</button>'; if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar2,inp.parentElement); bar2.addEventListener('click',function(e){var b=e.target.closest('[data-cmd]'); if(!b) return; inp.value=getModePrefix()+b.getAttribute('data-cmd'); inp.focus();}); }
       inp.focus();
-    }; r.readAsDataURL(f);
+}; window.__f_siapkanFoto(f); r.readAsDataURL(f);
   };
   var wadah=inp.parentElement; for(var i=0;i<3;i++){ if(wadah&&wadah.querySelector('button')) break; if(wadah&&wadah.parentElement) wadah=wadah.parentElement; }
   if(!wadah) wadah=inp.parentElement;
@@ -1322,6 +1322,24 @@ window.__f_simpanGambar = async function(src, nama){
     info('Gambar tidak bisa disimpan langsung di sini. Tahan gambarnya lalu pilih "Simpan gambar".');
     return 'gagal';
   }
+};
+// === LAMPIRAN FOTO UNTUK TANYA: diperkecil lalu dikirim bersama pertanyaan berikutnya ===
+window.__f_pendingImg = null;
+window.__f_siapkanFoto = function(file){
+  try{
+    var fr=new FileReader();
+    fr.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var k=Math.min(1,1024/Math.max(im.naturalWidth,im.naturalHeight));
+        var c=document.createElement('canvas'); c.width=Math.round(im.naturalWidth*k); c.height=Math.round(im.naturalHeight*k);
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        window.__f_pendingImg=c.toDataURL('image/jpeg',0.85);
+      };
+      im.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  }catch(e){}
 };
 // --- EDIT FOTO AI: kirim foto + instruksi ke server (/api/edit), tampilkan hasilnya di chat ---
 window.__f_editFotoAI = function(origDataUrl, prompt){
