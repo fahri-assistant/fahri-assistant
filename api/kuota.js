@@ -63,7 +63,7 @@ async function bacaHitung(id) {
   const t = await accessToken();
   const r = await fetch(docUrl(id), { headers: { Authorization: 'Bearer ' + t } });
   if (r.status === 404) return { count: 0, ada: false };
-  if (!r.ok) throw new Error('baca kuota gagal ' + r.status);
+  if (!r.ok) { const detail = (await r.text()).slice(0, 300).replace(/\s+/g, ' '); throw new Error('baca kuota gagal ' + r.status + ' - ' + detail); }
   const j = await r.json();
   return { count: Number((j.fields && j.fields.count && j.fields.count.integerValue) || 0), ada: true };
 }
@@ -85,7 +85,11 @@ function idTamu(req) {
 }
 
 // Cek dan catat satu pemakaian. Mengembalikan { ok, pesan, sisa }.
+// Pembatas dimatikan sementara. Ubah ke true kalau nanti ingin batas harian diaktifkan lagi.
+export const KUOTA_AKTIF = false;
+
 export async function cekKuota(req, jenis) {
+  if (!KUOTA_AKTIF) return { ok: true, sisa: null };
   if (!['chat', 'gambar', 'edit'].includes(jenis)) return { ok: false, pesan: 'Jenis tidak dikenal.' };
   try {
     const auth = String((req.headers && req.headers.authorization) || '').replace(/^Bearer\s+/i, '');
