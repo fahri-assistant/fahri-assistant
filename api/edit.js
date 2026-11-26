@@ -1,3 +1,4 @@
+import { cekKuota } from './kuota.js';
 // api/edit.js - Edit foto pakai Pollinations (POST /v1/images/edits)
 // Kirim: { "prompt": "jadikan anime", "image": "data:image/jpeg;base64,..." }
 // Balasan sukses: { "image": "data:image/...;base64,..." } atau { "url": "https://..." }
@@ -45,6 +46,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method salah' });
   if (terlaluBanyak(req, 'edit', 6, 10 * 60 * 1000)) { res.setHeader('Retry-After', '300'); return res.status(429).json({ error: 'Terlalu banyak permintaan edit foto. Tunggu beberapa menit lalu coba lagi ya.' }); }
+  const kuotaEdit = await cekKuota(req, 'edit');
+  if (!kuotaEdit.ok) return res.status(429).json({ error: kuotaEdit.pesan });
 
   const { key, name: keyName } = getKey();
   if (!key) return res.status(500).json({ error: 'API key Pollinations belum terpasang di Vercel (nama variabel: POLLINATIONS_API_KEY).' });

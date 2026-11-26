@@ -1,3 +1,4 @@
+import { cekKuota } from './kuota.js';
 // Pembatas pemakaian sederhana per alamat IP (tersimpan di memori fungsi; cukup untuk menahan penyalahgunaan ringan)
 const _hits = globalThis.__rl || (globalThis.__rl = new Map());
 function terlaluBanyak(req, nama, maks, jendelaMs) {
@@ -59,6 +60,8 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ reply: 'Method salah' });
   if (terlaluBanyak(req, 'chat', 40, 10 * 60 * 1000)) { res.setHeader('Retry-After', '120'); return res.status(429).json({ reply: 'Terlalu banyak permintaan. Tunggu beberapa menit lalu coba lagi ya.' }); }
+  const kuotaChat = await cekKuota(req, 'chat');
+  if (!kuotaChat.ok) return res.status(429).json({ reply: kuotaChat.pesan });
   try {
     const body = req.body || {};
     let msgs = body.messages || [];
