@@ -507,7 +507,7 @@ try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(save
     var b = document.createElement('button');
     b.className = 'theme-btn';
     b.setAttribute('data-theme','premium');
-    b.innerHTML = '<i></i>✨ Premium Class';
+    b.innerHTML = '<i></i>✨ Premium';
     b.onclick = function(){ setTheme('premium'); };
     grid.appendChild(b);
   }
@@ -878,9 +878,9 @@ function buildChat(){
     var f=file.files[0]; if(!f) return;
     var isPdf=f.name.toLowerCase().endsWith('.pdf')||f.type.includes('pdf')||f.type.includes('document')||f.type.includes('text');
     if(isPdf){
-      var chat=getChat(); var d=document.createElement('div'); d.style.cssText='text-align:right;margin:10px 0'; d.innerHTML='<div style="display:inline-block;background:#8b5cf6;color:#fff;padding:10px 14px;border-radius:14px;font-size:13px">📄 '+f.name+'<br><span style="font-size:11px;opacity:.8">Dokumen siap dirangkum!</span></div>'; chat.appendChild(d);
+      var chat=getChat(); var d=document.createElement('div'); d.style.cssText='text-align:right;margin:10px 0'; d.innerHTML='<div style="display:inline-block;background:#8b5cf6;color:#fff;padding:10px 14px;border-radius:14px;font-size:13px">📄 '+f.name+'<br><span style="font-size:11px;opacity:.8">Dipilih (isi PDF belum bisa dibaca)</span></div>'; chat.appendChild(d);
       if(!document.getElementById('f-vision-bar')){ var bar=document.createElement('div'); bar.id='f-vision-bar'; bar.className='f-vision-bar'; bar.innerHTML='<button class="f-vision-chip" data-cmd="Rangkum dokumen ini secara lengkap + poin pentingnya">📋 Rangkum Dokumen Ini</button><button class="f-vision-chip" data-cmd="Jelaskan isi dokumen ini dengan bahasa sederhana">🔍 Jelaskan Dokumen</button><button class="f-vision-chip" data-cmd="Buatkan 5 soal dari dokumen ini">✍️ Buat Soal Dari Dokumen</button><button class="f-vision-chip" data-cmd="Terjemahkan dokumen ini">🌐 Terjemahkan</button>'; if(inp.parentElement) inp.parentElement.parentNode.insertBefore(bar,inp.parentElement); bar.addEventListener('click',function(e){var b=e.target.closest('[data-cmd]'); if(!b) return; inp.value=getModePrefix()+b.getAttribute('data-cmd')+' (File: '+f.name+')'; inp.focus();}); }
-      inp.value=getModePrefix()+'Tolong rangkum dokumen '+f.name+' ini'; inp.focus(); return;
+      addBubble('PDF "'+f.name+'" sudah dipilih, tapi aku belum bisa membaca isi file PDF. Tempel teks yang ingin dirangkum di kolom ketik, lalu kirim.','ai'); inp.focus(); return;
     }
     var r=new FileReader();
     r.onload=function(){
@@ -934,7 +934,7 @@ function hapusTTS(){
     if(oc.includes('speakText')) b.remove();
   });
 }
-setInterval(hapusTTS, 800);
+setInterval(hapusTTS, 2000);
 
 // --- 2. FLASHCARDS PAKAI POPUP APP, BUKAN PROMPT CHROME ---
 function openFlashApp(){
@@ -1049,7 +1049,7 @@ function cobaIsiDrawer(){
 // Cek tiap kali ada perubahan di halaman (pas drawer dibuka)
 var obs=new MutationObserver(function(){ cobaIsiDrawer(); hapusTTS(); });
 obs.observe(document.body, {childList:true, subtree:true});
-setInterval(cobaIsiDrawer, 1000);
+setInterval(cobaIsiDrawer, 2000);
 })();
 /* === FIX V4.2 - BAGIAN 4/4: POPUP APP + HAPUS DOBEL === */
 (function(){
@@ -1114,7 +1114,7 @@ function hapusDobel(){
     if(tx.includes('Profil Saya') || tx.includes('Hapus Semua Chat')) b.remove();
   });
 }
-setInterval(hapusDobel, 800);
+setInterval(hapusDobel, 2000);
 
 // --- GANTI PROMPT CHROME (BAHASA, PENGINGAT, DLL) JADI POPUP APP ---
 // Kita tangkap klik di menu garis 3 SEBELUM handler lama jalan
@@ -1397,7 +1397,7 @@ setInterval(function(){
   if(!document.getElementById('f-q-gambar')){
     var b1=document.createElement('button'); b1.className='f-quick'; b1.id='f-q-gambar'; b1.textContent='🎨 Buat Gambar'; b1.onclick=openBuatGambar; bar.appendChild(b1);
     var b2=document.createElement('button'); b2.className='f-quick'; b2.id='f-q-edit'; b2.textContent='✏️ Edit Foto'; b2.onclick=openEditFoto; bar.appendChild(b2);
-    var b3=document.createElement('button'); b3.className='f-quick'; b3.id='f-q-web'; b3.textContent='🌐 Cari Web'; b3.onclick=openCariWeb; bar.appendChild(b3);
+    var b3=document.createElement('button'); b3.className='f-quick'; b3.id='f-q-web'; b3.textContent='🌐 Ringkas Wikipedia'; b3.onclick=openCariWeb; bar.appendChild(b3);
   }
 }, 1000);
 
@@ -1625,7 +1625,7 @@ function bersih(){
 }
 var _bt=0; var obs=new MutationObserver(function(){ if(_bt) return; _bt=setTimeout(function(){ _bt=0; bersih(); },350); });
 obs.observe(document.body, {childList:true, subtree:true});
-setInterval(bersih, 1000);
+setInterval(bersih, 2000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bersih); else bersih();
 })();
 </script>
@@ -1826,7 +1826,7 @@ function jalan(){
   pindahFitur();
   document.querySelectorAll('.bubble.user .f-tools, .bubble.user .f-bubble-tools, .bubble.user .ai-actions').forEach(function(t){ t.remove(); });
 }
-setInterval(jalan, 1000);
+setInterval(jalan, 2000);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', jalan); else jalan();
 setTimeout(jalan, 1500);
 })();
@@ -1864,7 +1864,7 @@ function fix(){ var light = isLight(); document.querySelectorAll('#authBar div')
   });
 }
 fix();
-setInterval(fix, 1200);
+setInterval(fix, 2000);
 })();
 </script>
 <style>
@@ -2090,6 +2090,60 @@ window.__f_cekGambar = async function(){
     return false;
   }catch(e){ pesan('Tidak bisa mengecek batas pemakaian sekarang. Coba lagi sebentar.'); return false; }
 };
+</script>
+<script>
+/* TOMBOL CEPAT (Jawab Soal, Jelaskan, dll.): hanya mengisi kolom ketik, tidak langsung mengirim.
+   Anda bisa menambah pertanyaan dulu, lalu tekan kirim. */
+document.addEventListener('click', function(e){
+  var c = e.target && e.target.closest ? e.target.closest('.f-vision-chip') : null;
+  if(!c) return;
+  e.preventDefault();
+  var cmd = c.getAttribute('data-cmd') || '';
+  var inp = document.querySelector('input[placeholder*="Tanya"], textarea[placeholder*="Tanya"]') || document.querySelector('textarea') || document.querySelector('input[type="text"]');
+  if(!inp) return;
+  var awalan = (typeof getModePrefix === 'function') ? getModePrefix() : '';
+  inp.value = awalan + cmd;
+  inp.focus();
+});
+</script>
+<script>
+/* MENU RAPI: menyembunyikan menu hapus yang dobel dan memberi nama jelas pada tombol Log.
+   Dijalankan saat menu dibuka, tanpa timer berulang. Tidak menghapus fungsi apa pun. */
+(function(){
+  var SEMBUNYI = ['Hapus Semua Chat','Hapus Semua Log'];
+  function rapikan(){
+    var els = document.querySelectorAll('button, a, div');
+    for (var i=0;i<els.length;i++){
+      var el = els[i];
+      if (el.children.length > 2) continue;
+      var t = (el.textContent || '').replace(/\s+/g,' ').trim();
+      if (!t) continue;
+      if (SEMBUNYI.indexOf(t) !== -1 && el.closest && el.closest('.f-modal,.drawer,#drawer,#f-sheet,[class*="drawer"]')) {
+        el.style.display = 'none';
+      }
+      if (t === 'Log' && el.tagName === 'BUTTON') {
+        el.textContent = 'Riwayat Login';
+      }
+    }
+  }
+  var btn = document.getElementById('btnMenu');
+  if (btn) btn.addEventListener('click', function(){ setTimeout(rapikan, 80); });
+  setTimeout(rapikan, 1500);
+})();
+</script>
+<script>
+/* MENU TERTUTUP SETELAH DIPAKAI: item di drawer (☰) dan menu Fitur otomatis menutup setelah diklik.
+   Tombol yang harus tetap terbuka cukup diberi atribut data-keep="1". */
+document.addEventListener('click', function(e){
+  var t = e.target;
+  if(!t || !t.closest) return;
+  var item = t.closest('#drawer button, #drawer .f-item, #f-sheet button, #f-sheet .f-item');
+  if(!item || item.hasAttribute('data-keep')) return;
+  setTimeout(function(){
+    var d = document.getElementById('drawer'); if(d) d.classList.remove('open');
+    var sh = document.getElementById('f-sheet'); if(sh) sh.classList.remove('open');
+  }, 0);
+}, true);
 </script>
 </body>
 </html>
