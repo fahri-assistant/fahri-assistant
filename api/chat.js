@@ -118,9 +118,12 @@ Aturan WAJIB:
         return res.status(200).json({ reply: 'Maaf, fitur baca foto belum aktif di server. Coba lagi nanti ya.' });
       }
       let visionErr = '';
+      const batasVision = Date.now() + 50000; // total waktu untuk semua percobaan (fungsi Vercel 60 dtk)
       for (let coba = 1; coba <= 3; coba++) {
+        const sisa = batasVision - Date.now();
+        if (sisa < 8000) { visionErr = 'waktu habis, coba kirim lagi'; break; }
         try {
-          const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000);
+          const c = new AbortController(); const t = setTimeout(() => c.abort(), Math.min(sisa - 2000, 40000));
           const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + kunciGemini, 'Content-Type': 'application/json' },
@@ -142,7 +145,7 @@ Aturan WAJIB:
           if ((r.status === 503 || r.status === 429) && coba < 3) { await new Promise(res2 => setTimeout(res2, 1500 * coba)); continue; }
           break;
         } catch (e) {
-          visionErr = 'error ' + (e && e.message ? e.message : e);
+          visionErr = ((e && e.name === 'AbortError') ? 'Gemini terlalu lama menjawab' : ('error ' + (e && e.message ? e.message : e)));
           console.error('VISION: error ' + (e && e.message ? e.message : e));
           break;
         }
