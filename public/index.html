@@ -391,7 +391,7 @@ body[data-theme="premium"] .suggest-card{background:rgba(139,92,246,.35) !import
 <div class="header" id="header">
 <button class="menu-btn" id="btnMenu">☰</button>
 <div class="header-top"><div class="logo">F</div><div><h1>Fahri<br>Assistant</h1><p class="subtitle">AI cerdas buatan FahriAI</p><div class="online-status"><span class="online-dot"></span><span>Online - Siap Membantu</span></div></div></div>
-<p class="greet" id="greetText">Selamat siang, Ada yang dapat saya bantu</p><p class="greet2">hari ini?</p>
+<p class="greet" id="greetText">Selamat siang,</p><p class="greet2">Ada yang dapat saya bantu?</p>
 <div class="badge-row"><button class="badge" onclick="quick('Saya ingin mengajukan pertanyaan')"><i>💬</i> Chat</button><button class="badge" onclick="quick('Buat Gambar')"><i>🖼️</i> Gambar</button><button class="badge" onclick="quick('Edit Foto')"><i>✏️</i> Edit Foto</button></div>
 </div>
 <div class="authbar" id="authBar"><div class="status-pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Belum login</span></div><div class="login-btns" id="loginBtns"><button class="btn btn-google" id="btnGoogle">G Login Google</button><button class="btn btn-github" id="btnGithub">◉ Login Github</button></div><button class="btn btn-logout" id="btnLog" style="color:#d8b4fe;border-color:#a855f7">Log</button><button class="btn btn-logout hidden" id="btnLogout">Logout</button></div>
@@ -412,7 +412,7 @@ const welcomeEl=document.getElementById('welcome');
 window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loader').classList.add('hide')},900)});
 setTimeout(()=>{document.getElementById('loader').classList.add('hide')},2500);
 try{const d=new Date();const hari=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];const bln=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][d.getMonth()];document.getElementById('datePill').textContent='Hari ini - '+hari+', '+d.getDate()+' '+bln;}catch(e){}
-function updateGreeting(){const jam=new Date().getHours();let sapa='Selamat malam,';let icon='🌙';if(jam>=4&&jam<11){sapa='Selamat pagi,';icon='☀️'}else if(jam>=11&&jam<15){sapa='Selamat siang,';icon='🌤️'}else if(jam>=15&&jam<18){sapa='Selamat sore,';icon='🌇'}const el=document.getElementById('greetText');if(el)el.textContent=icon+' '+sapa+' Ada yang dapat saya bantu';}
+function updateGreeting(){const jam=new Date().getHours();let sapa='Selamat malam,';let icon='🌙';if(jam>=4&&jam<11){sapa='Selamat pagi,';icon='☀️'}else if(jam>=11&&jam<15){sapa='Selamat siang,';icon='🌤️'}else if(jam>=15&&jam<18){sapa='Selamat sore,';icon='🌇'}const el=document.getElementById('greetText');if(el)el.textContent=icon+' '+sapa;}
 updateGreeting();setInterval(updateGreeting,60000);
 let history=[];try{history=JSON.parse(localStorage.getItem('fahri_history')||'[]')}catch(e){history=[]}
 function saveHistory(){try{localStorage.setItem('fahri_history',JSON.stringify(history))}catch(e){}}
