@@ -59,7 +59,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   if (req.method !== 'POST') return res.status(405).json({ reply: 'Method salah' });
-  if (terlaluBanyak(req, 'chat', 40, 10 * 60 * 1000)) { res.setHeader('Retry-After', '120'); return res.status(429).json({ reply: 'Terlalu banyak permintaan. Mohon tunggu beberapa menit, lalu coba kembali.' }); }
+  if (terlaluBanyak(req, 'chat', 40, 10 * 60 * 1000)) { res.setHeader('Retry-After', '120'); return res.status(429).json({ reply: 'Terlalu banyak permintaan. Tunggu beberapa menit lalu coba lagi ya.' }); }
   const kuotaChat = await cekKuota(req, 'chat');
   if (!kuotaChat.ok) return res.status(429).json({ reply: kuotaChat.pesan });
   try {
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
     const systemPrompt = `Kamu adalah Fahri Assistant, asisten pintar buatan Fahri AI Akbar.
 Aturan WAJIB:
 - Jawab dalam Bahasa Indonesia yang sopan dan profesional, jelas, dan mudah dipahami. Sapa pengguna dengan "Anda" atau sapaan netral, dan hindari bahasa gaul
-- Jangan mengarang fakta. Kalau tidak tahu, katakan "Saya belum yakin, tetapi sejauh yang saya ketahui..."
+- Jangan mengarang fakta. Kalau tidak tahu, bilang "Aku belum yakin, tapi menurut yang aku tahu..."
 - Jawab sesuai pertanyaan terakhir, jangan melenceng
 - Kalau user tanya "siapa kamu", jawab kamu Fahri Assistant buatan Fahri
 - Jawab singkat tapi lengkap, pakai poin-poin kalau perlu
@@ -101,7 +101,7 @@ Aturan WAJIB:
     if (gambarUser) {
       const valid = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(gambarUser) && gambarUser.length < 4 * 1024 * 1024;
       if (!valid) {
-        return res.status(200).json({ reply: 'Mohon maaf, foto belum dapat dibaca. Silakan kirim ulang foto Anda (format JPG, PNG, atau WEBP, dengan ukuran tidak terlalu besar).' });
+        return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya. Coba kirim ulang fotonya ya (format JPG, PNG, atau WEBP, ukuran tidak terlalu besar).' });
       }
       // Model gambar: Gemini 3.8 Flash (Google AI Studio). Model 2.5 sudah tidak tersedia untuk pengguna baru. Model Groq Llama 4 Scout sudah dihentikan Groq (Juli 2026).
       const sysTxt = cleanMsgs.filter(m => m.role === 'system').map(m => m.content).join('\n');
@@ -115,13 +115,13 @@ Aturan WAJIB:
       const kunciGemini = (process.env.GEMINI_API_KEY || '').trim();
       if (!kunciGemini) {
         console.error('VISION: GEMINI_API_KEY belum terpasang');
-        return res.status(200).json({ reply: 'Mohon maaf, fitur pembacaan foto belum aktif di server. Silakan coba kembali nanti.' });
+        return res.status(200).json({ reply: 'Maaf, fitur baca foto belum aktif di server. Coba lagi nanti ya.' });
       }
       let visionErr = '';
       const batasVision = Date.now() + 50000; // total waktu untuk semua percobaan (fungsi Vercel 60 dtk)
       for (let coba = 1; coba <= 3; coba++) {
         const sisa = batasVision - Date.now();
-        if (sisa < 8000) { visionErr = 'waktu habis, silakan kirim ulang'; break; }
+        if (sisa < 8000) { visionErr = 'waktu habis, coba kirim lagi'; break; }
         try {
           const c = new AbortController(); const t = setTimeout(() => c.abort(), Math.min(sisa - 2000, 40000));
           const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
@@ -145,12 +145,12 @@ Aturan WAJIB:
           if ((r.status === 503 || r.status === 429) && coba < 3) { await new Promise(res2 => setTimeout(res2, 1500 * coba)); continue; }
           break;
         } catch (e) {
-          visionErr = ((e && e.name === 'AbortError') ? 'Gemini terlalu lama merespons' : ('error ' + (e && e.message ? e.message : e)));
+          visionErr = ((e && e.name === 'AbortError') ? 'Gemini terlalu lama menjawab' : ('error ' + (e && e.message ? e.message : e)));
           console.error('VISION: error ' + (e && e.message ? e.message : e));
           break;
         }
       }
-      return res.status(200).json({ reply: 'Mohon maaf, foto belum dapat dibaca saat ini. Silakan kirim ulang beberapa saat lagi.\n\n[detail: ' + visionErr + ']' });
+      return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.\n\n[detail: ' + visionErr + ']' });
     }
 
     const isStream = body.stream === true || req.headers.accept?.includes('text/event-stream');
@@ -219,10 +219,15 @@ Aturan WAJIB:
         if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
       }
     }
-    // GEMINI - Cadangan pertama untuk chat teks (setelah Groq), 8 detik
-    if ((process.env.GEMINI_API_KEY || '').trim()) {
-      const r = await tryOpenAI('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', process.env.GEMINI_API_KEY.trim(), 'gemini-3.8-flash', 8000);
-      if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
+    // CLOUDFLARE WORKERS AI (cadangan setelah Groq) - 8 detik
+    // Memakai akun Cloudflare yang sudah ada: CLOUDFLARE_ACCOUNT_ID dan CLOUDFLARE_API_TOKEN (atau CLOUDFLARE_API_KEY)
+    {
+      const cfAcc = (process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
+      const cfTok = ((process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY || '').trim());
+      if (cfAcc && cfTok) {
+        const r = await tryOpenAI('https://api.cloudflare.com/client/v4/accounts/' + cfAcc + '/ai/v1/chat/completions', cfTok, '@cf/meta/llama-3.3-70b-instruct-fp8-fast', 8000);
+        if (r.ok) { if (isStream) return await sendStream(r.stream); return await sendText(r.text); }
+      }
     }
     // TOGETHER - 8 detik
     if (process.env.TOGETHER_API_KEY) {
@@ -321,8 +326,8 @@ Aturan WAJIB:
         if (ptext) return await sendText(ptext);
       }
     } catch {}
-    return await sendText('Mohon maaf, seluruh layanan AI sedang sibuk. Silakan kirim kembali pertanyaan yang sama.');
+    return await sendText('Maaf, semua AI lagi sibuk sebentar. Coba kirim lagi pertanyaan yang sama ya, jangan ganti pertanyaan dulu.');
   } catch (e) {
-    return res.status(200).json({ reply: 'Mohon maaf, server sedang sibuk. Silakan coba kembali.' });
+    return res.status(200).json({ reply: 'Maaf, server lagi sibuk sebentar. Coba kirim lagi ya.' });
   }
                      }
