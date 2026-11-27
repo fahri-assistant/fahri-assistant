@@ -1951,6 +1951,65 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
 html{zoom:var(--fz,1)}
 body{height:var(--app-h,100dvh) !important;height:var(--app-h,100svh) !important}
 #drawer .drawer-box{max-height:calc(var(--app-h,100dvh) - 84px) !important}
+
+/* ===== TEMA BARU: aurora, neon, lavender, royal, cosmic (tetap identitas ungu Fahri) ===== */
+.theme-btn[data-theme="aurora"] i{background:linear-gradient(135deg,#22d3ee,#7c3aed)}
+.theme-btn[data-theme="neon"] i{background:linear-gradient(135deg,#ff2bd6,#7c3aed)}
+.theme-btn[data-theme="lavender"] i{background:linear-gradient(135deg,#ede9fe,#a78bfa)}
+.theme-btn[data-theme="royal"] i{background:linear-gradient(135deg,#d4af37,#2e1065)}
+.theme-btn[data-theme="cosmic"] i{background:radial-gradient(circle at 30% 30%,#c4b5fd,#1e0a3c)}
+
+/* AURORA: ungu dengan kilau cyan */
+body[data-theme="aurora"]{background:linear-gradient(180deg,#071a2e 0%,#0b0f2a 60%,#060818 100%)}
+body[data-theme="aurora"] .header{border-color:rgba(34,211,238,.85);box-shadow:inset 0 0 44px rgba(34,211,238,.18),0 0 28px rgba(34,211,238,.35);animation:none}
+body[data-theme="aurora"] .bubble.ai{background:#0c1d33 !important;border-color:rgba(94,234,212,.85) !important;box-shadow:inset 0 0 28px rgba(34,211,238,.15),0 0 20px rgba(34,211,238,.3) !important}
+body[data-theme="aurora"] .bubble.user{background:linear-gradient(135deg,#7c3aed,#0891b2) !important;border-color:rgba(165,243,252,.6) !important;box-shadow:0 0 18px rgba(34,211,238,.45) !important}
+body[data-theme="aurora"] .composer{border-color:rgba(34,211,238,.75);background:#0c1d33;box-shadow:0 0 18px rgba(34,211,238,.3)}
+body[data-theme="aurora"] .composer button{background:linear-gradient(135deg,#22d3ee,#7c3aed)}
+body[data-theme="aurora"] #chat::before{opacity:.2}
+
+/* NEON: gelap dengan garis pink tajam */
+body[data-theme="neon"]{background:linear-gradient(180deg,#07030d 0%,#0d0218 60%,#05010a 100%)}
+body[data-theme="neon"] .header{border-color:rgba(255,43,214,.9);box-shadow:inset 0 0 40px rgba(255,43,214,.2),0 0 30px rgba(255,43,214,.45);animation:none}
+body[data-theme="neon"] .bubble.ai{background:#14041f !important;border-color:rgba(255,43,214,.85) !important;box-shadow:inset 0 0 26px rgba(255,43,214,.16),0 0 22px rgba(255,43,214,.4) !important}
+body[data-theme="neon"] .bubble.user{background:linear-gradient(135deg,#ff2bd6,#7c3aed) !important;border-color:rgba(255,200,240,.6) !important;box-shadow:0 0 20px rgba(255,43,214,.55) !important}
+body[data-theme="neon"] .composer{border-color:rgba(255,43,214,.8);background:#14041f;box-shadow:0 0 20px rgba(255,43,214,.35)}
+body[data-theme="neon"] .composer button{background:linear-gradient(135deg,#ff2bd6,#7c3aed)}
+body[data-theme="neon"] #chat::before{opacity:.15}
+
+/* LAVENDER: terang, ungu muda, cocok untuk siang hari */
+body[data-theme="lavender"]{background:linear-gradient(180deg,#f3eefc 0%,#e9e1fb 100%);color:#2a1d4a}
+body[data-theme="lavender"] .header{background:#ffffff;border-color:#c4b5fd;box-shadow:0 0 20px rgba(124,58,237,.15);animation:none}
+body[data-theme="lavender"] .header h1{color:#2a1d4a}
+body[data-theme="lavender"] .subtitle{color:#7c3aed !important}
+body[data-theme="lavender"] .bubble.ai{background:#ffffff !important;color:#2a1d4a !important;border-color:#c4b5fd !important;box-shadow:0 0 14px rgba(124,58,237,.12) !important}
+body[data-theme="lavender"] .bubble.user{background:linear-gradient(135deg,#a78bfa,#7c3aed) !important;color:#ffffff !important;border-color:rgba(255,255,255,.6) !important}
+body[data-theme="lavender"] .composer{background:#ffffff;border-color:#c4b5fd;box-shadow:0 0 14px rgba(124,58,237,.12)}
+body[data-theme="lavender"] .composer input{color:#2a1d4a}
+body[data-theme="lavender"] .composer input::placeholder{color:#9a86c7}
+body[data-theme="lavender"] .composer button{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
+body[data-theme="lavender"] #chat::before{opacity:.08}
+body[data-theme="lavender"] #chat::after{display:none}
+body[data-theme="lavender"] .twinkle{display:none}
+
+/* ROYAL: ungu tua dengan aksen emas, kesan formal */
+body[data-theme="royal"]{background:linear-gradient(180deg,#140826 0%,#0a0414 60%,#05020b 100%)}
+body[data-theme="royal"] .header{border-color:rgba(212,175,55,.9);box-shadow:inset 0 0 40px rgba(212,175,55,.15),0 0 28px rgba(212,175,55,.3);animation:none}
+body[data-theme="royal"] .bubble.ai{background:#1c0d33 !important;border-color:rgba(212,175,55,.85) !important;box-shadow:inset 0 0 26px rgba(212,175,55,.12),0 0 20px rgba(212,175,55,.25) !important}
+body[data-theme="royal"] .bubble.user{background:linear-gradient(135deg,#4c1d95,#2e1065) !important;border-color:rgba(212,175,55,.7) !important;box-shadow:0 0 18px rgba(212,175,55,.3) !important}
+body[data-theme="royal"] .composer{border-color:rgba(212,175,55,.8);background:#1c0d33;box-shadow:0 0 18px rgba(212,175,55,.25)}
+body[data-theme="royal"] .composer button{background:linear-gradient(135deg,#e6c35c,#b8932a);color:#1a1020}
+body[data-theme="royal"] #chat::before{opacity:.15}
+
+/* COSMIC: ungu dengan bintang, untuk membaca lama */
+body[data-theme="cosmic"]{background:linear-gradient(180deg,#0b0520 0%,#050210 100%)}
+body[data-theme="cosmic"] .header{border-color:rgba(167,139,250,.8);box-shadow:inset 0 0 40px rgba(124,58,237,.25),0 0 26px rgba(124,58,237,.3);animation:none}
+body[data-theme="cosmic"] .bubble.ai{background:rgba(20,8,40,.82) !important;border-color:rgba(167,139,250,.75) !important;box-shadow:0 0 18px rgba(124,58,237,.25) !important}
+body[data-theme="cosmic"] .bubble.user{background:#3b0764 !important;border-color:rgba(196,181,253,.55) !important;box-shadow:0 0 16px rgba(124,58,237,.35) !important}
+body[data-theme="cosmic"] .composer{border-color:rgba(167,139,250,.7);background:rgba(20,8,40,.9);box-shadow:0 0 18px rgba(124,58,237,.3)}
+body[data-theme="cosmic"] .composer button{background:linear-gradient(135deg,#a78bfa,#6d28d9)}
+body[data-theme="cosmic"] #chat::before{opacity:.35}
+body[data-theme="cosmic"] .twinkle{opacity:.6}
 </style>
 
 <script>
@@ -2221,6 +2280,31 @@ window.__f_sholatCadangan = function(s, kunci, ulang, detail){
     s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia [detail: '+String(detail||'').slice(0,120)+']';
   }
 };
+</script>
+<script>
+/* TOMBOL TEMA BARU: ditambahkan ke menu tema tanpa mengubah tombol yang sudah ada */
+(function(){
+  var TEMA = [
+    {t:'aurora', nama:'Aurora'}, {t:'neon', nama:'Neon'}, {t:'lavender', nama:'Lavender'},
+    {t:'royal', nama:'Royal'}, {t:'cosmic', nama:'Cosmic'}
+  ];
+  function buat(){
+    var grid = document.querySelector('.theme-grid');
+    if(!grid) return;
+    TEMA.forEach(function(x){
+      if(grid.querySelector('[data-theme="'+x.t+'"]')) return;
+      var b = document.createElement('button');
+      b.className = 'theme-btn';
+      b.setAttribute('data-theme', x.t);
+      b.innerHTML = '<i></i>' + x.nama;
+      b.onclick = function(){ setTheme(x.t); };
+      grid.appendChild(b);
+    });
+    try{ var now = localStorage.getItem('fahri_theme') || 'original'; setTheme(now); }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buat);
+  else buat();
+})();
 </script>
 </body>
 </html>
