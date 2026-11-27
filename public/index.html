@@ -1952,64 +1952,124 @@ html{zoom:var(--fz,1)}
 body{height:var(--app-h,100dvh) !important;height:var(--app-h,100svh) !important}
 #drawer .drawer-box{max-height:calc(var(--app-h,100dvh) - 84px) !important}
 
-/* ===== TEMA BARU: aurora, neon, lavender, royal, cosmic (tetap identitas ungu Fahri) ===== */
-.theme-btn[data-theme="aurora"] i{background:linear-gradient(135deg,#22d3ee,#7c3aed)}
-.theme-btn[data-theme="neon"] i{background:linear-gradient(135deg,#ff2bd6,#7c3aed)}
-.theme-btn[data-theme="lavender"] i{background:linear-gradient(135deg,#ede9fe,#a78bfa)}
-.theme-btn[data-theme="royal"] i{background:linear-gradient(135deg,#d4af37,#2e1065)}
-.theme-btn[data-theme="cosmic"] i{background:radial-gradient(circle at 30% 30%,#c4b5fd,#1e0a3c)}
+/* ===== TEMA BARU (v3): latar, pola, dan bentuk gelembung dibuat berbeda satu sama lain ===== */
+.theme-btn[data-theme="aurora"] i{background:linear-gradient(135deg,#22d3ee,#a855f7)}
+.theme-btn[data-theme="neon"] i{background:#05010a;box-shadow:inset 0 0 0 2px #ff2bd6,0 0 10px #ff2bd6}
+.theme-btn[data-theme="lavender"] i{background:linear-gradient(135deg,#f5b8e4,#b8a4f5)}
+.theme-btn[data-theme="royal"] i{background:linear-gradient(135deg,#d4af37,#3b1a6b)}
+.theme-btn[data-theme="cosmic"] i{background:radial-gradient(circle at 35% 35%,#fff,#3b0764 70%)}
 
-/* AURORA: ungu dengan kilau cyan */
-body[data-theme="aurora"]{background:linear-gradient(180deg,#071a2e 0%,#0b0f2a 60%,#060818 100%)}
-body[data-theme="aurora"] .header{border-color:rgba(34,211,238,.85);box-shadow:inset 0 0 44px rgba(34,211,238,.18),0 0 28px rgba(34,211,238,.35);animation:none}
-body[data-theme="aurora"] .bubble.ai{background:#0c1d33 !important;border-color:rgba(94,234,212,.85) !important;box-shadow:inset 0 0 28px rgba(34,211,238,.15),0 0 20px rgba(34,211,238,.3) !important}
-body[data-theme="aurora"] .bubble.user{background:linear-gradient(135deg,#7c3aed,#0891b2) !important;border-color:rgba(165,243,252,.6) !important;box-shadow:0 0 18px rgba(34,211,238,.45) !important}
-body[data-theme="aurora"] .composer{border-color:rgba(34,211,238,.75);background:#0c1d33;box-shadow:0 0 18px rgba(34,211,238,.3)}
-body[data-theme="aurora"] .composer button{background:linear-gradient(135deg,#22d3ee,#7c3aed)}
-body[data-theme="aurora"] #chat::before{opacity:.2}
+/* matikan wallpaper lama khusus tema baru, supaya tiap tema punya latar sendiri */
+body[data-theme="aurora"] #chat::before, body[data-theme="aurora"] #chat::after,
+body[data-theme="neon"] #chat::before, body[data-theme="neon"] #chat::after,
+body[data-theme="lavender"] #chat::before, body[data-theme="lavender"] #chat::after,
+body[data-theme="royal"] #chat::before, body[data-theme="royal"] #chat::after,
+body[data-theme="cosmic"] #chat::before, body[data-theme="cosmic"] #chat::after{display:none !important}
+body[data-theme="aurora"] .twinkle, body[data-theme="neon"] .twinkle,
+body[data-theme="lavender"] .twinkle, body[data-theme="royal"] .twinkle{display:none}
 
-/* NEON: gelap dengan garis pink tajam */
-body[data-theme="neon"]{background:linear-gradient(180deg,#07030d 0%,#0d0218 60%,#05010a 100%)}
-body[data-theme="neon"] .header{border-color:rgba(255,43,214,.9);box-shadow:inset 0 0 40px rgba(255,43,214,.2),0 0 30px rgba(255,43,214,.45);animation:none}
-body[data-theme="neon"] .bubble.ai{background:#14041f !important;border-color:rgba(255,43,214,.85) !important;box-shadow:inset 0 0 26px rgba(255,43,214,.16),0 0 22px rgba(255,43,214,.4) !important}
-body[data-theme="neon"] .bubble.user{background:linear-gradient(135deg,#ff2bd6,#7c3aed) !important;border-color:rgba(255,200,240,.6) !important;box-shadow:0 0 20px rgba(255,43,214,.55) !important}
-body[data-theme="neon"] .composer{border-color:rgba(255,43,214,.8);background:#14041f;box-shadow:0 0 20px rgba(255,43,214,.35)}
-body[data-theme="neon"] .composer button{background:linear-gradient(135deg,#ff2bd6,#7c3aed)}
-body[data-theme="neon"] #chat::before{opacity:.15}
+/* AURORA: pita cahaya cyan-ungu, sejuk */
+body[data-theme="aurora"]{background:
+  radial-gradient(ellipse 70% 35% at 15% 0%, rgba(34,211,238,.45), transparent 70%),
+  radial-gradient(ellipse 60% 30% at 90% 15%, rgba(168,85,247,.5), transparent 70%),
+  radial-gradient(ellipse 80% 25% at 50% 40%, rgba(16,185,129,.22), transparent 70%),
+  linear-gradient(180deg,#031a2c 0%,#0a0a26 100%) !important}
+body[data-theme="aurora"] .header{border:2px solid rgba(34,211,238,.9);border-radius:28px;background:rgba(3,26,44,.7);box-shadow:0 0 34px rgba(34,211,238,.45);animation:none}
+body[data-theme="aurora"] .bubble.ai{background:rgba(8,40,60,.75) !important;border:2px solid rgba(94,234,212,.9) !important;border-radius:22px !important;box-shadow:0 0 24px rgba(34,211,238,.35) !important}
+body[data-theme="aurora"] .bubble.user{background:linear-gradient(135deg,#22d3ee,#a855f7) !important;color:#041018 !important;border-radius:22px !important;box-shadow:0 0 22px rgba(34,211,238,.6) !important}
+body[data-theme="aurora"] .composer{border:2px solid rgba(34,211,238,.9);background:rgba(3,26,44,.85);box-shadow:0 0 26px rgba(34,211,238,.4)}
+body[data-theme="aurora"] .composer button{background:linear-gradient(135deg,#22d3ee,#a855f7);color:#041018}
 
-/* LAVENDER: terang, ungu muda, cocok untuk siang hari */
-body[data-theme="lavender"]{background:linear-gradient(180deg,#f3eefc 0%,#e9e1fb 100%);color:#2a1d4a}
-body[data-theme="lavender"] .header{background:#ffffff;border-color:#c4b5fd;box-shadow:0 0 20px rgba(124,58,237,.15);animation:none}
-body[data-theme="lavender"] .header h1{color:#2a1d4a}
-body[data-theme="lavender"] .subtitle{color:#7c3aed !important}
-body[data-theme="lavender"] .bubble.ai{background:#ffffff !important;color:#2a1d4a !important;border-color:#c4b5fd !important;box-shadow:0 0 14px rgba(124,58,237,.12) !important}
-body[data-theme="lavender"] .bubble.user{background:linear-gradient(135deg,#a78bfa,#7c3aed) !important;color:#ffffff !important;border-color:rgba(255,255,255,.6) !important}
-body[data-theme="lavender"] .composer{background:#ffffff;border-color:#c4b5fd;box-shadow:0 0 14px rgba(124,58,237,.12)}
-body[data-theme="lavender"] .composer input{color:#2a1d4a}
-body[data-theme="lavender"] .composer input::placeholder{color:#9a86c7}
-body[data-theme="lavender"] .composer button{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
-body[data-theme="lavender"] #chat::before{opacity:.08}
-body[data-theme="lavender"] #chat::after{display:none}
-body[data-theme="lavender"] .twinkle{display:none}
+/* NEON: hitam dengan kisi pink, sudut tajam, glow kuat */
+body[data-theme="neon"]{background:
+  repeating-linear-gradient(0deg, rgba(255,43,214,.13) 0 1px, transparent 1px 30px),
+  repeating-linear-gradient(90deg, rgba(255,43,214,.13) 0 1px, transparent 1px 30px),
+  #05010a !important}
+body[data-theme="neon"] .header{border:2px solid #ff2bd6;border-radius:6px;background:#0a0212;box-shadow:0 0 0 1px #ff2bd6,0 0 40px rgba(255,43,214,.6);animation:none}
+body[data-theme="neon"] .header h1{color:#ff8ae8 !important;text-shadow:0 0 12px rgba(255,43,214,.9)}
+body[data-theme="neon"] .bubble.ai{background:#0a0212 !important;border:2px solid #ff2bd6 !important;border-radius:6px !important;box-shadow:0 0 0 1px rgba(255,43,214,.4),0 0 26px rgba(255,43,214,.55) !important;color:#ffd6f7 !important}
+body[data-theme="neon"] .bubble.user{background:#ff2bd6 !important;color:#12000f !important;border:2px solid #fff !important;border-radius:6px !important;box-shadow:0 0 26px rgba(255,43,214,.8) !important;font-weight:700}
+body[data-theme="neon"] .composer{border:2px solid #ff2bd6;border-radius:6px;background:#0a0212;box-shadow:0 0 28px rgba(255,43,214,.5)}
+body[data-theme="neon"] .composer button{background:#ff2bd6;color:#12000f;border-radius:6px}
 
-/* ROYAL: ungu tua dengan aksen emas, kesan formal */
-body[data-theme="royal"]{background:linear-gradient(180deg,#140826 0%,#0a0414 60%,#05020b 100%)}
-body[data-theme="royal"] .header{border-color:rgba(212,175,55,.9);box-shadow:inset 0 0 40px rgba(212,175,55,.15),0 0 28px rgba(212,175,55,.3);animation:none}
-body[data-theme="royal"] .bubble.ai{background:#1c0d33 !important;border-color:rgba(212,175,55,.85) !important;box-shadow:inset 0 0 26px rgba(212,175,55,.12),0 0 20px rgba(212,175,55,.25) !important}
-body[data-theme="royal"] .bubble.user{background:linear-gradient(135deg,#4c1d95,#2e1065) !important;border-color:rgba(212,175,55,.7) !important;box-shadow:0 0 18px rgba(212,175,55,.3) !important}
-body[data-theme="royal"] .composer{border-color:rgba(212,175,55,.8);background:#1c0d33;box-shadow:0 0 18px rgba(212,175,55,.25)}
-body[data-theme="royal"] .composer button{background:linear-gradient(135deg,#e6c35c,#b8932a);color:#1a1020}
-body[data-theme="royal"] #chat::before{opacity:.15}
+/* LAVENDER: lilac dan pink lembut, bukan putih */
+body[data-theme="lavender"]{background:
+  radial-gradient(circle at 12% 8%, #ffc2ea 0%, transparent 42%),
+  radial-gradient(circle at 92% 92%, #a894f0 0%, transparent 50%),
+  linear-gradient(180deg,#dccbf8 0%,#c6b0f0 100%) !important;color:#2b1450}
+body[data-theme="lavender"] .header{border:2px solid #7c3aed;border-radius:30px;background:rgba(124,58,237,.14);box-shadow:0 10px 30px rgba(124,58,237,.25);animation:none}
+body[data-theme="lavender"] .header h1{color:#2b1450}
+body[data-theme="lavender"] .subtitle{color:#5b21b6 !important}
+body[data-theme="lavender"] .bubble.ai{background:rgba(255,255,255,.55) !important;color:#2b1450 !important;border:2px solid #9d7ce8 !important;border-radius:26px !important;box-shadow:0 8px 20px rgba(124,58,237,.18) !important}
+body[data-theme="lavender"] .bubble.user{background:#2b1450 !important;color:#f5ecff !important;border-radius:26px !important;border:none !important;box-shadow:0 8px 20px rgba(43,20,80,.35) !important}
+body[data-theme="lavender"] .composer{border:2px solid #9d7ce8;background:rgba(255,255,255,.6);border-radius:30px;box-shadow:0 8px 20px rgba(124,58,237,.18)}
+body[data-theme="lavender"] .composer input{color:#2b1450}
+body[data-theme="lavender"] .composer input::placeholder{color:#7c5cb8}
+body[data-theme="lavender"] .composer button{background:#2b1450;color:#fff}
 
-/* COSMIC: ungu dengan bintang, untuk membaca lama */
-body[data-theme="cosmic"]{background:linear-gradient(180deg,#0b0520 0%,#050210 100%)}
-body[data-theme="cosmic"] .header{border-color:rgba(167,139,250,.8);box-shadow:inset 0 0 40px rgba(124,58,237,.25),0 0 26px rgba(124,58,237,.3);animation:none}
-body[data-theme="cosmic"] .bubble.ai{background:rgba(20,8,40,.82) !important;border-color:rgba(167,139,250,.75) !important;box-shadow:0 0 18px rgba(124,58,237,.25) !important}
-body[data-theme="cosmic"] .bubble.user{background:#3b0764 !important;border-color:rgba(196,181,253,.55) !important;box-shadow:0 0 16px rgba(124,58,237,.35) !important}
-body[data-theme="cosmic"] .composer{border-color:rgba(167,139,250,.7);background:rgba(20,8,40,.9);box-shadow:0 0 18px rgba(124,58,237,.3)}
-body[data-theme="cosmic"] .composer button{background:linear-gradient(135deg,#a78bfa,#6d28d9)}
-body[data-theme="cosmic"] #chat::before{opacity:.35}
-body[data-theme="cosmic"] .twinkle{opacity:.6}
+/* ROYAL: ungu tua dengan pola berlian emas */
+body[data-theme="royal"]{background:
+  repeating-linear-gradient(45deg, rgba(212,175,55,.09) 0 2px, transparent 2px 22px),
+  repeating-linear-gradient(-45deg, rgba(212,175,55,.06) 0 2px, transparent 2px 22px),
+  radial-gradient(ellipse at 50% 0%, #4c1d95 0%, transparent 60%),
+  #0c0418 !important}
+body[data-theme="royal"] .header{border:2px solid #d4af37;border-radius:20px;background:rgba(12,4,24,.85);box-shadow:inset 0 0 30px rgba(212,175,55,.2),0 0 30px rgba(212,175,55,.35);animation:none}
+body[data-theme="royal"] .header h1{color:#f3d77a !important}
+body[data-theme="royal"] .bubble.ai{background:rgba(28,13,51,.9) !important;border:2px solid #d4af37 !important;border-radius:14px !important;box-shadow:inset 0 0 24px rgba(212,175,55,.12),0 0 20px rgba(212,175,55,.25) !important;color:#f6ecd0 !important}
+body[data-theme="royal"] .bubble.user{background:linear-gradient(135deg,#6d28d9,#3b1a6b) !important;border:1px solid #f3d77a !important;border-radius:14px !important;color:#fff7dc !important}
+body[data-theme="royal"] .composer{border:2px solid #d4af37;border-radius:14px;background:#1c0d33;box-shadow:0 0 22px rgba(212,175,55,.3)}
+body[data-theme="royal"] .composer button{background:linear-gradient(135deg,#f3d77a,#b8932a);color:#1a1020;border-radius:12px}
+
+/* COSMIC: ruang angkasa dengan bintang kecil */
+body[data-theme="cosmic"]{background:
+  radial-gradient(1.5px 1.5px at 18px 30px, #fff, transparent),
+  radial-gradient(1px 1px at 72px 88px, #e9d5ff, transparent),
+  radial-gradient(1.2px 1.2px at 128px 20px, #fff, transparent),
+  radial-gradient(1px 1px at 40px 120px, #c4b5fd, transparent),
+  radial-gradient(ellipse 70% 40% at 80% 20%, rgba(139,92,246,.35), transparent 70%),
+  radial-gradient(ellipse 60% 40% at 10% 90%, rgba(236,72,153,.18), transparent 70%),
+  linear-gradient(180deg,#0a0318 0%,#120526 100%) !important;background-size:160px 160px,160px 160px,160px 160px,160px 160px,auto,auto,auto !important}
+body[data-theme="cosmic"] .twinkle{display:block;opacity:.7}
+body[data-theme="cosmic"] .header{border:1px solid rgba(196,181,253,.6);border-radius:40px;background:rgba(18,5,38,.55);box-shadow:0 0 40px rgba(124,58,237,.35);animation:none}
+body[data-theme="cosmic"] .bubble.ai{background:rgba(18,5,38,.7) !important;border:1px solid rgba(196,181,253,.6) !important;border-radius:40px !important;box-shadow:0 0 30px rgba(124,58,237,.3) !important}
+body[data-theme="cosmic"] .bubble.user{background:rgba(88,28,135,.85) !important;border:1px solid rgba(233,213,255,.7) !important;border-radius:40px !important;box-shadow:0 0 26px rgba(168,85,247,.5) !important}
+body[data-theme="cosmic"] .composer{border:1px solid rgba(196,181,253,.6);border-radius:40px;background:rgba(18,5,38,.75);box-shadow:0 0 26px rgba(124,58,237,.4)}
+body[data-theme="cosmic"] .composer button{background:radial-gradient(circle,#fff,#7c3aed);border-radius:50%}
+
+/* ===== PENYEMPURNAAN TEMA LAMA: lebih rapi dan elegan (tanpa mengubah layout) ===== */
+body[data-theme="midnight"] .header{border:1px solid rgba(170,200,240,.45) !important;background:linear-gradient(160deg,rgba(18,36,66,.92),rgba(8,16,32,.92)) !important;border-radius:26px !important}
+body[data-theme="midnight"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
+body[data-theme="midnight"] .bubble.ai{background:linear-gradient(160deg,#0f2140,#0a1628) !important;border:1px solid rgba(150,185,230,.5) !important;box-shadow:0 10px 26px rgba(0,0,0,.35) !important}
+body[data-theme="midnight"] .bubble.user{background:linear-gradient(135deg,#2b5aa6,#1e3a6e) !important;border:1px solid rgba(190,215,250,.35) !important;box-shadow:0 10px 24px rgba(0,0,0,.3) !important}
+body[data-theme="midnight"] .composer{border:1px solid rgba(150,185,230,.5) !important;border-radius:28px !important;background:linear-gradient(160deg,#0f2140,#0a1628) !important}
+
+body[data-theme="ivory"] .header{border:1px solid #dcd2b8 !important;border-radius:26px !important;box-shadow:0 8px 24px rgba(60,45,20,.08) !important}
+body[data-theme="ivory"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
+body[data-theme="ivory"] .bubble.ai{background:#fffdf7 !important;border:1px solid #e4dcc6 !important;box-shadow:0 10px 22px rgba(60,45,20,.08) !important;color:#2a2418 !important}
+body[data-theme="ivory"] .bubble.user{background:linear-gradient(135deg,#3d3426,#2a2418) !important;color:#f7f0de !important;border:none !important;box-shadow:0 10px 22px rgba(42,36,24,.25) !important}
+body[data-theme="ivory"] .composer{border:1px solid #d8cdb0 !important;border-radius:28px !important;box-shadow:0 8px 22px rgba(60,45,20,.08) !important}
+body[data-theme="ivory"] .composer button{background:linear-gradient(135deg,#b8934a,#8a6a2f) !important;color:#fffdf7 !important}
+
+body[data-theme="champagne"] .header{border:1px solid rgba(212,175,106,.6) !important;border-radius:26px !important;background:linear-gradient(160deg,#241c12,#15110b) !important}
+body[data-theme="champagne"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
+body[data-theme="champagne"] .bubble.ai{background:linear-gradient(160deg,#241c12,#1a1510) !important;border:1px solid rgba(212,175,106,.5) !important;box-shadow:0 10px 26px rgba(0,0,0,.4) !important}
+body[data-theme="champagne"] .bubble.user{background:linear-gradient(135deg,#e8c87a,#c9a25a) !important;color:#1a1510 !important;border:none !important;box-shadow:0 10px 24px rgba(212,175,106,.3) !important}
+body[data-theme="champagne"] .composer{border:1px solid rgba(212,175,106,.6) !important;border-radius:28px !important;background:linear-gradient(160deg,#241c12,#15110b) !important}
+
+body[data-theme="forest"] .header{border:1px solid rgba(160,205,178,.45) !important;border-radius:26px !important;background:linear-gradient(160deg,#133a29,#0a1f15) !important}
+body[data-theme="forest"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
+body[data-theme="forest"] .bubble.ai{background:linear-gradient(160deg,#133a29,#0d241a) !important;border:1px solid rgba(160,205,178,.45) !important;box-shadow:0 10px 26px rgba(0,0,0,.35) !important}
+body[data-theme="forest"] .bubble.user{background:linear-gradient(135deg,#4a7a5e,#2f5240) !important;border:1px solid rgba(200,235,215,.3) !important;box-shadow:0 10px 24px rgba(0,0,0,.3) !important}
+body[data-theme="forest"] .composer{border:1px solid rgba(160,205,178,.5) !important;border-radius:28px !important;background:linear-gradient(160deg,#133a29,#0d241a) !important}
+
+body[data-theme="premium"] .header{border:1px solid rgba(255,255,255,.14) !important;border-radius:26px !important;background:rgba(30,27,75,.55) !important}
+body[data-theme="premium"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
+body[data-theme="premium"] .bubble.ai{background:linear-gradient(160deg,#25216a,#1e1b4b) !important;border:1px solid rgba(255,255,255,.12) !important;box-shadow:0 10px 26px rgba(10,6,20,.45) !important}
+body[data-theme="premium"] .bubble.user{background:linear-gradient(135deg,#3b35a0,#2e2a7a) !important;border:1px solid rgba(255,255,255,.14) !important;box-shadow:0 10px 24px rgba(10,6,20,.4) !important}
+body[data-theme="premium"] .composer{border:1px solid rgba(255,255,255,.14) !important;border-radius:28px !important}
+
+/* Original: hanya sentuhan tipografi halus, identitas ungu dipertahankan */
+body:not([data-theme]) .bubble{letter-spacing:.1px;line-height:1.7}
 </style>
 
 <script>
