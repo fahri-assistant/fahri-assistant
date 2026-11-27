@@ -26,7 +26,7 @@ function guessMime(b64) {
 }
 
 // ===== Cloudflare Workers AI (FLUX.2 klein) - jatah gratis harian =====
-// Variabel di Vercel: CLOUDFLARE_ACCOUNT_ID dan CLOUDFLARE_API_TOKEN.
+// Variabel di Vercel: CLOUDFLARE_ACCOUNT_ID dan CLOUDFLARE_API_TOKEN (atau CLOUDFLARE_API_KEY bila isinya token).
 // Opsional: CLOUDFLARE_IMAGE_MODEL (default flux-2-klein-4b; boleh diganti ke @cf/black-forest-labs/flux-2-klein-9b).
 // Catatan: foto masukan harus kecil (di bawah 512x512), jadi pakai imageCF dari aplikasi.
 async function editCloudflare(akun, token, model, prompt, mime, buf, ow, oh, timeoutMs) {
@@ -77,16 +77,16 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
   res.setHeader('Access-Control-Max-Age', '86400');
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Metode permintaan tidak valid.' });
-  if (terlaluBanyak(req, 'edit', 6, 10 * 60 * 1000)) { res.setHeader('Retry-After', '300'); return res.status(429).json({ error: 'Terlalu banyak permintaan edit foto. Mohon tunggu beberapa menit, lalu coba kembali.' }); }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method salah' });
+  if (terlaluBanyak(req, 'edit', 6, 10 * 60 * 1000)) { res.setHeader('Retry-After', '300'); return res.status(429).json({ error: 'Terlalu banyak permintaan edit foto. Tunggu beberapa menit lalu coba lagi ya.' }); }
   const kuotaEdit = await cekKuota(req, 'edit');
   if (!kuotaEdit.ok) return res.status(429).json({ error: kuotaEdit.pesan });
 
   const { key, name: keyName } = getKey();
   const cfAkun = (process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
-  const cfToken = (process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY || '').trim();
+  const cfToken = ((process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY || '').trim());
   const adaCF = !!(cfAkun && cfToken);
-  if (!key && !adaCF) return res.status(500).json({ error: 'API key belum terpasang di Vercel (CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN, atau POLLINATIONS_API_KEY).' });
+  if (!key && !adaCF) { console.error('EDIT: kunci belum terpasang di server'); return res.status(500).json({ error: 'Fitur edit foto sedang tidak tersedia. Coba lagi nanti ya.' }); }
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
@@ -94,12 +94,12 @@ export default async function handler(req, res) {
 
   const prompt = String(body.prompt || '').trim().slice(0, 800);
   const m = String(body.image || '').match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
-  if (!prompt) return res.status(400).json({ error: 'Instruksi edit belum diisi.' });
-  if (!m) return res.status(400).json({ error: 'Foto tidak valid. Gunakan format JPG, PNG, atau WEBP.' });
+  if (!prompt) return res.status(400).json({ error: 'Instruksi editnya kosong.' });
+  if (!m) return res.status(400).json({ error: 'Foto tidak valid (pakai JPG/PNG/WEBP).' });
 
   const mime = m[1];
   const buf = Buffer.from(m[2], 'base64');
-  if (buf.length > 3.5 * 1024 * 1024) return res.status(413).json({ error: 'Ukuran foto terlalu besar. Silakan gunakan foto yang lebih kecil.' });
+  if (buf.length > 3.5 * 1024 * 1024) return res.status(413).json({ error: 'Foto terlalu besar, coba foto yang lebih kecil.' });
   const ext = mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1];
 
   const deadline = Date.now() + 55000;
@@ -147,7 +147,7 @@ export default async function handler(req, res) {
 
       if (!r.ok) {
         lastErr = model + ': ' + r.status + ' ' + txt.slice(0, 160).replace(/\s+/g, ' ');
-        if (r.status === 401) return res.status(502).json({ error: 'API key Pollinations ditolak (401). Variabel terbaca: ' + keyName + ' (awalan "' + key.slice(0, 3) + '", panjang ' + key.length + '). Buat key baru (jenis Secret, awalan sk_) di enter.pollinations.ai lalu isi POLLINATIONS_API_KEY di Vercel dan deploy ulang.' + (galatCF ? ' | Percobaan Cloudflare juga gagal: ' + galatCF : (adaCF ? '' : ' | Cloudflare belum dipasang.')) });
+        if (r.status === 401) { console.error('EDIT: kunci ditolak 401'); return res.status(502).json({ error: 'Fitur edit foto sedang tidak tersedia. Coba lagi nanti ya.' }); }
         continue;
       }
 
@@ -165,5 +165,6 @@ export default async function handler(req, res) {
       lastErr = model + ': ' + (e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'error');
     }
   }
-  return res.status(502).json({ error: 'Edit foto belum berhasil. ' + lastErr });
+  console.error('EDIT gagal:', lastErr);
+  return res.status(502).json({ error: 'Maaf, foto belum bisa diedit sekarang. Coba lagi beberapa saat lagi ya.' });
 }

@@ -150,7 +150,8 @@ Aturan WAJIB:
           break;
         }
       }
-      return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.\n\n[detail: ' + visionErr + ']' });
+      console.error('VISION gagal (akhir):', visionErr);
+      return res.status(200).json({ reply: 'Maaf, aku belum bisa membaca fotonya sekarang. Coba kirim ulang fotonya beberapa saat lagi ya.' });
     }
 
     const isStream = body.stream === true || req.headers.accept?.includes('text/event-stream');
