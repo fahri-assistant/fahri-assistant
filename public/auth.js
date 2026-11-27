@@ -46,7 +46,7 @@ function pasang(id, provName){
         // Batal sendiri atau popup ganda: tidak perlu pesan
         var kode = (e && e.code) || '';
         if (/cancelled-popup-request|popup-closed-by-user|cancelled/.test(kode)) return;
-        alert('Login gagal: ' + kode + ' - ' + ((e && e.message) || ''));
+        console.error('LOGIN gagal:', kode); alert('Login belum berhasil. Coba lagi ya.');
       }).finally(function(){
         window.__authBusy = false;
       });

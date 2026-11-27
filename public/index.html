@@ -665,7 +665,7 @@ window.__f_bicara = function(t){
   if(P){
     Promise.resolve().then(function(){ return P.stop(); }).catch(function(){})
       .then(function(){ return P.speak(Object.assign({ text:t, lang:'id-ID', rate:1.0, pitch:1.0, volume:1.0 }, window.__f_voiceNativeOpt ? window.__f_voiceNativeOpt() : {})); })
-      .catch(function(e){ info('Suara gagal: '+((e&&e.message)||e||'tidak diketahui')); web(); });
+      .catch(function(e){ info('Suara belum bisa diputar. Coba lagi ya.'); web(); });
     return;
   }
   web();
@@ -1424,27 +1424,65 @@ setInterval(function(){
 
 // --- 5. CARI WEB REAL-TIME ---
 function openCariWeb(){
+  var SUMBER=[['wiki-id','📘 Wikipedia ID'],['wiki-en','🌍 Wikipedia EN'],['berita','📰 Berita'],['umum','🔎 Web umum']];
+  var pilih='wiki-id';
   var ov=document.createElement('div'); ov.className='f-app-overlay';
-  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">🌐</div><div style="font-weight:800;font-size:17px;margin:6px 0">Cari Web Real-time</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Cari berita / info terbaru, bukan dari data lama AI.</div><input class="f-ap-input" id="f-web-q" placeholder="Tuliskan topik atau kata kunci pencarian" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-web-batal">Batal</button><button class="f-ap-oke" id="f-web-cari">🔍 Cari</button></div><div id="f-web-hasil" style="text-align:left;font-size:13px;line-height:1.5;margin-top:10px"></div></div>';
-  document.body.appendChild(ov);
+  var kotak=document.createElement('div'); kotak.className='f-app-popup'; kotak.style.cssText='max-width:400px !important;text-align:left';
+  kotak.innerHTML='<div style="font-size:28px;text-align:center">🌐</div><div style="font-weight:800;font-size:17px;margin:6px 0;text-align:center">Cari Info</div><div style="font-size:12.5px;opacity:.75;margin-bottom:10px;text-align:center">Pilih sumber, lalu tulis kata kunci.</div>';
+  var wrapSumber=document.createElement('div'); wrapSumber.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px';
+  var tombolSumber=[];
+  SUMBER.forEach(function(x){
+    var b=document.createElement('button'); b.type='button'; b.textContent=x[1]; b.setAttribute('data-s',x[0]);
+    b.style.cssText='padding:7px 10px;border-radius:99px;border:1px solid rgba(192,132,252,.5);background:rgba(255,255,255,.04);font-size:12.5px;color:inherit';
+    b.onclick=function(){ pilih=x[0]; tombolSumber.forEach(function(t){ t.style.background='rgba(255,255,255,.04)'; }); b.style.background='rgba(168,85,247,.35)'; };
+    tombolSumber.push(b); wrapSumber.appendChild(b);
+  });
+  tombolSumber[0].style.background='rgba(168,85,247,.35)';
+  kotak.appendChild(wrapSumber);
+  var input=document.createElement('input'); input.className='f-ap-input'; input.placeholder='Kata kunci, contoh: jadwal Persib';
+  input.style.cssText='width:100%;margin-bottom:8px';
+  kotak.appendChild(input);
+  var hasilEl=document.createElement('div'); hasilEl.style.cssText='font-size:13px;max-height:260px;overflow-y:auto;margin-top:6px';
+  kotak.appendChild(hasilEl);
+  var aksi=document.createElement('div'); aksi.style.cssText='display:flex;gap:8px;margin-top:10px';
+  var batal=document.createElement('button'); batal.type='button'; batal.textContent='Tutup';
+  batal.style.cssText='flex:1;padding:10px;border-radius:12px;border:none;background:rgba(255,255,255,.08);color:inherit;font-weight:700';
+  var cari=document.createElement('button'); cari.type='button'; cari.textContent='Cari';
+  cari.style.cssText='flex:1;padding:10px;border-radius:12px;border:none;background:#7c3aed;color:#fff;font-weight:700';
+  aksi.appendChild(batal); aksi.appendChild(cari); kotak.appendChild(aksi);
+  ov.appendChild(kotak); document.body.appendChild(ov);
   ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
-  document.getElementById('f-web-batal').onclick=function(){ ov.remove(); };
-  document.getElementById('f-web-cari').onclick=function(){
-    var q=document.getElementById('f-web-q').value.trim(); if(!q) return;
-    document.getElementById('f-web-hasil').innerHTML='🔍 Sedang mencari...';
-    // Pakai Wikipedia + DuckDuckGo (gratis, tanpa API key)
-    fetch('https://id.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(d){
-      if(d.extract){
-        document.getElementById('f-web-hasil').innerHTML='<b>'+(d.title||q)+'</b><br>'+d.extract.slice(0,600)+'...<br><br><button id="f-web-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat / Tanya AI</button>';
-        document.getElementById('f-web-kirim').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] '+q+' - Info dari Wikipedia: '+d.extract.slice(0,300)+' - Jelaskan lebih lanjut & update terbaru'; inp.focus(); } ov.remove(); };
-      } else {
-        document.getElementById('f-web-hasil').innerHTML='Gak ketemu di Wikipedia. Coba tanya langsung ke AI di chat dengan kata kunci:<br><b>'+q+'</b><br><br><button id="f-web-kirim2" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Tanya AI Sekarang</button>';
-        document.getElementById('f-web-kirim2').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] Cari info terbaru tentang: '+q; inp.focus(); } ov.remove(); };
-      }
-    }).catch(function(){
-      document.getElementById('f-web-hasil').innerHTML='Koneksi gagal. Coba tanya langsung di chat:<br><b>'+q+'</b>';
-    });
-  };
+  batal.onclick=function(){ ov.remove(); };
+  function tampil(item){
+    var inp=getInp(); if(!inp) return;
+    inp.value='[CARI WEB REAL-TIME] '+input.value.trim()+' - Sumber: '+item.title+' ('+item.url+') - '+(item.snippet||'')+' - Jelaskan dan sebut sumbernya';
+    inp.focus(); ov.remove();
+  }
+  function cariSekarang(){
+    var q=input.value.trim(); if(!q){ hasilEl.textContent='Tulis kata kunci dulu.'; return; }
+    hasilEl.textContent='🔍 Sedang mencari...';
+    fetch('https://fahri-assistant.vercel.app/api/cari',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,sumber:pilih})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        hasilEl.innerHTML='';
+        if(!d.ok || !d.hasil || !d.hasil.length){
+          hasilEl.textContent = d.ok ? 'Tidak ada hasil untuk sumber ini. Coba sumber lain.' : 'Sumber ini sedang tidak bisa dihubungi. Coba sumber lain.';
+          return;
+        }
+        d.hasil.forEach(function(item){
+          var b=document.createElement('button'); b.type='button';
+          b.style.cssText='display:block;width:100%;text-align:left;padding:10px;margin-bottom:8px;border-radius:12px;border:1px solid rgba(192,132,252,.35);background:rgba(255,255,255,.03);color:inherit';
+          b.innerHTML='<div style="font-weight:700;margin-bottom:3px"></div><div style="font-size:12px;opacity:.75"></div>';
+          b.firstChild.textContent=item.title; b.lastChild.textContent=item.snippet||item.url;
+          b.onclick=function(){ tampil(item); };
+          hasilEl.appendChild(b);
+        });
+      })
+      .catch(function(){ hasilEl.textContent='Koneksi gagal. Periksa internet lalu coba lagi.'; });
+  }
+  cari.onclick=cariSekarang;
+  input.addEventListener('keydown',function(e){ if(e.key==='Enter') cariSekarang(); });
+  setTimeout(function(){ input.focus(); },50);
 }
 })();
 /* === BAGIAN 8 - FIX: SEND + 1 TOMBOL FITUR + LOADING + BUBBLE === */
@@ -1764,7 +1802,7 @@ function fToggleNotif(){
       var tepat=!x || x.exact_alarm!=='denied';
       fNotifPopup('🔔','Pengingat aktif', tepat ? 'Kamu akan diingatkan tiap masuk waktu sholat sesuai lokasimu.' : 'Pengingat aktif, tetapi izin "Alarm & pengingat" belum diberikan sehingga waktunya bisa meleset. Aktifkan di Pengaturan > Aplikasi > Fahri Assistant.');
     });
-  }).catch(function(e){ fNotifPopup('⚠️','Gagal mengaktifkan pengingat',(e&&e.message)||e); });
+  }).catch(function(e){ fNotifPopup('⚠️','Pengingat belum aktif','Coba lagi nanti ya.'); });
 }
 setInterval(function(){
   var menu=document.querySelector('#drawer .f-menu-kanan')||document.querySelector('#drawer .drawer-box');
@@ -2082,6 +2120,21 @@ body.fs-besar .bubble{font-size:17px !important;line-height:1.75 !important}
 #fModal p,#fModal li{color:#e9e3ff}
 #fModal ul{padding-left:18px}
 #fModal .tutup{margin-top:14px;width:100%;padding:10px;border-radius:12px;border:none;background:#7c3aed;color:#fff;font-weight:700}
+
+/* ===== MENU: item tambahan dibuat seragam dengan item lain + modal umpan balik ===== */
+#drawer .drawer-box .f-item[data-umum], #drawer .drawer-box .f-item[data-a="suara"]{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:none;box-shadow:none;padding:10px 6px;color:inherit;font:inherit}
+#drawer .drawer-box .f-item[data-umum] span, #drawer .drawer-box .f-item[data-a="suara"] span{width:24px;text-align:center;font-size:17px}
+#drawer .drawer-box [data-umum="catatan"]{font-size:11.5px;opacity:.7;padding:8px 6px 4px;line-height:1.5}
+#fUmpan{position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px}
+#fUmpan.open{display:flex}
+#fUmpan .kotak{max-width:360px;width:100%;background:#14082a;border:1.5px solid #c084fc;border-radius:20px;padding:18px;color:#f5f3ff;font-size:14px}
+#fUmpan h3{font-size:17px;margin-bottom:10px}
+#fUmpan .nilai{display:flex;gap:10px;margin-bottom:10px}
+#fUmpan .nilai button{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(192,132,252,.45);background:rgba(255,255,255,.04);font-size:18px}
+#fUmpan .nilai button.on{border-color:#c084fc;background:rgba(168,85,247,.3)}
+#fUmpan textarea{width:100%;min-height:90px;border-radius:12px;border:1px solid rgba(192,132,252,.45);background:#0c0418;color:#f5f3ff;padding:10px;font:inherit;resize:vertical}
+#fUmpan .aksi{display:flex;gap:8px;margin-top:12px}
+#fUmpan .aksi button{flex:1;padding:10px;border-radius:12px;border:none;font-weight:700}
 </style>
 
 <script>
@@ -2349,7 +2402,7 @@ window.__f_sholatCadangan = function(s, kunci, ulang, detail){
     s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Memuat jadwal...';
     setTimeout(function(){ if(ulang) ulang(); }, 3000);
   } else {
-    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia [detail: '+String(detail||'').slice(0,120)+']';
+    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum bisa dimuat. Coba lagi nanti.';
   }
 };
 </script>
@@ -2476,6 +2529,95 @@ window.__f_sholatCadangan = function(s, kunci, ulang, detail){
   var btn = document.getElementById('btnMenu');
   if(btn) btn.addEventListener('click', function(){ setTimeout(sisipkan, 80); });
   try{ var u = localStorage.getItem('fahri_ukuran'); if(u) terapkanUkuran(u); }catch(e){}
+})();
+</script>
+<script>
+/* MENU RAPI: item Suara, Privasi, Ukuran teks, dan Umpan balik dibuat seragam dan dikelompokkan di Pengaturan */
+(function(){
+  function ikon(el, emoji, label){
+    el.className = 'f-item';
+    el.innerHTML = '<span>' + emoji + '</span>' + label;
+  }
+  function namaSuara(){
+    try{ return localStorage.getItem('f_tts_voice') || 'Otomatis'; }catch(e){ return 'Otomatis'; }
+  }
+  function ukuranSekarang(){
+    try{ return localStorage.getItem('fahri_ukuran') || 'normal'; }catch(e){ return 'normal'; }
+  }
+  function bukaUmpan(){
+    var m = document.getElementById('fUmpan');
+    if(!m){
+      m = document.createElement('div'); m.id = 'fUmpan';
+      var k = document.createElement('div'); k.className = 'kotak';
+      var h = document.createElement('h3'); h.textContent = 'Umpan balik'; k.appendChild(h);
+      var p = document.createElement('div'); p.style.cssText = 'font-size:12.5px;opacity:.8;margin-bottom:10px'; p.textContent = 'Bagaimana pengalamanmu memakai Fahri Assistant?'; k.appendChild(p);
+      var nilai = 0;
+      var wrap = document.createElement('div'); wrap.className = 'nilai';
+      [['👍',1],['😐',0],['👎',-1]].forEach(function(x){
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = x[0];
+        b.onclick = function(){ nilai = x[1]; wrap.querySelectorAll('button').forEach(function(q){ q.classList.remove('on'); }); b.classList.add('on'); };
+        wrap.appendChild(b);
+      });
+      k.appendChild(wrap);
+      var ta = document.createElement('textarea'); ta.placeholder = 'Tulis saran atau masalah yang kamu temui (opsional)'; k.appendChild(ta);
+      var aksi = document.createElement('div'); aksi.className = 'aksi';
+      var batal = document.createElement('button'); batal.type = 'button'; batal.textContent = 'Batal';
+      batal.style.background = 'rgba(255,255,255,.08)'; batal.style.color = '#f5f3ff';
+      batal.onclick = function(){ m.classList.remove('open'); };
+      var kirim = document.createElement('button'); kirim.type = 'button'; kirim.textContent = 'Kirim';
+      kirim.style.background = '#7c3aed'; kirim.style.color = '#fff';
+      kirim.onclick = function(){
+        var teks = ta.value.trim();
+        if(nilai === 0 && !teks){ alert('Pilih penilaian atau tulis sesuatu dulu ya.'); return; }
+        var data = { t: Date.now(), nilai: nilai, teks: teks };
+        try{
+          var simpan = JSON.parse(localStorage.getItem('fahri_umpan') || '[]');
+          simpan.unshift(data); localStorage.setItem('fahri_umpan', JSON.stringify(simpan.slice(0,100)));
+        }catch(e){}
+        try{
+          var u = firebase.auth().currentUser;
+          if(u) firebase.firestore().collection('users').doc(u.uid).collection('umpan').add(data).catch(function(){});
+        }catch(e){}
+        m.classList.remove('open'); ta.value = ''; wrap.querySelectorAll('button').forEach(function(q){ q.classList.remove('on'); }); nilai = 0;
+        alert('Terima kasih atas umpan balikmu!');
+      };
+      aksi.appendChild(batal); aksi.appendChild(kirim); k.appendChild(aksi);
+      m.appendChild(k); m.onclick = function(e){ if(e.target === m) m.classList.remove('open'); };
+      document.body.appendChild(m);
+    }
+    m.classList.add('open');
+  }
+  function rapikan(){
+    var box = document.querySelector('#drawer .drawer-box');
+    if(!box) return;
+    var bahasa = box.querySelector('[data-a="bahasa"]');
+    var suara = box.querySelector('[data-a="suara"]');
+    var privasi = box.querySelector('[data-umum="privasi"]');
+    var ukuran = box.querySelector('[data-umum="ukuran"]');
+    var catatan = box.querySelector('[data-umum="catatan"]');
+    var sep = box.querySelector('[data-umum="sep"]');
+    if(suara) ikon(suara, '🗣️', 'Suara: ' + namaSuara());
+    if(privasi) ikon(privasi, '🔒', 'Privasi & Syarat');
+    if(ukuran) ikon(ukuran, '🔠', 'Ukuran teks: ' + ukuranSekarang());
+    var umpan = box.querySelector('[data-umum="umpan"]');
+    if(!umpan){
+      umpan = document.createElement('button');
+      umpan.setAttribute('data-umum','umpan');
+      umpan.onclick = function(e){ e.preventDefault(); e.stopPropagation(); bukaUmpan(); };
+    }
+    ikon(umpan, '💬', 'Umpan balik');
+    // Susun ulang: Suara, Ukuran, Privasi, Umpan balik, lalu catatan (di bawah Bahasa)
+    var urutan = [suara, ukuran, privasi, umpan].filter(Boolean);
+    var acuan = bahasa || box.querySelector('[data-a="riwayat"]');
+    if(acuan){
+      var titik = acuan.nextSibling;
+      urutan.forEach(function(el){ box.insertBefore(el, titik); });
+    }
+    if(sep && sep.parentNode) sep.style.display = 'none';
+    if(catatan) catatan.style.display = 'block';
+  }
+  var btn = document.getElementById('btnMenu');
+  if(btn) btn.addEventListener('click', function(){ setTimeout(rapikan, 120); });
 })();
 </script>
 </body>
