@@ -2070,6 +2070,18 @@ body[data-theme="premium"] .composer{border:1px solid rgba(255,255,255,.14) !imp
 
 /* Original: hanya sentuhan tipografi halus, identitas ungu dipertahankan */
 body:not([data-theme]) .bubble{letter-spacing:.1px;line-height:1.7}
+
+/* ===== FITUR UMUM: ukuran teks gelembung & modal privasi ===== */
+body.fs-kecil .bubble{font-size:13px !important;line-height:1.6 !important}
+body.fs-besar .bubble{font-size:17px !important;line-height:1.75 !important}
+#fModal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px}
+#fModal.open{display:flex}
+#fModal .kotak{max-width:360px;width:100%;max-height:82vh;overflow-y:auto;background:#14082a;border:1.5px solid #c084fc;border-radius:20px;padding:18px;color:#f5f3ff;font-size:14px;line-height:1.65}
+#fModal h3{font-size:17px;margin-bottom:8px}
+#fModal h4{font-size:14px;margin:12px 0 4px;color:#e9d5ff}
+#fModal p,#fModal li{color:#e9e3ff}
+#fModal ul{padding-left:18px}
+#fModal .tutup{margin-top:14px;width:100%;padding:10px;border-radius:12px;border:none;background:#7c3aed;color:#fff;font-weight:700}
 </style>
 
 <script>
@@ -2364,6 +2376,106 @@ window.__f_sholatCadangan = function(s, kunci, ulang, detail){
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buat);
   else buat();
+})();
+</script>
+<script>
+/* FITUR UMUM: Privasi & Syarat, pengaturan ukuran teks, dan catatan AI di menu ☰ */
+(function(){
+  var TEKS_PRIVASI = {
+    judul: 'Privasi & Syarat Penggunaan',
+    isi: [
+      ['Catatan', 'Ini adalah ringkasan awal dan belum ditinjau oleh ahli hukum. Sebelum dipakai umum, teks ini perlu diperiksa ulang.'],
+      ['Data yang disimpan', 'Riwayat chat disimpan di perangkatmu. Jika kamu login, salinan riwayat juga disimpan di akunmu agar bisa dibuka di perangkat lain.'],
+      ['Data yang dikirim ke pihak ketiga', 'Pertanyaan dan foto yang kamu kirim diproses oleh penyedia AI pihak ketiga untuk membuat jawaban. Kami tidak menjual data pribadimu.'],
+      ['Cara menghapus data', 'Gunakan "Bersihkan chat" di menu untuk menghapus riwayat di perangkat ini. Untuk menghapus salinan di akun, hubungi kami.'],
+      ['Batasan jawaban AI', 'AI bisa keliru. Periksa ulang jawaban yang penting, terutama terkait kesehatan, hukum, dan keuangan.'],
+      ['Syarat penggunaan', 'Jangan memakai aplikasi ini untuk hal yang melanggar hukum atau membahayakan orang lain.']
+    ]
+  };
+
+  /* HAPUS DATA SAYA: di perangkat (localStorage) dan di akun (Firestore, jika login) */
+  var KUNCI_DATA = ['fahri_history','fahri_history_v2','fahri_log','fahri_simpan','fahri_bookmark','fahri_flash','fahri_todo','fahri_sesi','fahri_foto','fahri_nama','fahri_inget','f_sholat_cache','f_lokasi','f_sholat_notif'];
+  function hapusSemuaData(btn){
+    btn.disabled = true; btn.textContent = 'Menghapus...';
+    KUNCI_DATA.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    try{ sessionStorage.clear(); }catch(e){}
+    var selesaiLokal = function(akunMsg){
+      btn.textContent = 'Data di perangkat sudah dihapus' + akunMsg;
+      try{ if(typeof riwayat !== 'undefined') riwayat = []; }catch(e){}
+      setTimeout(function(){ location.reload(); }, 1200);
+    };
+    var uid = null;
+    try{ uid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null; }catch(e){}
+    if(!uid){ selesaiLokal(''); return; }
+    try{
+      firebase.firestore().collection('users').doc(uid).collection('data').doc('history').delete()
+        .then(function(){ selesaiLokal(' dan di akun.'); })
+        .catch(function(){ selesaiLokal(' (salinan di akun belum terhapus, coba lagi nanti).'); });
+    }catch(e){ selesaiLokal(' (salinan di akun belum terhapus, coba lagi nanti).'); }
+  }
+  function bukaModal(){
+    var m = document.getElementById('fModal');
+    if(!m){
+      m = document.createElement('div'); m.id = 'fModal';
+      var k = document.createElement('div'); k.className = 'kotak';
+      var h = document.createElement('h3'); h.textContent = TEKS_PRIVASI.judul; k.appendChild(h);
+      TEKS_PRIVASI.isi.forEach(function(x){
+        var h4 = document.createElement('h4'); h4.textContent = x[0]; k.appendChild(h4);
+        var p = document.createElement('p'); p.textContent = x[1]; k.appendChild(p);
+      });
+      var hapus = document.createElement('button'); hapus.className = 'tutup'; hapus.style.background = '#7f1d1d'; hapus.style.marginTop = '8px';
+      hapus.textContent = 'Hapus semua data saya';
+      hapus.onclick = function(){
+        if(!confirm('Hapus semua riwayat, bookmark, dan data lain di perangkat ini dan di akun (jika login)? Tindakan ini tidak bisa dibatalkan.')) return;
+        hapusSemuaData(hapus);
+      };
+      k.appendChild(hapus);
+      var t = document.createElement('button'); t.className = 'tutup'; t.textContent = 'Tutup';
+      t.onclick = function(){ m.classList.remove('open'); };
+      k.appendChild(t); m.appendChild(k);
+      m.onclick = function(e){ if(e.target === m) m.classList.remove('open'); };
+      document.body.appendChild(m);
+    }
+    m.classList.add('open');
+  }
+  function terapkanUkuran(u){
+    document.body.classList.remove('fs-kecil','fs-besar');
+    if(u === 'kecil') document.body.classList.add('fs-kecil');
+    if(u === 'besar') document.body.classList.add('fs-besar');
+    try{ localStorage.setItem('fahri_ukuran', u); }catch(e){}
+  }
+  function item(id, label, fn){
+    var b = document.createElement('button');
+    b.className = 'f-item'; b.setAttribute('data-umum', id);
+    b.textContent = label;
+    b.onclick = function(e){ e.preventDefault(); e.stopPropagation(); fn(); };
+    return b;
+  }
+  function sisipkan(){
+    var box = document.querySelector('#drawer .drawer-box');
+    if(!box || box.querySelector('[data-umum]')) return;
+    var sep = document.createElement('div');
+    sep.setAttribute('data-umum','sep'); sep.style.cssText = 'height:1px;background:rgba(192,132,252,.25);margin:8px 0';
+    box.appendChild(sep);
+    box.appendChild(item('privasi','🔒 Privasi & Syarat', bukaModal));
+    var cur = 'normal';
+    try{ cur = localStorage.getItem('fahri_ukuran') || 'normal'; }catch(e){}
+    box.appendChild(item('ukuran','🔠 Ukuran teks: '+cur, function(){
+      var urut = ['kecil','normal','besar'];
+      var sekarang = (localStorage.getItem('fahri_ukuran') || 'normal');
+      var nxt = urut[(urut.indexOf(sekarang)+1) % urut.length];
+      terapkanUkuran(nxt);
+      var b = box.querySelector('[data-umum="ukuran"]'); if(b) b.textContent = '🔠 Ukuran teks: '+nxt;
+    }));
+    var note = document.createElement('div');
+    note.setAttribute('data-umum','catatan');
+    note.style.cssText = 'font-size:11px;opacity:.7;padding:6px 6px 2px;line-height:1.5';
+    note.textContent = 'AI bisa keliru. Periksa ulang jawaban yang penting.';
+    box.appendChild(note);
+  }
+  var btn = document.getElementById('btnMenu');
+  if(btn) btn.addEventListener('click', function(){ setTimeout(sisipkan, 80); });
+  try{ var u = localStorage.getItem('fahri_ukuran'); if(u) terapkanUkuran(u); }catch(e){}
 })();
 </script>
 </body>
