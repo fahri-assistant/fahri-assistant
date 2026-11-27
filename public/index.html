@@ -397,7 +397,7 @@ body[data-theme="premium"] .suggest-card{background:rgba(139,92,246,.35) !import
 <div class="authbar" id="authBar"><div class="status-pill" id="statusPill"><span class="dot" id="statusDot"></span><span id="statusText">Belum login</span></div><div class="login-btns" id="loginBtns"><button class="btn btn-google" id="btnGoogle">G Login Google</button><button class="btn btn-github" id="btnGithub">◉ Login Github</button></div><button class="btn btn-logout" id="btnLog" style="color:#d8b4fe;border-color:#a855f7">Log</button><button class="btn btn-logout hidden" id="btnLogout">Logout</button></div>
 <div id="chat"><div class="twinkle"></div><div class="date-pill" id="datePill">Hari ini</div><div class="welcome" id="welcome"><div class="bubble ai"><div class="ai-row"><div class="mini-logo">F</div><span>Selamat datang. Saya Fahri Assistant, asisten AI buatan FahriAI. Silakan ajukan pertanyaan atau minta saya membuatkan gambar.</span><button class="tts-btn" onclick="speakText(this,this.parentElement.textContent)">🔊</button></div></div><div class="chips"><button class="chip" onclick="quick('Saya ingin mengajukan pertanyaan')"><i>💡</i>Ajukan Pertanyaan</button><button class="chip" onclick="quick('Buat Gambar')"><i>✨</i>Buat Gambar</button><button class="chip" onclick="quick('Bantu saya menyusun email formal')"><i>✉️</i>Menyusun Email Formal</button><button class="chip" onclick="quick('Jelaskan layanan yang tersedia di Fahri Assistant')"><i>ℹ️</i>Layanan Tersedia</button></div></div></div>
 <div class="composer"><input id="input" placeholder="Tanyakan sesuatu kepada Fahri..." autocomplete="off"><button id="sendBtn">➤</button></div>
-<div class="drawer" id="drawer"><div class="drawer-box"><div class="drawer-profile"><b id="drawerName">Pengguna</b><p id="drawerEmail">Belum login</p></div><button class="drawer-item" id="btnClearChat">🧹 Bersihkan Chat</button><button class="drawer-item" id="btnProfile">👤 Profil Pengguna</button><div class="theme-section"><div class="theme-title">🎨 TEMA</div><div class="theme-grid"><button class="theme-btn active" data-theme="original" onclick="setTheme('original')"><i></i>Fahri Original</button><button class="theme-btn" data-theme="midnight" onclick="setTheme('midnight')"><i></i>Midnight</button><button class="theme-btn" data-theme="ivory" onclick="setTheme('ivory')"><i></i>Ivory Clean</button><button class="theme-btn" data-theme="champagne" onclick="setTheme('champagne')"><i></i>Champagne</button><button class="theme-btn" data-theme="forest" onclick="setTheme('forest')"><i></i>Forest Calm</button></div></div><button class="drawer-item" id="btnCloseDrawer">✖ Tutup</button><div class="drawer-ver">Fahri Assistant v1.3.0<br>buatan FahriAI</div></div></div>
+<div class="drawer" id="drawer"><div class="drawer-box"><div class="drawer-profile"><b id="drawerName">Pengguna</b><p id="drawerEmail">Belum login</p></div><button class="drawer-item" id="btnClearChat">🧹 Bersihkan Chat</button><button class="drawer-item" id="btnProfile">👤 Profil Pengguna</button><div class="theme-section"><div class="theme-title">🎨 TEMA</div><div class="theme-grid"><button class="theme-btn active" data-theme="original" onclick="setTheme('original')"><i></i>Fahri Original</button><button class="theme-btn" data-theme="midnight" onclick="setTheme('midnight')"><i></i>Midnight</button><button class="theme-btn" data-theme="ivory" onclick="setTheme('ivory')"><i></i>Ivory Clean</button><button class="theme-btn" data-theme="champagne" onclick="setTheme('champagne')"><i></i>Champagne</button><button class="theme-btn" data-theme="elegan" onclick="setTheme('elegan')"><i></i>Elegan</button><button class="theme-btn" data-theme="forest" onclick="setTheme('forest')"><i></i>Forest Calm</button></div></div><button class="drawer-item" id="btnCloseDrawer">✖ Tutup</button><div class="drawer-ver">Fahri Assistant v1.3.0<br>buatan FahriAI</div></div></div>
 <div class="confirm" id="confirmClear"><div class="confirm-box"><div class="c-icon">🧹</div><b>Hapus Semua Chat?</b><p>Semua riwayat chat akan dihapus. Ini tidak bisa dibatalkan.</p><div class="confirm-row"><button class="confirm-btn cancel" id="btnCancelClear">Batal</button><button class="confirm-btn delete" id="btnYesClear">Ya, Hapus</button></div></div></div>
 <div class="profile" id="profilePopup"><div class="profile-box"><div class="profile-avatar" id="profileAvatar">F</div><b id="profileName">Pengguna</b><p class="p-email" id="profileEmail">Belum login</p><div class="profile-row"><span>Login dengan</span><b id="profileProvider" style="font-size:14px">-</b></div><div class="profile-row"><span>Status</span><b id="profileStatus" style="font-size:14px">Belum login</b></div><button class="profile-btn" id="btnCloseProfile">Tutup</button></div></div>
 <div id="logPanel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:18px">Log Chat</b><button id="btnCloseLog" style="background:#a855f7;border:0;color:#fff;padding:8px 14px;border-radius:999px;font-weight:700">Tutup</button></div><div class="log-box" id="logBox">Belum ada log</div><button id="btnClearLog" style="margin-top:12px;background:transparent;border:1px solid #ff6b81;color:#ff6b81;padding:10px;border-radius:999px">Hapus Semua Log</button></div>
@@ -494,7 +494,7 @@ document.getElementById('btnProfile').onclick=function(){document.getElementById
 document.getElementById('btnCloseProfile').onclick=function(){document.getElementById('profilePopup').classList.remove('open')};
 document.getElementById('profilePopup').onclick=function(e){if(e.target.id==='profilePopup')document.getElementById('profilePopup').classList.remove('open')};
 function setTheme(t){if(t==='original'){document.body.removeAttribute('data-theme')}else{document.body.setAttribute('data-theme',t)}try{localStorage.setItem('fahri_theme',t)}catch(e){}document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-theme')===t)})}
-try{var savedTheme=localStorage.getItem('fahri_theme')||'original';setTheme(savedTheme)}catch(e){}
+try{var savedTheme=localStorage.getItem('fahri_theme')||'original';if(!localStorage.getItem('fahri_elegan_dicoba')){localStorage.setItem('fahri_elegan_dicoba','1');savedTheme='elegan'}setTheme(savedTheme)}catch(e){}
 /* === FITUR BARU v3 + TOMBOL PREMIUM OTOMATIS === */
 (function(){
   if(window.__fahriFiturV2) return; window.__fahriFiturV2 = true;
@@ -665,7 +665,7 @@ window.__f_bicara = function(t){
   if(P){
     Promise.resolve().then(function(){ return P.stop(); }).catch(function(){})
       .then(function(){ return P.speak(Object.assign({ text:t, lang:'id-ID', rate:1.0, pitch:1.0, volume:1.0 }, window.__f_voiceNativeOpt ? window.__f_voiceNativeOpt() : {})); })
-      .catch(function(e){ info('Suara belum bisa diputar. Coba lagi ya.'); web(); });
+      .catch(function(e){ info('Suara gagal: '+((e&&e.message)||e||'tidak diketahui')); web(); });
     return;
   }
   web();
@@ -1424,65 +1424,27 @@ setInterval(function(){
 
 // --- 5. CARI WEB REAL-TIME ---
 function openCariWeb(){
-  var SUMBER=[['wiki-id','📘 Wikipedia ID'],['wiki-en','🌍 Wikipedia EN'],['berita','📰 Berita'],['umum','🔎 Web umum']];
-  var pilih='wiki-id';
   var ov=document.createElement('div'); ov.className='f-app-overlay';
-  var kotak=document.createElement('div'); kotak.className='f-app-popup'; kotak.style.cssText='max-width:400px !important;text-align:left';
-  kotak.innerHTML='<div style="font-size:28px;text-align:center">🌐</div><div style="font-weight:800;font-size:17px;margin:6px 0;text-align:center">Cari Info</div><div style="font-size:12.5px;opacity:.75;margin-bottom:10px;text-align:center">Pilih sumber, lalu tulis kata kunci.</div>';
-  var wrapSumber=document.createElement('div'); wrapSumber.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px';
-  var tombolSumber=[];
-  SUMBER.forEach(function(x){
-    var b=document.createElement('button'); b.type='button'; b.textContent=x[1]; b.setAttribute('data-s',x[0]);
-    b.style.cssText='padding:7px 10px;border-radius:99px;border:1px solid rgba(192,132,252,.5);background:rgba(255,255,255,.04);font-size:12.5px;color:inherit';
-    b.onclick=function(){ pilih=x[0]; tombolSumber.forEach(function(t){ t.style.background='rgba(255,255,255,.04)'; }); b.style.background='rgba(168,85,247,.35)'; };
-    tombolSumber.push(b); wrapSumber.appendChild(b);
-  });
-  tombolSumber[0].style.background='rgba(168,85,247,.35)';
-  kotak.appendChild(wrapSumber);
-  var input=document.createElement('input'); input.className='f-ap-input'; input.placeholder='Kata kunci, contoh: jadwal Persib';
-  input.style.cssText='width:100%;margin-bottom:8px';
-  kotak.appendChild(input);
-  var hasilEl=document.createElement('div'); hasilEl.style.cssText='font-size:13px;max-height:260px;overflow-y:auto;margin-top:6px';
-  kotak.appendChild(hasilEl);
-  var aksi=document.createElement('div'); aksi.style.cssText='display:flex;gap:8px;margin-top:10px';
-  var batal=document.createElement('button'); batal.type='button'; batal.textContent='Tutup';
-  batal.style.cssText='flex:1;padding:10px;border-radius:12px;border:none;background:rgba(255,255,255,.08);color:inherit;font-weight:700';
-  var cari=document.createElement('button'); cari.type='button'; cari.textContent='Cari';
-  cari.style.cssText='flex:1;padding:10px;border-radius:12px;border:none;background:#7c3aed;color:#fff;font-weight:700';
-  aksi.appendChild(batal); aksi.appendChild(cari); kotak.appendChild(aksi);
-  ov.appendChild(kotak); document.body.appendChild(ov);
+  ov.innerHTML='<div class="f-app-popup" style="max-width:400px !important"><div style="font-size:30px">🌐</div><div style="font-weight:800;font-size:17px;margin:6px 0">Cari Web Real-time</div><div style="font-size:13px;opacity:.7;margin-bottom:10px">Cari berita / info terbaru, bukan dari data lama AI.</div><input class="f-ap-input" id="f-web-q" placeholder="Tuliskan topik atau kata kunci pencarian" style="display:block !important"><div class="f-ap-btns"><button class="f-ap-batal" id="f-web-batal">Batal</button><button class="f-ap-oke" id="f-web-cari">🔍 Cari</button></div><div id="f-web-hasil" style="text-align:left;font-size:13px;line-height:1.5;margin-top:10px"></div></div>';
+  document.body.appendChild(ov);
   ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
-  batal.onclick=function(){ ov.remove(); };
-  function tampil(item){
-    var inp=getInp(); if(!inp) return;
-    inp.value='[CARI WEB REAL-TIME] '+input.value.trim()+' - Sumber: '+item.title+' ('+item.url+') - '+(item.snippet||'')+' - Jelaskan dan sebut sumbernya';
-    inp.focus(); ov.remove();
-  }
-  function cariSekarang(){
-    var q=input.value.trim(); if(!q){ hasilEl.textContent='Tulis kata kunci dulu.'; return; }
-    hasilEl.textContent='🔍 Sedang mencari...';
-    fetch('https://fahri-assistant.vercel.app/api/cari',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,sumber:pilih})})
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        hasilEl.innerHTML='';
-        if(!d.ok || !d.hasil || !d.hasil.length){
-          hasilEl.textContent = d.ok ? 'Tidak ada hasil untuk sumber ini. Coba sumber lain.' : 'Sumber ini sedang tidak bisa dihubungi. Coba sumber lain.';
-          return;
-        }
-        d.hasil.forEach(function(item){
-          var b=document.createElement('button'); b.type='button';
-          b.style.cssText='display:block;width:100%;text-align:left;padding:10px;margin-bottom:8px;border-radius:12px;border:1px solid rgba(192,132,252,.35);background:rgba(255,255,255,.03);color:inherit';
-          b.innerHTML='<div style="font-weight:700;margin-bottom:3px"></div><div style="font-size:12px;opacity:.75"></div>';
-          b.firstChild.textContent=item.title; b.lastChild.textContent=item.snippet||item.url;
-          b.onclick=function(){ tampil(item); };
-          hasilEl.appendChild(b);
-        });
-      })
-      .catch(function(){ hasilEl.textContent='Koneksi gagal. Periksa internet lalu coba lagi.'; });
-  }
-  cari.onclick=cariSekarang;
-  input.addEventListener('keydown',function(e){ if(e.key==='Enter') cariSekarang(); });
-  setTimeout(function(){ input.focus(); },50);
+  document.getElementById('f-web-batal').onclick=function(){ ov.remove(); };
+  document.getElementById('f-web-cari').onclick=function(){
+    var q=document.getElementById('f-web-q').value.trim(); if(!q) return;
+    document.getElementById('f-web-hasil').innerHTML='🔍 Sedang mencari...';
+    // Pakai Wikipedia + DuckDuckGo (gratis, tanpa API key)
+    fetch('https://id.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(d){
+      if(d.extract){
+        document.getElementById('f-web-hasil').innerHTML='<b>'+(d.title||q)+'</b><br>'+d.extract.slice(0,600)+'...<br><br><button id="f-web-kirim" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Kirim ke Chat / Tanya AI</button>';
+        document.getElementById('f-web-kirim').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] '+q+' - Info dari Wikipedia: '+d.extract.slice(0,300)+' - Jelaskan lebih lanjut & update terbaru'; inp.focus(); } ov.remove(); };
+      } else {
+        document.getElementById('f-web-hasil').innerHTML='Gak ketemu di Wikipedia. Coba tanya langsung ke AI di chat dengan kata kunci:<br><b>'+q+'</b><br><br><button id="f-web-kirim2" style="width:100%;padding:11px;border-radius:99px;border:none;background:#22c55e;color:#fff;font-weight:800">➡️ Tanya AI Sekarang</button>';
+        document.getElementById('f-web-kirim2').onclick=function(){ var inp=getInp(); if(inp){ inp.value='[CARI WEB REAL-TIME] Cari info terbaru tentang: '+q; inp.focus(); } ov.remove(); };
+      }
+    }).catch(function(){
+      document.getElementById('f-web-hasil').innerHTML='Koneksi gagal. Coba tanya langsung di chat:<br><b>'+q+'</b>';
+    });
+  };
 }
 })();
 /* === BAGIAN 8 - FIX: SEND + 1 TOMBOL FITUR + LOADING + BUBBLE === */
@@ -1802,7 +1764,7 @@ function fToggleNotif(){
       var tepat=!x || x.exact_alarm!=='denied';
       fNotifPopup('🔔','Pengingat aktif', tepat ? 'Kamu akan diingatkan tiap masuk waktu sholat sesuai lokasimu.' : 'Pengingat aktif, tetapi izin "Alarm & pengingat" belum diberikan sehingga waktunya bisa meleset. Aktifkan di Pengaturan > Aplikasi > Fahri Assistant.');
     });
-  }).catch(function(e){ fNotifPopup('⚠️','Pengingat belum aktif','Coba lagi nanti ya.'); });
+  }).catch(function(e){ fNotifPopup('⚠️','Gagal mengaktifkan pengingat',(e&&e.message)||e); });
 }
 setInterval(function(){
   var menu=document.querySelector('#drawer .f-menu-kanan')||document.querySelector('#drawer .drawer-box');
@@ -1989,152 +1951,6 @@ body:not([data-theme]) #f-fitur-fab, body[data-theme="original"] #f-fitur-fab{ba
 html{zoom:var(--fz,1)}
 body{height:var(--app-h,100dvh) !important;height:var(--app-h,100svh) !important}
 #drawer .drawer-box{max-height:calc(var(--app-h,100dvh) - 84px) !important}
-
-/* ===== TEMA BARU (v3): latar, pola, dan bentuk gelembung dibuat berbeda satu sama lain ===== */
-.theme-btn[data-theme="aurora"] i{background:linear-gradient(135deg,#22d3ee,#a855f7)}
-.theme-btn[data-theme="neon"] i{background:#05010a;box-shadow:inset 0 0 0 2px #ff2bd6,0 0 10px #ff2bd6}
-.theme-btn[data-theme="lavender"] i{background:linear-gradient(135deg,#f5b8e4,#b8a4f5)}
-.theme-btn[data-theme="royal"] i{background:linear-gradient(135deg,#d4af37,#3b1a6b)}
-.theme-btn[data-theme="cosmic"] i{background:radial-gradient(circle at 35% 35%,#fff,#3b0764 70%)}
-
-/* matikan wallpaper lama khusus tema baru, supaya tiap tema punya latar sendiri */
-body[data-theme="aurora"] #chat::before, body[data-theme="aurora"] #chat::after,
-body[data-theme="neon"] #chat::before, body[data-theme="neon"] #chat::after,
-body[data-theme="lavender"] #chat::before, body[data-theme="lavender"] #chat::after,
-body[data-theme="royal"] #chat::before, body[data-theme="royal"] #chat::after,
-body[data-theme="cosmic"] #chat::before, body[data-theme="cosmic"] #chat::after{display:none !important}
-body[data-theme="aurora"] .twinkle, body[data-theme="neon"] .twinkle,
-body[data-theme="lavender"] .twinkle, body[data-theme="royal"] .twinkle{display:none}
-
-/* AURORA: pita cahaya cyan-ungu, sejuk */
-body[data-theme="aurora"]{background:
-  radial-gradient(ellipse 70% 35% at 15% 0%, rgba(34,211,238,.45), transparent 70%),
-  radial-gradient(ellipse 60% 30% at 90% 15%, rgba(168,85,247,.5), transparent 70%),
-  radial-gradient(ellipse 80% 25% at 50% 40%, rgba(16,185,129,.22), transparent 70%),
-  linear-gradient(180deg,#031a2c 0%,#0a0a26 100%) !important}
-body[data-theme="aurora"] .header{border:2px solid rgba(34,211,238,.9);border-radius:28px;background:rgba(3,26,44,.7);box-shadow:0 0 34px rgba(34,211,238,.45);animation:none}
-body[data-theme="aurora"] .bubble.ai{background:rgba(8,40,60,.75) !important;border:2px solid rgba(94,234,212,.9) !important;border-radius:22px !important;box-shadow:0 0 24px rgba(34,211,238,.35) !important}
-body[data-theme="aurora"] .bubble.user{background:linear-gradient(135deg,#22d3ee,#a855f7) !important;color:#041018 !important;border-radius:22px !important;box-shadow:0 0 22px rgba(34,211,238,.6) !important}
-body[data-theme="aurora"] .composer{border:2px solid rgba(34,211,238,.9);background:rgba(3,26,44,.85);box-shadow:0 0 26px rgba(34,211,238,.4)}
-body[data-theme="aurora"] .composer button{background:linear-gradient(135deg,#22d3ee,#a855f7);color:#041018}
-
-/* NEON: hitam dengan kisi pink, sudut tajam, glow kuat */
-body[data-theme="neon"]{background:
-  repeating-linear-gradient(0deg, rgba(255,43,214,.13) 0 1px, transparent 1px 30px),
-  repeating-linear-gradient(90deg, rgba(255,43,214,.13) 0 1px, transparent 1px 30px),
-  #05010a !important}
-body[data-theme="neon"] .header{border:2px solid #ff2bd6;border-radius:6px;background:#0a0212;box-shadow:0 0 0 1px #ff2bd6,0 0 40px rgba(255,43,214,.6);animation:none}
-body[data-theme="neon"] .header h1{color:#ff8ae8 !important;text-shadow:0 0 12px rgba(255,43,214,.9)}
-body[data-theme="neon"] .bubble.ai{background:#0a0212 !important;border:2px solid #ff2bd6 !important;border-radius:6px !important;box-shadow:0 0 0 1px rgba(255,43,214,.4),0 0 26px rgba(255,43,214,.55) !important;color:#ffd6f7 !important}
-body[data-theme="neon"] .bubble.user{background:#ff2bd6 !important;color:#12000f !important;border:2px solid #fff !important;border-radius:6px !important;box-shadow:0 0 26px rgba(255,43,214,.8) !important;font-weight:700}
-body[data-theme="neon"] .composer{border:2px solid #ff2bd6;border-radius:6px;background:#0a0212;box-shadow:0 0 28px rgba(255,43,214,.5)}
-body[data-theme="neon"] .composer button{background:#ff2bd6;color:#12000f;border-radius:6px}
-
-/* LAVENDER: lilac dan pink lembut, bukan putih */
-body[data-theme="lavender"]{background:
-  radial-gradient(circle at 12% 8%, #ffc2ea 0%, transparent 42%),
-  radial-gradient(circle at 92% 92%, #a894f0 0%, transparent 50%),
-  linear-gradient(180deg,#dccbf8 0%,#c6b0f0 100%) !important;color:#2b1450}
-body[data-theme="lavender"] .header{border:2px solid #7c3aed;border-radius:30px;background:rgba(124,58,237,.14);box-shadow:0 10px 30px rgba(124,58,237,.25);animation:none}
-body[data-theme="lavender"] .header h1{color:#2b1450}
-body[data-theme="lavender"] .subtitle{color:#5b21b6 !important}
-body[data-theme="lavender"] .bubble.ai{background:rgba(255,255,255,.55) !important;color:#2b1450 !important;border:2px solid #9d7ce8 !important;border-radius:26px !important;box-shadow:0 8px 20px rgba(124,58,237,.18) !important}
-body[data-theme="lavender"] .bubble.user{background:#2b1450 !important;color:#f5ecff !important;border-radius:26px !important;border:none !important;box-shadow:0 8px 20px rgba(43,20,80,.35) !important}
-body[data-theme="lavender"] .composer{border:2px solid #9d7ce8;background:rgba(255,255,255,.6);border-radius:30px;box-shadow:0 8px 20px rgba(124,58,237,.18)}
-body[data-theme="lavender"] .composer input{color:#2b1450}
-body[data-theme="lavender"] .composer input::placeholder{color:#7c5cb8}
-body[data-theme="lavender"] .composer button{background:#2b1450;color:#fff}
-
-/* ROYAL: ungu tua dengan pola berlian emas */
-body[data-theme="royal"]{background:
-  repeating-linear-gradient(45deg, rgba(212,175,55,.09) 0 2px, transparent 2px 22px),
-  repeating-linear-gradient(-45deg, rgba(212,175,55,.06) 0 2px, transparent 2px 22px),
-  radial-gradient(ellipse at 50% 0%, #4c1d95 0%, transparent 60%),
-  #0c0418 !important}
-body[data-theme="royal"] .header{border:2px solid #d4af37;border-radius:20px;background:rgba(12,4,24,.85);box-shadow:inset 0 0 30px rgba(212,175,55,.2),0 0 30px rgba(212,175,55,.35);animation:none}
-body[data-theme="royal"] .header h1{color:#f3d77a !important}
-body[data-theme="royal"] .bubble.ai{background:rgba(28,13,51,.9) !important;border:2px solid #d4af37 !important;border-radius:14px !important;box-shadow:inset 0 0 24px rgba(212,175,55,.12),0 0 20px rgba(212,175,55,.25) !important;color:#f6ecd0 !important}
-body[data-theme="royal"] .bubble.user{background:linear-gradient(135deg,#6d28d9,#3b1a6b) !important;border:1px solid #f3d77a !important;border-radius:14px !important;color:#fff7dc !important}
-body[data-theme="royal"] .composer{border:2px solid #d4af37;border-radius:14px;background:#1c0d33;box-shadow:0 0 22px rgba(212,175,55,.3)}
-body[data-theme="royal"] .composer button{background:linear-gradient(135deg,#f3d77a,#b8932a);color:#1a1020;border-radius:12px}
-
-/* COSMIC: ruang angkasa dengan bintang kecil */
-body[data-theme="cosmic"]{background:
-  radial-gradient(1.5px 1.5px at 18px 30px, #fff, transparent),
-  radial-gradient(1px 1px at 72px 88px, #e9d5ff, transparent),
-  radial-gradient(1.2px 1.2px at 128px 20px, #fff, transparent),
-  radial-gradient(1px 1px at 40px 120px, #c4b5fd, transparent),
-  radial-gradient(ellipse 70% 40% at 80% 20%, rgba(139,92,246,.35), transparent 70%),
-  radial-gradient(ellipse 60% 40% at 10% 90%, rgba(236,72,153,.18), transparent 70%),
-  linear-gradient(180deg,#0a0318 0%,#120526 100%) !important;background-size:160px 160px,160px 160px,160px 160px,160px 160px,auto,auto,auto !important}
-body[data-theme="cosmic"] .twinkle{display:block;opacity:.7}
-body[data-theme="cosmic"] .header{border:1px solid rgba(196,181,253,.6);border-radius:40px;background:rgba(18,5,38,.55);box-shadow:0 0 40px rgba(124,58,237,.35);animation:none}
-body[data-theme="cosmic"] .bubble.ai{background:rgba(18,5,38,.7) !important;border:1px solid rgba(196,181,253,.6) !important;border-radius:40px !important;box-shadow:0 0 30px rgba(124,58,237,.3) !important}
-body[data-theme="cosmic"] .bubble.user{background:rgba(88,28,135,.85) !important;border:1px solid rgba(233,213,255,.7) !important;border-radius:40px !important;box-shadow:0 0 26px rgba(168,85,247,.5) !important}
-body[data-theme="cosmic"] .composer{border:1px solid rgba(196,181,253,.6);border-radius:40px;background:rgba(18,5,38,.75);box-shadow:0 0 26px rgba(124,58,237,.4)}
-body[data-theme="cosmic"] .composer button{background:radial-gradient(circle,#fff,#7c3aed);border-radius:50%}
-
-/* ===== PENYEMPURNAAN TEMA LAMA: lebih rapi dan elegan (tanpa mengubah layout) ===== */
-body[data-theme="midnight"] .header{border:1px solid rgba(170,200,240,.45) !important;background:linear-gradient(160deg,rgba(18,36,66,.92),rgba(8,16,32,.92)) !important;border-radius:26px !important}
-body[data-theme="midnight"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
-body[data-theme="midnight"] .bubble.ai{background:linear-gradient(160deg,#0f2140,#0a1628) !important;border:1px solid rgba(150,185,230,.5) !important;box-shadow:0 10px 26px rgba(0,0,0,.35) !important}
-body[data-theme="midnight"] .bubble.user{background:linear-gradient(135deg,#2b5aa6,#1e3a6e) !important;border:1px solid rgba(190,215,250,.35) !important;box-shadow:0 10px 24px rgba(0,0,0,.3) !important}
-body[data-theme="midnight"] .composer{border:1px solid rgba(150,185,230,.5) !important;border-radius:28px !important;background:linear-gradient(160deg,#0f2140,#0a1628) !important}
-
-body[data-theme="ivory"] .header{border:1px solid #dcd2b8 !important;border-radius:26px !important;box-shadow:0 8px 24px rgba(60,45,20,.08) !important}
-body[data-theme="ivory"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
-body[data-theme="ivory"] .bubble.ai{background:#fffdf7 !important;border:1px solid #e4dcc6 !important;box-shadow:0 10px 22px rgba(60,45,20,.08) !important;color:#2a2418 !important}
-body[data-theme="ivory"] .bubble.user{background:linear-gradient(135deg,#3d3426,#2a2418) !important;color:#f7f0de !important;border:none !important;box-shadow:0 10px 22px rgba(42,36,24,.25) !important}
-body[data-theme="ivory"] .composer{border:1px solid #d8cdb0 !important;border-radius:28px !important;box-shadow:0 8px 22px rgba(60,45,20,.08) !important}
-body[data-theme="ivory"] .composer button{background:linear-gradient(135deg,#b8934a,#8a6a2f) !important;color:#fffdf7 !important}
-
-body[data-theme="champagne"] .header{border:1px solid rgba(212,175,106,.6) !important;border-radius:26px !important;background:linear-gradient(160deg,#241c12,#15110b) !important}
-body[data-theme="champagne"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
-body[data-theme="champagne"] .bubble.ai{background:linear-gradient(160deg,#241c12,#1a1510) !important;border:1px solid rgba(212,175,106,.5) !important;box-shadow:0 10px 26px rgba(0,0,0,.4) !important}
-body[data-theme="champagne"] .bubble.user{background:linear-gradient(135deg,#e8c87a,#c9a25a) !important;color:#1a1510 !important;border:none !important;box-shadow:0 10px 24px rgba(212,175,106,.3) !important}
-body[data-theme="champagne"] .composer{border:1px solid rgba(212,175,106,.6) !important;border-radius:28px !important;background:linear-gradient(160deg,#241c12,#15110b) !important}
-
-body[data-theme="forest"] .header{border:1px solid rgba(160,205,178,.45) !important;border-radius:26px !important;background:linear-gradient(160deg,#133a29,#0a1f15) !important}
-body[data-theme="forest"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
-body[data-theme="forest"] .bubble.ai{background:linear-gradient(160deg,#133a29,#0d241a) !important;border:1px solid rgba(160,205,178,.45) !important;box-shadow:0 10px 26px rgba(0,0,0,.35) !important}
-body[data-theme="forest"] .bubble.user{background:linear-gradient(135deg,#4a7a5e,#2f5240) !important;border:1px solid rgba(200,235,215,.3) !important;box-shadow:0 10px 24px rgba(0,0,0,.3) !important}
-body[data-theme="forest"] .composer{border:1px solid rgba(160,205,178,.5) !important;border-radius:28px !important;background:linear-gradient(160deg,#133a29,#0d241a) !important}
-
-body[data-theme="premium"] .header{border:1px solid rgba(255,255,255,.14) !important;border-radius:26px !important;background:rgba(30,27,75,.55) !important}
-body[data-theme="premium"] .bubble{border-radius:20px !important;line-height:1.7;letter-spacing:.1px}
-body[data-theme="premium"] .bubble.ai{background:linear-gradient(160deg,#25216a,#1e1b4b) !important;border:1px solid rgba(255,255,255,.12) !important;box-shadow:0 10px 26px rgba(10,6,20,.45) !important}
-body[data-theme="premium"] .bubble.user{background:linear-gradient(135deg,#3b35a0,#2e2a7a) !important;border:1px solid rgba(255,255,255,.14) !important;box-shadow:0 10px 24px rgba(10,6,20,.4) !important}
-body[data-theme="premium"] .composer{border:1px solid rgba(255,255,255,.14) !important;border-radius:28px !important}
-
-/* Original: hanya sentuhan tipografi halus, identitas ungu dipertahankan */
-body:not([data-theme]) .bubble{letter-spacing:.1px;line-height:1.7}
-
-/* ===== FITUR UMUM: ukuran teks gelembung & modal privasi ===== */
-body.fs-kecil .bubble{font-size:13px !important;line-height:1.6 !important}
-body.fs-besar .bubble{font-size:17px !important;line-height:1.75 !important}
-#fModal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px}
-#fModal.open{display:flex}
-#fModal .kotak{max-width:360px;width:100%;max-height:82vh;overflow-y:auto;background:#14082a;border:1.5px solid #c084fc;border-radius:20px;padding:18px;color:#f5f3ff;font-size:14px;line-height:1.65}
-#fModal h3{font-size:17px;margin-bottom:8px}
-#fModal h4{font-size:14px;margin:12px 0 4px;color:#e9d5ff}
-#fModal p,#fModal li{color:#e9e3ff}
-#fModal ul{padding-left:18px}
-#fModal .tutup{margin-top:14px;width:100%;padding:10px;border-radius:12px;border:none;background:#7c3aed;color:#fff;font-weight:700}
-
-/* ===== MENU: item tambahan dibuat seragam dengan item lain + modal umpan balik ===== */
-#drawer .drawer-box .f-item[data-umum], #drawer .drawer-box .f-item[data-a="suara"]{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:none;box-shadow:none;padding:10px 6px;color:inherit;font:inherit}
-#drawer .drawer-box .f-item[data-umum] span, #drawer .drawer-box .f-item[data-a="suara"] span{width:24px;text-align:center;font-size:17px}
-#drawer .drawer-box [data-umum="catatan"]{font-size:11.5px;opacity:.7;padding:8px 6px 4px;line-height:1.5}
-#fUmpan{position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px}
-#fUmpan.open{display:flex}
-#fUmpan .kotak{max-width:360px;width:100%;background:#14082a;border:1.5px solid #c084fc;border-radius:20px;padding:18px;color:#f5f3ff;font-size:14px}
-#fUmpan h3{font-size:17px;margin-bottom:10px}
-#fUmpan .nilai{display:flex;gap:10px;margin-bottom:10px}
-#fUmpan .nilai button{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(192,132,252,.45);background:rgba(255,255,255,.04);font-size:18px}
-#fUmpan .nilai button.on{border-color:#c084fc;background:rgba(168,85,247,.3)}
-#fUmpan textarea{width:100%;min-height:90px;border-radius:12px;border:1px solid rgba(192,132,252,.45);background:#0c0418;color:#f5f3ff;padding:10px;font:inherit;resize:vertical}
-#fUmpan .aksi{display:flex;gap:8px;margin-top:12px}
-#fUmpan .aksi button{flex:1;padding:10px;border-radius:12px;border:none;font-weight:700}
 </style>
 
 <script>
@@ -2402,223 +2218,68 @@ window.__f_sholatCadangan = function(s, kunci, ulang, detail){
     s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Memuat jadwal...';
     setTimeout(function(){ if(ulang) ulang(); }, 3000);
   } else {
-    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum bisa dimuat. Coba lagi nanti.';
+    s.innerHTML = '<b>🕌 Sholat Hari Ini</b>Jadwal belum tersedia [detail: '+String(detail||'').slice(0,120)+']';
   }
 };
 </script>
-<script>
-/* TOMBOL TEMA BARU: ditambahkan ke menu tema tanpa mengubah tombol yang sudah ada */
-(function(){
-  var TEMA = [
-    {t:'aurora', nama:'Aurora'}, {t:'neon', nama:'Neon'}, {t:'lavender', nama:'Lavender'},
-    {t:'royal', nama:'Royal'}, {t:'cosmic', nama:'Cosmic'}
-  ];
-  function buat(){
-    var grid = document.querySelector('.theme-grid');
-    if(!grid) return;
-    TEMA.forEach(function(x){
-      if(grid.querySelector('[data-theme="'+x.t+'"]')) return;
-      var b = document.createElement('button');
-      b.className = 'theme-btn';
-      b.setAttribute('data-theme', x.t);
-      b.innerHTML = '<i></i>' + x.nama;
-      b.onclick = function(){ setTheme(x.t); };
-      grid.appendChild(b);
-    });
-    try{ var now = localStorage.getItem('fahri_theme') || 'original'; setTheme(now); }catch(e){}
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buat);
-  else buat();
-})();
-</script>
-<script>
-/* FITUR UMUM: Privasi & Syarat, pengaturan ukuran teks, dan catatan AI di menu ☰ */
-(function(){
-  var TEKS_PRIVASI = {
-    judul: 'Privasi & Syarat Penggunaan',
-    isi: [
-      ['Catatan', 'Ini adalah ringkasan awal dan belum ditinjau oleh ahli hukum. Sebelum dipakai umum, teks ini perlu diperiksa ulang.'],
-      ['Data yang disimpan', 'Riwayat chat disimpan di perangkatmu. Jika kamu login, salinan riwayat juga disimpan di akunmu agar bisa dibuka di perangkat lain.'],
-      ['Data yang dikirim ke pihak ketiga', 'Pertanyaan dan foto yang kamu kirim diproses oleh penyedia AI pihak ketiga untuk membuat jawaban. Kami tidak menjual data pribadimu.'],
-      ['Cara menghapus data', 'Gunakan "Bersihkan chat" di menu untuk menghapus riwayat di perangkat ini. Untuk menghapus salinan di akun, hubungi kami.'],
-      ['Batasan jawaban AI', 'AI bisa keliru. Periksa ulang jawaban yang penting, terutama terkait kesehatan, hukum, dan keuangan.'],
-      ['Syarat penggunaan', 'Jangan memakai aplikasi ini untuk hal yang melanggar hukum atau membahayakan orang lain.']
-    ]
-  };
 
-  /* HAPUS DATA SAYA: di perangkat (localStorage) dan di akun (Firestore, jika login) */
-  var KUNCI_DATA = ['fahri_history','fahri_history_v2','fahri_log','fahri_simpan','fahri_bookmark','fahri_flash','fahri_todo','fahri_sesi','fahri_foto','fahri_nama','fahri_inget','f_sholat_cache','f_lokasi','f_sholat_notif'];
-  function hapusSemuaData(btn){
-    btn.disabled = true; btn.textContent = 'Menghapus...';
-    KUNCI_DATA.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
-    try{ sessionStorage.clear(); }catch(e){}
-    var selesaiLokal = function(akunMsg){
-      btn.textContent = 'Data di perangkat sudah dihapus' + akunMsg;
-      try{ if(typeof riwayat !== 'undefined') riwayat = []; }catch(e){}
-      setTimeout(function(){ location.reload(); }, 1200);
-    };
-    var uid = null;
-    try{ uid = firebase.auth().currentUser ? firebase.auth().currentUser.uid : null; }catch(e){}
-    if(!uid){ selesaiLokal(''); return; }
-    try{
-      firebase.firestore().collection('users').doc(uid).collection('data').doc('history').delete()
-        .then(function(){ selesaiLokal(' dan di akun.'); })
-        .catch(function(){ selesaiLokal(' (salinan di akun belum terhapus, coba lagi nanti).'); });
-    }catch(e){ selesaiLokal(' (salinan di akun belum terhapus, coba lagi nanti).'); }
-  }
-  function bukaModal(){
-    var m = document.getElementById('fModal');
-    if(!m){
-      m = document.createElement('div'); m.id = 'fModal';
-      var k = document.createElement('div'); k.className = 'kotak';
-      var h = document.createElement('h3'); h.textContent = TEKS_PRIVASI.judul; k.appendChild(h);
-      TEKS_PRIVASI.isi.forEach(function(x){
-        var h4 = document.createElement('h4'); h4.textContent = x[0]; k.appendChild(h4);
-        var p = document.createElement('p'); p.textContent = x[1]; k.appendChild(p);
-      });
-      var hapus = document.createElement('button'); hapus.className = 'tutup'; hapus.style.background = '#7f1d1d'; hapus.style.marginTop = '8px';
-      hapus.textContent = 'Hapus semua data saya';
-      hapus.onclick = function(){
-        if(!confirm('Hapus semua riwayat, bookmark, dan data lain di perangkat ini dan di akun (jika login)? Tindakan ini tidak bisa dibatalkan.')) return;
-        hapusSemuaData(hapus);
-      };
-      k.appendChild(hapus);
-      var t = document.createElement('button'); t.className = 'tutup'; t.textContent = 'Tutup';
-      t.onclick = function(){ m.classList.remove('open'); };
-      k.appendChild(t); m.appendChild(k);
-      m.onclick = function(e){ if(e.target === m) m.classList.remove('open'); };
-      document.body.appendChild(m);
-    }
-    m.classList.add('open');
-  }
-  function terapkanUkuran(u){
-    document.body.classList.remove('fs-kecil','fs-besar');
-    if(u === 'kecil') document.body.classList.add('fs-kecil');
-    if(u === 'besar') document.body.classList.add('fs-besar');
-    try{ localStorage.setItem('fahri_ukuran', u); }catch(e){}
-  }
-  function item(id, label, fn){
-    var b = document.createElement('button');
-    b.className = 'f-item'; b.setAttribute('data-umum', id);
-    b.textContent = label;
-    b.onclick = function(e){ e.preventDefault(); e.stopPropagation(); fn(); };
-    return b;
-  }
-  function sisipkan(){
-    var box = document.querySelector('#drawer .drawer-box');
-    if(!box || box.querySelector('[data-umum]')) return;
-    var sep = document.createElement('div');
-    sep.setAttribute('data-umum','sep'); sep.style.cssText = 'height:1px;background:rgba(192,132,252,.25);margin:8px 0';
-    box.appendChild(sep);
-    box.appendChild(item('privasi','🔒 Privasi & Syarat', bukaModal));
-    var cur = 'normal';
-    try{ cur = localStorage.getItem('fahri_ukuran') || 'normal'; }catch(e){}
-    box.appendChild(item('ukuran','🔠 Ukuran teks: '+cur, function(){
-      var urut = ['kecil','normal','besar'];
-      var sekarang = (localStorage.getItem('fahri_ukuran') || 'normal');
-      var nxt = urut[(urut.indexOf(sekarang)+1) % urut.length];
-      terapkanUkuran(nxt);
-      var b = box.querySelector('[data-umum="ukuran"]'); if(b) b.textContent = '🔠 Ukuran teks: '+nxt;
-    }));
-    var note = document.createElement('div');
-    note.setAttribute('data-umum','catatan');
-    note.style.cssText = 'font-size:11px;opacity:.7;padding:6px 6px 2px;line-height:1.5';
-    note.textContent = 'AI bisa keliru. Periksa ulang jawaban yang penting.';
-    box.appendChild(note);
-  }
-  var btn = document.getElementById('btnMenu');
-  if(btn) btn.addEventListener('click', function(){ setTimeout(sisipkan, 80); });
-  try{ var u = localStorage.getItem('fahri_ukuran'); if(u) terapkanUkuran(u); }catch(e){}
-})();
-</script>
-<script>
-/* MENU RAPI: item Suara, Privasi, Ukuran teks, dan Umpan balik dibuat seragam dan dikelompokkan di Pengaturan */
-(function(){
-  function ikon(el, emoji, label){
-    el.className = 'f-item';
-    el.innerHTML = '<span>' + emoji + '</span>' + label;
-  }
-  function namaSuara(){
-    try{ return localStorage.getItem('f_tts_voice') || 'Otomatis'; }catch(e){ return 'Otomatis'; }
-  }
-  function ukuranSekarang(){
-    try{ return localStorage.getItem('fahri_ukuran') || 'normal'; }catch(e){ return 'normal'; }
-  }
-  function bukaUmpan(){
-    var m = document.getElementById('fUmpan');
-    if(!m){
-      m = document.createElement('div'); m.id = 'fUmpan';
-      var k = document.createElement('div'); k.className = 'kotak';
-      var h = document.createElement('h3'); h.textContent = 'Umpan balik'; k.appendChild(h);
-      var p = document.createElement('div'); p.style.cssText = 'font-size:12.5px;opacity:.8;margin-bottom:10px'; p.textContent = 'Bagaimana pengalamanmu memakai Fahri Assistant?'; k.appendChild(p);
-      var nilai = 0;
-      var wrap = document.createElement('div'); wrap.className = 'nilai';
-      [['👍',1],['😐',0],['👎',-1]].forEach(function(x){
-        var b = document.createElement('button'); b.type = 'button'; b.textContent = x[0];
-        b.onclick = function(){ nilai = x[1]; wrap.querySelectorAll('button').forEach(function(q){ q.classList.remove('on'); }); b.classList.add('on'); };
-        wrap.appendChild(b);
-      });
-      k.appendChild(wrap);
-      var ta = document.createElement('textarea'); ta.placeholder = 'Tulis saran atau masalah yang kamu temui (opsional)'; k.appendChild(ta);
-      var aksi = document.createElement('div'); aksi.className = 'aksi';
-      var batal = document.createElement('button'); batal.type = 'button'; batal.textContent = 'Batal';
-      batal.style.background = 'rgba(255,255,255,.08)'; batal.style.color = '#f5f3ff';
-      batal.onclick = function(){ m.classList.remove('open'); };
-      var kirim = document.createElement('button'); kirim.type = 'button'; kirim.textContent = 'Kirim';
-      kirim.style.background = '#7c3aed'; kirim.style.color = '#fff';
-      kirim.onclick = function(){
-        var teks = ta.value.trim();
-        if(nilai === 0 && !teks){ alert('Pilih penilaian atau tulis sesuatu dulu ya.'); return; }
-        var data = { t: Date.now(), nilai: nilai, teks: teks };
-        try{
-          var simpan = JSON.parse(localStorage.getItem('fahri_umpan') || '[]');
-          simpan.unshift(data); localStorage.setItem('fahri_umpan', JSON.stringify(simpan.slice(0,100)));
-        }catch(e){}
-        try{
-          var u = firebase.auth().currentUser;
-          if(u) firebase.firestore().collection('users').doc(u.uid).collection('umpan').add(data).catch(function(){});
-        }catch(e){}
-        m.classList.remove('open'); ta.value = ''; wrap.querySelectorAll('button').forEach(function(q){ q.classList.remove('on'); }); nilai = 0;
-        alert('Terima kasih atas umpan balikmu!');
-      };
-      aksi.appendChild(batal); aksi.appendChild(kirim); k.appendChild(aksi);
-      m.appendChild(k); m.onclick = function(e){ if(e.target === m) m.classList.remove('open'); };
-      document.body.appendChild(m);
-    }
-    m.classList.add('open');
-  }
-  function rapikan(){
-    var box = document.querySelector('#drawer .drawer-box');
-    if(!box) return;
-    var bahasa = box.querySelector('[data-a="bahasa"]');
-    var suara = box.querySelector('[data-a="suara"]');
-    var privasi = box.querySelector('[data-umum="privasi"]');
-    var ukuran = box.querySelector('[data-umum="ukuran"]');
-    var catatan = box.querySelector('[data-umum="catatan"]');
-    var sep = box.querySelector('[data-umum="sep"]');
-    if(suara) ikon(suara, '🗣️', 'Suara: ' + namaSuara());
-    if(privasi) ikon(privasi, '🔒', 'Privasi & Syarat');
-    if(ukuran) ikon(ukuran, '🔠', 'Ukuran teks: ' + ukuranSekarang());
-    var umpan = box.querySelector('[data-umum="umpan"]');
-    if(!umpan){
-      umpan = document.createElement('button');
-      umpan.setAttribute('data-umum','umpan');
-      umpan.onclick = function(e){ e.preventDefault(); e.stopPropagation(); bukaUmpan(); };
-    }
-    ikon(umpan, '💬', 'Umpan balik');
-    // Susun ulang: Suara, Ukuran, Privasi, Umpan balik, lalu catatan (di bawah Bahasa)
-    var urutan = [suara, ukuran, privasi, umpan].filter(Boolean);
-    var acuan = bahasa || box.querySelector('[data-a="riwayat"]');
-    if(acuan){
-      var titik = acuan.nextSibling;
-      urutan.forEach(function(el){ box.insertBefore(el, titik); });
-    }
-    if(sep && sep.parentNode) sep.style.display = 'none';
-    if(catatan) catatan.style.display = 'block';
-  }
-  var btn = document.getElementById('btnMenu');
-  if(btn) btn.addEventListener('click', function(){ setTimeout(rapikan, 120); });
-})();
-</script>
+<style id="tema-elegan">
+/* ===== TEMA ELEGAN (opsional) - tanpa neon, satu warna aksen, tipografi halus =====
+   Cara kembali ke tampilan awal: menu ☰ > Tema > "Fahri Original". Semua aturan di bawah hanya berlaku bila body[data-theme="elegan"]. */
+:root{ --el-bg:#0b0a10; --el-surf:#14131b; --el-surf2:#1a1923; --el-line:rgba(255,255,255,.08); --el-text:#ececf3; --el-muted:#9a99ab; --el-acc:#8b7cf6; --el-acc2:#6a5be0 }
+html:has(body[data-theme="elegan"]){ background:#0b0a10 }
+body[data-theme="elegan"]{ background:radial-gradient(ellipse 90% 38% at 50% -6%, rgba(122,98,255,.16), transparent 70%), #0b0a10 !important; color:var(--el-text) !important;
+  font-family:Inter,"SF Pro Text","Plus Jakarta Sans","Segoe UI",Roboto,system-ui,-apple-system,sans-serif !important; letter-spacing:.005em; -webkit-font-smoothing:antialiased }
+body[data-theme="elegan"] #chat{ background:transparent !important }
+body[data-theme="elegan"] #chat::before, body[data-theme="elegan"] #chat::after, body[data-theme="elegan"] .twinkle, body[data-theme="elegan"] #fahri-wall{ display:none !important }
+
+/* Header */
+body[data-theme="elegan"] .header{ background:linear-gradient(180deg,#15141d,#0f0e15) !important; border:1px solid var(--el-line) !important; box-shadow:0 14px 34px rgba(0,0,0,.45) !important; animation:none !important }
+body[data-theme="elegan"] .header::before{ opacity:0 !important }
+body[data-theme="elegan"] .logo{ box-shadow:0 0 0 1px rgba(255,255,255,.16), 0 10px 26px rgba(0,0,0,.5) !important; filter:brightness(1.1) saturate(1.1) !important }
+body[data-theme="elegan"] .header h1{ font-weight:750 !important; letter-spacing:-.02em !important; text-shadow:none !important; color:#f5f4fa !important }
+body[data-theme="elegan"] .subtitle{ color:var(--el-acc) !important; font-weight:500 !important; letter-spacing:.01em }
+body[data-theme="elegan"] .online-status{ font-weight:500 !important; color:#7ddca0 !important }
+body[data-theme="elegan"] .online-status .online-dot{ box-shadow:0 0 0 3px rgba(74,222,128,.14) !important }
+body[data-theme="elegan"] .greet, body[data-theme="elegan"] .greet2{ font-size:25px !important; font-weight:650 !important; letter-spacing:-.015em !important; color:#f2f1f8 !important }
+body[data-theme="elegan"] .greet2{ color:#b7b5cc !important }
+
+/* Tombol & kartu */
+body[data-theme="elegan"] .badge, body[data-theme="elegan"] .chip, body[data-theme="elegan"] .suggest-card{ background:rgba(255,255,255,.045) !important; border:1px solid rgba(255,255,255,.10) !important; box-shadow:none !important; color:var(--el-text) !important; font-weight:550 !important }
+body[data-theme="elegan"] .badge i, body[data-theme="elegan"] .chip i{ filter:none !important; color:var(--el-acc) !important; font-size:19px !important; opacity:.95 }
+body[data-theme="elegan"] .badge:active, body[data-theme="elegan"] .chip:active{ background:rgba(139,124,246,.16) !important }
+body[data-theme="elegan"] .menu-btn, body[data-theme="elegan"] #btnMenu{ background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.12) !important; box-shadow:none !important; color:#fff !important }
+body[data-theme="elegan"] #f-fitur-fab{ background:#1a1926 !important; border:1px solid rgba(255,255,255,.14) !important; box-shadow:0 6px 18px rgba(0,0,0,.4) !important; font-weight:600 !important }
+body[data-theme="elegan"] .date-pill{ background:rgba(255,255,255,.05) !important; border:1px solid var(--el-line) !important; color:var(--el-muted) !important; box-shadow:none !important; font-weight:500 !important }
+body[data-theme="elegan"] #authBar #f-auth-info .f-info-row{ background:var(--el-surf) !important; border:1px solid var(--el-line) !important; box-shadow:none !important; border-radius:18px !important; color:var(--el-text) !important }
+
+/* Gelembung chat */
+body[data-theme="elegan"] .bubble{ box-shadow:none !important; transform:none !important; font-weight:450 !important; line-height:1.72 !important; letter-spacing:.003em }
+body[data-theme="elegan"] .bubble.ai{ background:var(--el-surf) !important; border:1px solid var(--el-line) !important; color:#e9e8f1 !important; border-radius:20px !important; border-top-left-radius:6px !important }
+body[data-theme="elegan"] .bubble.user{ background:linear-gradient(135deg,var(--el-acc2),#5446cc) !important; border:none !important; color:#fff !important; border-radius:20px !important; border-bottom-right-radius:6px !important; box-shadow:0 8px 22px rgba(84,70,204,.30) !important }
+body[data-theme="elegan"] .bubble b{ font-weight:650 !important }
+body[data-theme="elegan"] .bubble th, body[data-theme="elegan"] .bubble td{ border-color:rgba(255,255,255,.10) !important }
+body[data-theme="elegan"] .bubble th{ background:rgba(139,124,246,.14) !important }
+body[data-theme="elegan"] .bubble hr{ border-top-color:rgba(255,255,255,.10) !important }
+body[data-theme="elegan"] .tts-btn, body[data-theme="elegan"] .ai-actions button{ background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.10) !important; box-shadow:none !important }
+body[data-theme="elegan"] .mini-logo{ box-shadow:0 0 0 1px rgba(255,255,255,.16), 0 6px 16px rgba(0,0,0,.45) !important; filter:brightness(1.1) saturate(1.1) !important }
+
+/* Kolom ketik */
+body[data-theme="elegan"] .composer{ background:var(--el-surf) !important; border:1px solid rgba(255,255,255,.10) !important; box-shadow:0 10px 30px rgba(0,0,0,.5) !important }
+body[data-theme="elegan"] .composer:focus-within{ border-color:rgba(139,124,246,.55) !important; box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 0 3px rgba(139,124,246,.12) !important }
+body[data-theme="elegan"] .composer input{ color:var(--el-text) !important; font-weight:450 !important }
+body[data-theme="elegan"] .composer input::placeholder{ color:#77768a !important }
+body[data-theme="elegan"] .composer button{ background:linear-gradient(135deg,var(--el-acc),var(--el-acc2)) !important; box-shadow:0 6px 16px rgba(106,91,224,.4) !important }
+
+/* Menu, jendela, dan panel */
+body[data-theme="elegan"] .drawer-box, body[data-theme="elegan"] .confirm-box, body[data-theme="elegan"] .profile-box, body[data-theme="elegan"] #f-sheet-box, body[data-theme="elegan"] .f-app-popup{ background:var(--el-surf) !important; border:1px solid rgba(255,255,255,.10) !important; box-shadow:0 24px 60px rgba(0,0,0,.6) !important }
+body[data-theme="elegan"] .drawer-item{ font-weight:500 !important }
+body[data-theme="elegan"] .drawer-profile, body[data-theme="elegan"] .theme-section, body[data-theme="elegan"] .drawer-ver{ border-color:var(--el-line) !important }
+body[data-theme="elegan"] .theme-btn{ border-color:rgba(255,255,255,.12) !important; box-shadow:none !important }
+body[data-theme="elegan"] .theme-btn.active{ border-color:var(--el-acc) !important; background:rgba(139,124,246,.18) !important; box-shadow:none !important }
+body[data-theme="elegan"] .confirm-btn.delete, body[data-theme="elegan"] .profile-btn{ box-shadow:none !important; background:linear-gradient(135deg,var(--el-acc),var(--el-acc2)) !important }
+body[data-theme="elegan"] .f-app-popup .f-ap-input{ background:var(--el-surf2) !important; border:1px solid rgba(255,255,255,.12) !important }
+.theme-btn[data-theme="elegan"] i{ background:linear-gradient(135deg,#15141d,#8b7cf6) !important }
+</style>
 </body>
 </html>
